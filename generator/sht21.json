@@ -1,0 +1,37 @@
+{
+  "sensorName":"sht21",
+  "includes":["<HTU2xD_SHT2x_Si70xx.h>"],
+  "sensorInitializer": {
+    "params": "",
+    "body": "this->sht.begin() ? this->status = Sensor::StatusReady: (this->status = Sensor::StatusError)&&(this->error = Sensor::ErrorNotFound);"
+  },
+  "properties": {
+    "private": [{
+      "name": "sht",
+      "type": "HTU2xD_SHT2x_SI70xx",
+      "initializer": "sht(SHT2x_SENSOR, HUMD_12BIT_TEMP_14BIT)"
+    }]
+  },
+  "mesuresCount": 3,
+  "mesures":[{
+    "name":"temperature",
+    "unit":"*C",
+    "sampleRate":"5000",
+    "delayFirst":"1000",
+    "body": "value = this->sht.readTemperature();"
+  },{
+    "name": "humidity",
+    "unit": "%",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->sht.readHumidity();"
+  },{
+    "name": "compensated_humidity",
+    "unit": "%",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->sht.getCompensatedHumidity(this->read_(0));"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}

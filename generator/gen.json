@@ -1,0 +1,42 @@
+{
+  "sensorName":"bme280",
+  "includes":["<Adafruit_BME280.h>"],
+  "sensorInitializer": {
+    "params": "",
+    "body": "this->bme.begin() || this->bme.begin(0x76)? this->status = Sensor::StatusReady: (this->status = Sensor::StatusReady)&&(this->error = Sensor::ErrorNotFound);"
+  },
+  "properties": {
+    "private": [{
+      "name": "bme",
+      "type": "Adafruit_BME280"
+    }]
+  },
+  "mesuresCount": 4,
+  "mesures":[{
+    "name":"temperature",
+    "unit":"*C",
+    "sampleRate":"5000",
+    "delayFirst":"0",
+    "body": "value = this->bme.readTemperature();"
+  },{
+    "name": "humidity",
+    "unit": "%",
+    "sampleRate": "5000",
+    "delayFirst": "0",
+    "body": "value = this->bme.readHumidity();"
+  },{
+    "name": "pressure",
+    "unit": "Pa",
+    "sampleRate": "5000",
+    "delayFirst": "0",
+    "body": "value = this->bme.readPressure();"
+  },{
+    "name": "altitude",
+    "unit": "m",
+    "sampleRate": "60000",
+    "delayFirst": "5000",
+    "body": "value = this->bme.readAltitude(1013);"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}

@@ -1,0 +1,59 @@
+{
+  "sensorName":"mq2",
+  "includes":["<MQ2.h>"],
+  "sensorInitializer": {
+    "params": "int pin",
+    "body": "this->mq.init();"
+  },
+  "properties": {
+    "private": [{
+      "name": "mq",
+      "type": "MQ2",
+      "initializer": "mq(5, 10, pin)"
+    }]
+  },
+  "mesuresCount": 6,
+  "mesures":[{
+    "name":"LPG",
+    "unit":"ppm",
+    "sampleRate":"5000",
+    "delayFirst":"1000",
+    "body": "value = this->mq.readLPG();"
+  },{
+    "name": "H2",
+    "unit": "ppm",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->mq.readH2();"
+  },
+  {
+    "name": "CO",
+    "unit": "ppm",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->mq.readCO();"
+  },
+  {
+    "name": "Alcohol",
+    "unit": "ppm",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->mq.readAlcohol();"
+  },
+  {
+    "name": "Propane",
+    "unit": "ppm",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->mq.readPropane();"
+  },
+  {
+    "name": "raw",
+    "unit": "v",
+    "sampleRate": "2000",
+    "delayFirst": "1000",
+    "body": "value = this->mq.sensor_volt;"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}

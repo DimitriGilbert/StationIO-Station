@@ -1,0 +1,37 @@
+{
+  "sensorName":"ccs811",
+  "includes":["<Adafruit_CCS811.h>"],
+  "sensorInitializer": {
+    "params": "",
+    "body": "this->ccs.begin();"
+  },
+  "properties": {
+    "private": [{
+      "name": "ccs",
+      "type": "Adafruit_CCS811"
+    }]
+  },
+  "mesuresCount": 3,
+  "mesures":[{
+    "name":"eCO2",
+    "unit":"",
+    "sampleRate":"5000",
+    "delayFirst":"1000",
+    "body": "value = this->ccs.geteCO2();"
+  },{
+    "name": "VOC",
+    "unit": "ppm",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "if(this->ccs.available() && this->ccs.readData() == 0){value = this->ccs.getTVOC();}"
+  },
+  {
+    "name": "temperature",
+    "unit": "*C",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "if(this->ccs.available() && this->ccs.readData() == 0){value = this->ccs.calculateTemperature();}"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}

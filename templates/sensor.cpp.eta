@@ -1,0 +1,135 @@
+#include <Arduino.h>
+
+#include "./<%= it.sensorName %>.h"
+
+<%= it.sensorName %>::<%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>) : Sensor("<%= it.sensorName %>") {<%= it.sensorInitializer!==undefined&&it.sensorInitializer.body!==undefined?it.sensorInitializer.body:"" %> 
+
+  <% it.mesures.forEach(function(m, i){ %> 
+    this->mesuresSampleLast[<%= i %>] = (unsigned long)<%= m.delayFirst!==undefined?m.delayFirst:"0" %>; 
+<% }) %>
+};
+<%= it.sensorName %>::~<%= it.sensorName %>(){};
+
+const <%= it.sensorName %>::SensorMesure <%= it.sensorName %>::mesures[<%= it.mesuresCount %>] = {<% it.mesures.forEach(function(m){ %> 
+    {
+      "<%= m.name %>",
+      "<%= m.unit %>"
+    },<%
+  }) %>
+};
+const u_int *<%= it.sensorName %>::mesuresSampleRates[<%= it.mesuresCount %>] = {<% it.mesures.forEach(function(m){ %> 
+    (const u_int *)<%= m.sampleRate %>,<%
+  }) %>
+};
+
+Sensor::SensorMesureData *<%= it.sensorName %>::read_() {
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    this->mesuresDatas[i] = this->read_(i);
+    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
+  }
+  return this->mesuresDatas;
+}
+Sensor::SensorMesureData <%= it.sensorName %>::read_(int index) {
+  if (index < this->mesuresCount) {
+    Sensor::SensorMesureData value = 0;
+    this->mesuresSampleLast[index] = millis();
+    switch (index) {<% it.mesures.forEach(function(m, i){ %> 
+      // mesure <%= m.name %> 
+      case <%= i %>:
+        <%= m.body!==undefined?m.body:"return 0;" %> 
+        break;
+<% }) %>
+    }
+    this->mesuresDatas[index] = value;
+    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    return this->mesuresDatas[index];
+  }
+  return this->read_(<%= it.mesuresDefault!==undefined?it.mesuresDefault:"0" %>);
+}
+
+void <%= it.sensorName %>::loop() {
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    if (millis() - this->mesuresSampleLast[i] > (unsigned long)this->mesuresSampleRates[i]) {
+      this->read_(i);
+    }
+  }
+}
+
+Sensor::SensorMesureData *<%= it.sensorName %>::read() { return this->mesuresDatas; }
+
+Sensor::SensorMesureData <%= it.sensorName %>::read(int index) {
+  return this->__read(index, this->mesuresCount, this->mesuresDatas);
+}
+
+Sensor::SensorMesureData *<%= it.sensorName %>::average(int last) {
+  Sensor::SensorMesureData data[this->mesuresCount];
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    data[i] = this->average(last, i);
+  }
+
+  return data;
+}
+
+Sensor::SensorMesureData <%= it.sensorName %>::average(int last, int index) {
+  // return this->__average(last, index, this->mesuresCount, this->mesuresBuffers);
+  if (index > this->mesuresCount) {
+    return 0;
+  }
+  SensorMesureData data = 0;
+
+  if (last > this->mesuresBuffers[index].size()) {
+    last = this->mesuresBuffers[index].size();
+  }
+
+  for (size_t i = 0; i < last; i++) {
+    data = data + this->mesuresBuffers[index][i];
+  }
+  return data / last;
+}
+
+String <%= it.sensorName %>::toString() {
+  String out = this->name+"\n";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat("\t"+this->toString(i));
+  }
+  return out;
+}
+String <%= it.sensorName %>::toString(int index) {
+  return this->mesures[index].name + ": " + String(this->read(index))+" "+this->mesures[index].unit+"\n";
+}
+String <%= it.sensorName %>::toCsv() {
+  String out = "";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toCsv(i));
+  }
+  return out;
+}
+String <%= it.sensorName %>::toCsv(int index) {
+  return "\""+this->name+"\", \""+this->mesures[index].name+"\", \""+this->read(index)+"\", \""+this->mesures[index].unit+"\"\n";
+}
+String <%= it.sensorName %>::toJson() {
+  String out = "\""+this->name+"\": {";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    if (i > 0)
+    {
+      out.concat(", ");
+    }
+    out.concat(this->toJson(i));
+  }
+  out.concat("}");
+  return out;
+}
+String <%= it.sensorName %>::toJson(int index) {
+  return "\""+this->mesures[index].name + "\":" + String(this->read(index));
+}
+String <%= it.sensorName %>::toXml() {
+  String out = "<"+this->name+">";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toXml(i));
+  }
+  out.concat("</"+this->name+">");
+  return out;
+}
+String <%= it.sensorName %>::toXml(int index) {
+  return "<"+this->mesures[index].name+" unit=\"+this->mesures[index].unit+\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
+}

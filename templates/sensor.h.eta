@@ -1,0 +1,43 @@
+#include <Arduino.h>
+#include "../Sensor.h"
+<% it.includes!==undefined?it.includes.forEach(function(i){ %> 
+#include <%= i %> <%}):""; %> 
+
+#ifndef StationIOSensor_<%= it.sensorName %>_h
+#define StationIOSensor_<%= it.sensorName %>_h
+
+class <%= it.sensorName %> : public Sensor
+{
+private:<% it.properties!==undefined&&it.properties.private!==undefined?it.properties.private.forEach(function(p){ %> 
+  <%= p.type %> <%= p.name %>; <%}):""; %> 
+public:<% it.properties!==undefined&&it.properties.public!==undefined?it.properties.public.forEach(function(p){ %> 
+  <%= p.type %> <%= p.name %>; <%}):""; %> 
+  <%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>);
+  ~<%= it.sensorName %>();
+
+  static const size_t mesuresCount = <%= it.mesuresCount %>;
+  static const SensorMesure mesures[<%= it.mesuresCount %>];
+  static const u_int *mesuresSampleRates[<%= it.mesuresCount %>];
+  unsigned long mesuresSampleLast[<%= it.mesuresCount %>];
+
+  SensorMesureData mesuresDatas[<%= it.mesuresCount %>];
+  CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
+  
+  SensorMesureData *read();
+  SensorMesureData read(int index);
+  SensorMesureData *average(int last);
+  SensorMesureData average(int last, int index);
+  String toString();
+  String toString(int index);
+  String toCsv();
+  String toCsv(int index);
+  String toJson();
+  String toJson(int index);
+  String toXml();
+  String toXml(int index);
+  SensorMesureData *read_();
+  SensorMesureData read_(int index);
+  void loop();
+};
+
+#endif
