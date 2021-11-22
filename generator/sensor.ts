@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import * as eta from "eta";
 
-let sensorName = "mq2";
+let sensorName = "dht11";
 
 fs.readFile(`./generator/${sensorName}.json`)
   .then(async (dataBuffer) => {

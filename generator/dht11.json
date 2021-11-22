@@ -1,0 +1,39 @@
+{
+  "sensorName":"dht11",
+  "includes":["<DHT.h>"],
+  "sensorInitializer": {
+    "params": "int pin",
+    "body": "this->dht.begin() ? this->status = Sensor::StatusReady: (this->status = Sensor::StatusError)&&(this->error = Sensor::ErrorNotFound);"
+  },
+  "properties": {
+    "private": [{
+      "name": "dht",
+      "type": "DHT",
+      "initializer": "dht(pin, DHT11)"
+    }]
+  },
+  "mesuresCount": 3,
+  "mesures":[{
+    "name":"temperature",
+    "unit":"*C",
+    "sampleRate":"5000",
+    "delayFirst":"1000",
+    "body": "value = this->dht.readTemperature();"
+  },
+  {
+    "name": "humidity",
+    "unit": "%",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->dht.readHumidity();"
+  },
+  {
+    "name": "heat_index",
+    "unit": "%",
+    "sampleRate": "5000",
+    "delayFirst": "1000",
+    "body": "value = this->dht.computeHeatIndex(this->read(0), this->read(1), false);"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}
