@@ -29,11 +29,11 @@ void BaseStation::setup() {
   this->status = BaseStation::StatusReady;
 }
 
-void BaseStation::setupSensors(Sensor** sensors, int sensorCount) {
+void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
   this->sensors = sensors;
   this->sensorCount = sensorCount;
-  this->log("Sensors :" + String(sensorCount));
-  for (size_t i = 0; i < sensorCount; i++) {
+  this->log("Sensors : " + String(this->sensorCount));
+  for (size_t i = 0; i < this->sensorCount; i++) {
     this->logt(String(i) + " -> " + this->sensors[i]->name);
   }
 }
@@ -89,12 +89,18 @@ bool BaseStation::ready(int minStatus) {
 }
 
 void BaseStation::loop() {
-  for (size_t i = 0; i < this->sensorCount; i++) {
+    // this->logt(String(this->sensorCount));
+    // this->logt("loop sensors");
+    for (size_t i = 0; i < this->sensorCount; i++) {
+    // this->logt(String(i));
+    // this->logt(this->sensors[i]->name);
     this->sensors[i]->loop();
   }
+  // this->logt("loop callbacks");
   for (size_t i = 0; i < this->loopCallbackCount; i++) {
     this->loopCallbacks[i](this);
   }
+  // this->logt("loop timers");
   for (size_t i = 0; i < this->timerCallbackCount; i++) {
     int ti = millis();
     if (ti >= this->timerCallbacks[i].next) {

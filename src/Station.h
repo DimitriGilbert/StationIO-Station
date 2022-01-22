@@ -50,11 +50,11 @@ class BaseStation {
   String stationTypeName;
   int status;
   int error;
-  size_t sensorCount;
+  size_t sensorCount = 0;
   Sensor** sensors;
-  size_t loopCallbackCount;
-  BaseStation::StationCallback_t* loopCallbacks;
-  size_t timerCallbackCount;
+  size_t loopCallbackCount = 0;
+  StationCallback_t* loopCallbacks;
+  size_t timerCallbackCount = 0;
   StationCallbackTimer_t* timerCallbacks;
 
   static const int StatusStarting = 0;
@@ -79,7 +79,7 @@ class BaseStation {
              int loopCallbackCount,
              StationCallbackTimer_t* timerCallbacks,
              int timerCallbackCount);
-  void setupSensors(Sensor** sensors, int sensorCount);
+  void setupSensors(Sensor** sensors, size_t sensorCount);
   void setupLoopCallback(StationCallback_t* loopCallbacks,
                          int loopCallbackCount);
   void setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
