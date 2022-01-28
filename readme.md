@@ -123,6 +123,20 @@ wish :
 
 ## Getting started
 
+### Install
+
+For now you have to clone (or download) the repo, it is not yet packaged as a project or library.
+
+```bash
+
+cd <path to parent directory>
+git clone git@github.com:DimitriGilbert/StationIO-Station.git <project name>
+cd <project name>
+cp ./templates/main.cpp.dist ./src/main.cpp
+```
+
+Open the directory and select src/main.cpp in your favorite code editor so we can dissact it together.
+
 ### Includes
 
 The only mandatory includes are the arduino librairy and the station header file.
@@ -149,7 +163,7 @@ They take place between includes and the setup function, here you will initializ
 
 StationClass station(
   "Station name",
-  # WiFi, optional
+  # WiFi, optional, assumes you have an esp
   {
     ssid : "your ssid",
     password : "your password"
