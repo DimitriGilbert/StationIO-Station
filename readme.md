@@ -135,7 +135,7 @@ cd <project name>
 cp ./templates/main.cpp.dist ./src/main.cpp
 ```
 
-Open the directory and select src/main.cpp in your favorite code editor so we can dissact it together.
+Open the directory and select src/main.cpp in your favorite code editor so we can dissect it together.
 
 ### Includes
 

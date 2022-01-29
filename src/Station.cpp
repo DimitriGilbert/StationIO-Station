@@ -228,17 +228,19 @@ void EspStation::initWebServer() {
   this->webServer.on("/", [this](AsyncWebServerRequest* request) {
     String data;
     AsyncWebHeader* hd = request->getHeader("Accept");
-    if (strcmp(hd->value().c_str(), "application/json") == 0) {
+    const char * accv = hd->value().c_str();
+    if (strcmp(accv, "application/json") == 0) {
       data = this->toJson();
-    } else if (strcmp(hd->value().c_str(), "application/xml") == 0) {
+    } else if (strcmp(accv, "application/xml") == 0) {
       data = this->toXml();
-    } else if (strcmp(hd->value().c_str(), "text/csv") == 0) {
+    } else if (strcmp(accv, "text/csv") == 0) {
       data = this->toCsv();
     } else {
       data = this->toString();
+      accv = "text/plain";
     }
 
-    request->send(200, hd->value().c_str(), data);
+    request->send(200, accv, data);
   });
 }
 
