@@ -4,6 +4,8 @@ An Arduino framework-ish thingy that takes care of the basics !
 
 ## TLDR
 
+### Basic Station
+
 Include the station and sensors header files, initialize and voila a connected arduino station !
 
 Here is an example for a DHT11 sensor :
@@ -29,6 +31,26 @@ void loop() {
 }
 
 ```
+
+### main.cpp generator
+
+A tool to generate main.cpp file from json configs exists, configs are located in ./config/*.json and an example is available, to run it :
+
+```bash
+npx ts-node generator/main.ts
+```
+
+to run on a different config edit line 4 of generator/main.ts.
+
+### sensor generator generator
+
+A tool to generate main.cpp file from json configs exists, configs are located in ./generator/*.json and examples are available, to run it :
+
+```bash
+npx ts-node generator/sensor.ts
+```
+
+to run on a different config edit line 4 of generator/sensor.ts.
 
 ## Background and Philosophy
 
