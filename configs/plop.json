@@ -1,0 +1,19 @@
+{
+  "name": "StationIO",
+  "wifi": {
+    "ssid": "ssid",
+    "password": "pass"
+  },
+  "callbacks": [
+    "void stringLog(BaseStation * station){station->log(station->toString());}"
+  ],
+  "sensors": [
+    ["dht11", "D4"]
+  ],
+  "timers": [
+    {
+      "callback": "stringLog",
+      "interval": 10000
+    }
+  ]
+}

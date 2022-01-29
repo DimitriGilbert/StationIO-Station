@@ -1,0 +1,89 @@
+#include <Arduino.h>
+#include "./Station.h"
+
+// including sensors
+<% if(it.sensors!==undefined){
+  it.sensors.forEach(function(sensor){
+sensorname = sensor;
+if(typeof sensor !== "string"){
+  sensorname = sensor[0];
+}%>
+#include "./sensors/<%=sensorname %>.h"
+<%})}%>
+
+// initializing station
+StationClass station(
+  "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
+  {
+    ssid : "<%= it.wifi.ssid %>",
+    password : "<%= it.wifi.password %>"
+  }
+<% } %>);
+
+// ___ sensors ___
+<% if(it.sensors!==undefined){%>
+Sensor* sensors[<%= it.sensors.length %>] = {<% it.sensors.forEach(function(sensor){
+sensorArg = "";
+sensorname = sensor;
+if(typeof sensor !== "string"){
+  sensorArg = sensor[1];
+  sensorname = sensor[0];
+}
+%> 
+  new <%= sensorname %>(<%= sensorArg %>),<%})%> 
+};
+
+<%}
+if(it.callbacks!==undefined){%>
+// ___ callbacks ___
+<% it.callbacks.forEach(function(cb){%>
+<%= cb %><%})%> 
+
+<%}
+if(it.loops!==undefined){%>
+// ___ loops ___
+BaseStation::StationCallback_t* loopsCallbacks[<%= it.loops.length %>] = {<% it.loops.forEach(function(loop){%> 
+  <%= loop %>,<%})%> 
+};
+
+<%}
+if(it.timers!==undefined){%>
+// ___ timers ___
+BaseStation::StationCallbackTimer_t timers[<%= it.timers.length %>] = {<% it.timers.forEach(function(timer){%> 
+  {<%= timer.callback %>, <%= timer.interval %>},<%})%> 
+};
+
+<%}
+if(it.webServerRoutes!==undefined){%>
+// ___ web Server ___
+EspStation::StationWebCallbackInfo_t**  webServerRoutes[<%= it.webServerRoutes.length %>] = {<% it.webServerRoutes.forEach(function(route){%> 
+  {<%= route.callback %>, <%= route.url %>, <%= route.login %>, <%= route.password %>},<%})%> 
+};
+
+<%}%>
+
+void setup() {
+  station.setup();
+
+  <% if(it.sensors!==undefined){%>// setting up sensors
+  station.setupSensors(sensors, <%= it.sensors.length %>);
+
+  <%}
+  if(it.loops!==undefined){%>// setting up loops
+  station.setupLoopCallback(loops, <%= it.loops.length %>);
+
+  <%}
+  if(it.timers!==undefined){%>// setting up timers
+  station.setupTimerCallback(timers, <%= it.timers.length %>);
+
+  <%}
+  if(it.webServerRoutes!==undefined){%>// setting up web Server
+  station.setupWebServerCallback(webServerRoutes, <%= it.webServerRoutes.length %>);
+
+<%}%>// ___ custom code goes here ___
+}
+
+void loop() {
+  station.loop();
+  // ___ custom code goes here ___
+}
