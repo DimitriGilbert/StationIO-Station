@@ -1,6 +1,8 @@
 #include "./Station.h"
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <WiFiUdp.h>
 #include <Wire.h>
 
 // Base Station
@@ -63,6 +65,44 @@ void BaseStation::setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
   }
 }
 
+void BaseStation::setupOTA() {
+  ArduinoOTA.onStart([this]() {
+    this->log("Starting OTA update on :");
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH){
+      this->logt("sketch");
+    }
+    // U_SPIFFS
+    else {
+      this->logt("filesystem");
+      SPIFFS.end();
+      this->logt("\tfs unmounted");
+    }
+  });
+  ArduinoOTA.onEnd([this]() {
+    this->log("OTA update ended");
+  });
+  ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) {
+    this->logt("\tOTA update progress: " + String(progress) + "/" + String(total/100));
+    // Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+}
+
 void BaseStation::setup(Sensor** sensors, int sensorCount) {
   this->setup();
   this->setupSensors(sensors, sensorCount);
@@ -89,18 +129,16 @@ bool BaseStation::ready(int minStatus) {
 }
 
 void BaseStation::loop() {
-    // this->logt(String(this->sensorCount));
-    // this->logt("loop sensors");
-    for (size_t i = 0; i < this->sensorCount; i++) {
-    // this->logt(String(i));
-    // this->logt(this->sensors[i]->name);
+  ArduinoOTA.handle();
+  
+  for (size_t i = 0; i < this->sensorCount; i++) {
     this->sensors[i]->loop();
   }
-  // this->logt("loop callbacks");
+  
   for (size_t i = 0; i < this->loopCallbackCount; i++) {
     this->loopCallbacks[i](this);
   }
-  // this->logt("loop timers");
+  
   for (size_t i = 0; i < this->timerCallbackCount; i++) {
     int ti = millis();
     if (ti >= this->timerCallbacks[i].next) {
@@ -143,6 +181,7 @@ I2CScan BaseStation::scanI2C() {
       errors,
   };
 }
+
 String BaseStation::toString() {
   String out = "";
   for (size_t i = 0; i < this->sensorCount; i++) {

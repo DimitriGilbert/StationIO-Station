@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <WiFiUdp.h>
 #include <Wire.h>
 #ifndef StationIOStation_h
 #define StationIOStation_h
@@ -87,6 +89,7 @@ class BaseStation {
   void setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
                           int timerCallbackCount,
                           int delay);
+  void setupOTA();
   bool ready();
   bool ready(int minStatus);
   void loop();
