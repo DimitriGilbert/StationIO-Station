@@ -66,7 +66,7 @@ What I wanted was something that would :
   * developed on a D1 mini and a nodemcu board
   * compiles-ish for uno and esp32
 * handle the basics :
-  * sensor management and measurements
+  * sensor management and mesurements
   * custom arduino code integration with or without a timer
   * basic WiFi and web server if possible
 * be extensible, it's a parsec away from being great (first time using c++...) but supporting a new sensor is easy, so is adding routes (that call standard arduino functions) to the web server
@@ -93,7 +93,7 @@ wish :
 
 ### Sensors
 
-I added support for all the sensors I have, using standard libraries (like Adafruit's DHTx or BMPx libs) in a class implementing basic common functionnalities (measurement, loging, output formating, ...)
+I added support for all the sensors I have, using standard libraries (like Adafruit's DHTx or BMPx libs) in a class implementing basic common functionnalities (mesurement, loging, output formating, ...)
 
 support :
 
