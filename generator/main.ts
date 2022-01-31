@@ -1,7 +1,8 @@
 import { promises as fs } from "fs";
 import * as eta from "eta";
+import { argv } from "process";
 
-let stationName = "StationIO";
+let stationName = argv[2] || "StationIO";
 
 fs.readFile(`./configs/${stationName}.json`)
   .then(async (dataBuffer) => {

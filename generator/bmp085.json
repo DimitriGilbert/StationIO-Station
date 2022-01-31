@@ -1,0 +1,36 @@
+{
+  "sensorName":"bmp085",
+  "includes":["<Adafruit_BMP085.h>"],
+  "sensorInitializer": {
+    "params": "",
+    "body": "this->bmp.begin() ? this->status = Sensor::StatusReady: (this->status = Sensor::StatusError)&&(this->error = Sensor::ErrorNotFound);"
+  },
+  "properties": {
+    "private": [{
+      "name": "bmp",
+      "type": "Adafruit_BMP085"
+    }]
+  },
+  "mesuresCount": 4,
+  "mesures":[{
+    "name":"temperature",
+    "unit":"*C",
+    "sampleRate":"5000",
+    "delayFirst":"0",
+    "body": "value = this->bmp.readTemperature();"
+  },{
+    "name": "pressure",
+    "unit": "Pa",
+    "sampleRate": "5000",
+    "delayFirst": "0",
+    "body": "value = this->bmp.readPressure();"
+  },{
+    "name": "altitude",
+    "unit": "m",
+    "sampleRate": "60000",
+    "delayFirst": "5000",
+    "body": "value = this->bmp.readAltitude(1013);"
+  }],
+  "mesuresDefault":[0],
+  "mesuresBufferSize": 40
+}

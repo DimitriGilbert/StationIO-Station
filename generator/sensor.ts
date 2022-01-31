@@ -1,7 +1,8 @@
 import { promises as fs } from "fs";
 import * as eta from "eta";
+import { argv } from "process";
 
-let sensorName = "dht11";
+let sensorName = argv[2] || "dht11";
 
 fs.readFile(`./generator/${sensorName}.json`)
   .then(async (dataBuffer) => {

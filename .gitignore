@@ -4,5 +4,6 @@
 .vscode/launch.json
 .vscode/ipch
 node_modules
-main.cpp
+src/main.cpp
 configs/
+src/*main.cpp.bak

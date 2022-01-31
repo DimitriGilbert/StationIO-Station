@@ -80,6 +80,9 @@ void setup() {
   if(it.webServerRoutes!==undefined){%>// setting up web Server
   station.setupWebServerCallback(webServerRoutes, <%= it.webServerRoutes.length %>);
 
+  // setting up OTA
+  station.setupOTA();
+
 <%}%>// ___ custom code goes here ___
 }
 
