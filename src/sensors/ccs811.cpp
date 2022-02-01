@@ -3,7 +3,11 @@
 #include "./ccs811.h"
 
 ccs811::ccs811() : Sensor("ccs811") {
-  this->ccs.begin();
+  this->ccs.begin() ? this->status = Sensor::StatusReady
+                    : (this->status = Sensor::StatusError) &&
+                          (this->error = Sensor::ErrorNotFound);
+  ;
+  while (!ccs.available()) {Serial.println("\t waiting for ccs811");}
 
   this->mesuresSampleLast[0] = (unsigned long)1000;
 
@@ -33,23 +37,25 @@ Sensor::SensorMesureData* ccs811::read_() {
 }
 Sensor::SensorMesureData ccs811::read_(int index) {
   if (index < this->mesuresCount) {
-    Sensor::SensorMesureData value = 0;
+    Sensor::SensorMesureData value = -999;
     this->mesuresSampleLast[index] = millis();
-    switch (index) {
-      // mesure eCO2
-      case 0:
-        value = this->ccs.geteCO2();
-        break;
+    if (this->ccs.readData()) {
+      switch (index) {
+        // mesure eCO2
+        case 0:
+          value = this->ccs.geteCO2();
+          break;
 
-      // mesure VOC
-      case 1:
-        value = this->ccs.getTVOC();
-        break;
+        // mesure VOC
+        case 1:
+          value = this->ccs.getTVOC();
+          break;
 
-      // mesure temperature
-      case 2:
-        value = this->ccs.calculateTemperature();
-        break;
+        // mesure temperature
+        case 2:
+          value = this->ccs.calculateTemperature();
+          break;
+      }
     }
     this->mesuresDatas[index] = value;
     this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
