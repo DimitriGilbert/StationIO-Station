@@ -1,106 +1,106 @@
-#include "./mq2.h"
+#include "./linky.h"
 
 #include <Arduino.h>
 
 #include "./html.h"
 
-mq2::mq2(int pin) : Sensor("mq2"), mq(5, 10, pin) {
-  this->mq.init();
-
-  this->mesuresSampleLast[0] = (unsigned long)1000;
-
-  this->mesuresSampleLast[1] = (unsigned long)1000;
-
-  this->mesuresSampleLast[2] = (unsigned long)1000;
-
-  this->mesuresSampleLast[3] = (unsigned long)1000;
-
-  this->mesuresSampleLast[4] = (unsigned long)1000;
-
-  this->mesuresSampleLast[5] = (unsigned long)1000;
+linky::linky(TInfo &lnk) : Sensor("linky") {
+  // Serial.begin(1200, SERIAL_7E1);
+  // Serial.swap();
+  this->lnk = lnk;
+  // this->lnk.init();
+  // this->lnk.attachData(fn_data);
+  this->mesuresSampleLast[0] = (unsigned long)10000;
+  this->mesuresSampleLast[1] = (unsigned long)10000;
+  this->mesuresSampleLast[2] = (unsigned long)10000;
+  this->mesuresSampleLast[3] = (unsigned long)10000;
 };
-mq2::~mq2(){};
+linky::~linky(){};
 
-const mq2::SensorMesure mq2::mesures[6] = {
-    {"LPG", "ppm"},     {"H2", "ppm"},      {"CO", "ppm"},
-    {"Alcohol", "ppm"}, {"Propane", "ppm"}, {"raw", "v"},
+const linky::SensorMesure linky::mesures[4] = {
+    {"hp", "w"},
+    {"hc", "W"},
+    {"tarif", ""},
+    {"power", "va"},
 };
-const u_int* mq2::mesuresSampleRates[6] = {
-    (const u_int*)5000, (const u_int*)5000, (const u_int*)5000,
-    (const u_int*)5000, (const u_int*)5000, (const u_int*)2000,
+const u_int *linky::mesuresSampleRates[4] = {
+    (const u_int *)5000,
+    (const u_int *)5000,
+    (const u_int *)5000,
+    (const u_int *)5000,
 };
 
-size_t mq2::getMesuresCount() { return this->mesuresCount; }
-Sensor::SensorMesureData* mq2::read_() {
+String linky::getValue(String name) {
+  const char *tgt = name.c_str();
+  int tgtl = strlen(tgt);
+  ValueList *me = this->lnk.getList();
+  String data = "does not exists";
+  while (me->next) {
+    // go to next node
+    me = me->next;
+
+    // Check if we match this LABEL
+    if (tgtl == strlen(me->name) && strcmp(me->name, tgt) == 0) {
+      // this one has a value ?
+      if (me->value) {
+        data = String(me->value);
+      }
+    }
+  }
+  return data;
+}
+size_t linky::getMesuresCount() { return this->mesuresCount; }
+Sensor::SensorMesureData *linky::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     this->mesuresDatas[i] = this->read_(i);
     this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
   }
   return this->mesuresDatas;
 }
-Sensor::SensorMesureData mq2::read_(int index) {
+Sensor::SensorMesureData linky::read_(int index) {
   if (index < this->mesuresCount) {
     Sensor::SensorMesureData value = 0;
     this->mesuresSampleLast[index] = millis();
-    // this->mq.serialDebug(true);
     switch (index) {
-      // mesure LPG
+      // mesure hp
       case 0:
-        value = this->mq.readLPG();
+        value = this->getValue("HCHP").toFloat();
         break;
 
-      // mesure H2
+      // mesure hc
       case 1:
-        value = this->mq.readH2();
+        value = this->getValue("HCHC").toFloat();
         break;
 
-      // mesure CO
+      // mesure tarif
       case 2:
-        value = this->mq.readCO();
+        value = this->getValue("PTEC") == "HC.." ? 1 : 57;
         break;
 
-      // mesure Alcohol
+      // mesure power
       case 3:
-        value = this->mq.readAlcohol();
-        break;
-
-      // mesure Propane
-      case 4:
-        value = this->mq.readPropane();
-        break;
-
-      // mesure raw
-      case 5:
-        value = this->mq.sensor_volt;
+        value = this->getValue("PAPP").toFloat();
         break;
     }
-    this->mesuresDatas[index] = value;
-    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    this->setMesure(index, value);
     return this->mesuresDatas[index];
   }
   return this->read_(0);
 }
-void mq2::setMesure(int index, float value) {
+void linky::setMesure(int index, float value) {
   this->mesuresDatas[index] = value;
   this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
 }
 
-void mq2::loop() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (millis() - this->mesuresSampleLast[i] >
-        (unsigned long)this->mesuresSampleRates[i]) {
-      this->read_(i);
-    }
-  }
-}
+void linky::loop() {}
 
-Sensor::SensorMesureData* mq2::read() { return this->mesuresDatas; }
+Sensor::SensorMesureData *linky::read() { return this->mesuresDatas; }
 
-Sensor::SensorMesureData mq2::read(int index) {
+Sensor::SensorMesureData linky::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
 }
 
-Sensor::SensorMesureData* mq2::average(int last) {
+Sensor::SensorMesureData *linky::average(int last) {
   Sensor::SensorMesureData data[this->mesuresCount];
   for (size_t i = 0; i < this->mesuresCount; i++) {
     data[i] = this->average(last, i);
@@ -109,7 +109,7 @@ Sensor::SensorMesureData* mq2::average(int last) {
   return data;
 }
 
-Sensor::SensorMesureData mq2::average(int last, int index) {
+Sensor::SensorMesureData linky::average(int last, int index) {
   // return this->__average(last, index, this->mesuresCount,
   // this->mesuresBuffers);
   if (index > this->mesuresCount) {
@@ -127,29 +127,29 @@ Sensor::SensorMesureData mq2::average(int last, int index) {
   return data / last;
 }
 
-String mq2::toString() {
+String linky::toString() {
   String out = this->name + "\n";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat("\t" + this->toString(i));
   }
   return out;
 }
-String mq2::toString(int index) {
+String linky::toString(int index) {
   return this->mesures[index].name + ": " + String(this->read(index)) + " " +
          this->mesures[index].unit + "\n";
 }
-String mq2::toCsv() {
+String linky::toCsv() {
   String out = "";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toCsv(i));
   }
   return out;
 }
-String mq2::toCsv(int index) {
+String linky::toCsv(int index) {
   return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
          this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
 }
-String mq2::toJson() {
+String linky::toJson() {
   String out = "\"" + this->name + "\": {";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     if (i > 0) {
@@ -160,10 +160,10 @@ String mq2::toJson() {
   out.concat("}");
   return out;
 }
-String mq2::toJson(int index) {
+String linky::toJson(int index) {
   return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
 }
-String mq2::toXml() {
+String linky::toXml() {
   String out = "<" + this->name + ">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toXml(i));
@@ -171,25 +171,32 @@ String mq2::toXml() {
   out.concat("</" + this->name + ">");
   return out;
 }
-String mq2::toXml(int index) {
+String linky::toXml(int index) {
   return "<" + this->mesures[index].name + " unit=\"" +
          this->mesures[index].unit + "\">" + String(this->read(index)) + "</" +
          this->mesures[index].name + ">";
 }
-String mq2::jsUtils() {
-  return HtmlElt("script", "const mq2_utils = {inChart: name => name==='raw'}");
+String linky::jsUtils() {
+  return HtmlElt(
+      "script",
+      "const linky_utils = {format_hp: (val) => parseFloat(val) / "
+      "1000,format_hc: (val) => parseFloat(val) / 1000,format_tarif: (val) => "
+      "(val == 'HC..' ? 'heures creuses' : 'heures pleines'),inChart: (name) "
+      "=> "
+      "name == 'power',};"
+  );
 }
-String mq2::toHtml() {
+String linky ::toHtml() {
   String out = "<div class=\"sensor " + this->name +
                "\"><div class=\"sensor-name\">" + this->name +
                "</div><div class=\"sensor-mesures\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
-  out.concat("</div></div>"+this->jsUtils());
+  out.concat("</div></div>" + this->jsUtils());
   return out;
 }
-String mq2::toHtml(int index) {
+String linky ::toHtml(int index) {
   return "<div class=\"sensor-mesure " + this->mesures[index].name +
          "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
          "</span> : <span class=\"sensor-mesure-value\">" +

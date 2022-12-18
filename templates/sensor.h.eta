@@ -23,6 +23,7 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   SensorMesureData mesuresDatas[<%= it.mesuresCount %>];
   CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
   
+  size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
   SensorMesureData *average(int last);
@@ -35,6 +36,8 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String toHtml();
+  String toHtml(int index);
   SensorMesureData *read_();
   SensorMesureData read_(int index);
   void loop();

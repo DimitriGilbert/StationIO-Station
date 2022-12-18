@@ -37,8 +37,10 @@ public:
   bool ready();
   SensorMesureData __read(int index, size_t count, SensorMesureData *datas);
   SensorMesureData __average(int last, int index, size_t count, CircularBuffer<SensorMesureData, 20>buffers[]);
+  virtual size_t getMesuresCount() = 0;
   virtual SensorMesureData *read() = 0;
   virtual SensorMesureData read(int index) = 0;
+  virtual void setMesure(int index, float value) = 0;
   virtual SensorMesureData *average(int last) = 0;
   virtual SensorMesureData average(int last, int index) = 0;
   virtual String toString() = 0;
@@ -49,6 +51,8 @@ public:
   virtual String toJson(int index) = 0;
   virtual String toXml() = 0;
   virtual String toXml(int index) = 0;
+  virtual String toHtml() = 0;
+  virtual String toHtml(int index) = 0;
 
   virtual SensorMesureData *read_() = 0;
   virtual SensorMesureData read_(int index) = 0;

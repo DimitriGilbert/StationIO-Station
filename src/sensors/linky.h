@@ -1,27 +1,26 @@
 #include <Arduino.h>
+#include <LibTeleinfo.h>
+
 #include "../Sensor.h"
- 
-#include <DHT.h>  
 
-#ifndef StationIOSensor_dht11_h
-#define StationIOSensor_dht11_h
+#ifndef StationIOSensor_linky_h
+#define StationIOSensor_linky_h
 
-class dht11 : public Sensor
-{
-private: 
-  DHT dht;  
-public: 
-  dht11(int pin);
-  ~dht11();
+class linky : public Sensor {
+ public:
+  linky(TInfo &lnk);
+  ~linky();
 
-  static const size_t mesuresCount = 3;
-  static const SensorMesure mesures[3];
-  static const u_int *mesuresSampleRates[3];
-  unsigned long mesuresSampleLast[3];
+  TInfo lnk;
+  static const size_t mesuresCount = 4;
+  static const SensorMesure mesures[4];
+  static const u_int *mesuresSampleRates[4];
+  unsigned long mesuresSampleLast[4];
 
-  SensorMesureData mesuresDatas[3];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[3];
+  SensorMesureData mesuresDatas[4];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
 
+  String getValue(String name);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
@@ -36,11 +35,11 @@ public:
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String jsUtils();
   String toHtml();
   String toHtml(int index);
   SensorMesureData *read_();
   SensorMesureData read_(int index);
   void loop();
 };
-
 #endif

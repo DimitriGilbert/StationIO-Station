@@ -26,6 +26,7 @@ const u_int* dht11::mesuresSampleRates[3] = {
     (const u_int*)5000,
 };
 
+size_t dht11::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* dht11::read_() {
   for (int i = 0; i < this->mesuresCount; i++) {
     this->mesuresDatas[i] = this->read_(i);
@@ -58,6 +59,10 @@ Sensor::SensorMesureData dht11::read_(int index) {
     return this->mesuresDatas[index];
   }
   return this->read_(0);
+}
+void dht11::setMesure(int index, float value) {
+  this->mesuresDatas[index] = value;
+  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
 }
 
 void dht11::loop() {
@@ -151,6 +156,24 @@ String dht11::toXml() {
 }
 String dht11::toXml(int index) {
   return "<" + this->mesures[index].name +
-         " unit=\"+this->mesures[index].unit+\">" + String(this->read(index)) +
+         " unit=\""+this->mesures[index].unit+"\">" + String(this->read(index)) +
          "</" + this->mesures[index].name + ">";
+}
+String dht11::toHtml() {
+  String out = "<div class=\"sensor " + this->name +
+               "\"><div class=\"sensor-name\">" + this->name +
+               "</div><div class=\"sensor-mesures\">";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toHtml(i));
+  }
+  out.concat("</div></div>");
+  return out;
+}
+String dht11::toHtml(int index) {
+  return "<div class=\"sensor-mesure " + this->mesures[index].name +
+         "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
+         "</span> : <span class=\"sensor-mesure-value\">" +
+         String(this->read(index)) +
+         "</span><span class=\"sensor-mesure-unit\">" +
+         this->mesures[index].unit + "</span></div>";
 }

@@ -22,8 +22,10 @@ public:
   SensorMesureData mesuresDatas[4];
   CircularBuffer<SensorMesureData,40> mesuresBuffers[4];
   
+  size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
+  void setMesure(int index, float value);
   SensorMesureData *average(int last);
   SensorMesureData average(int last, int index);
   String toString();
@@ -34,6 +36,9 @@ public:
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String jsUtils();
+  String toHtml();
+  String toHtml(int index);
   SensorMesureData *read_();
   SensorMesureData read_(int index);
   void loop();

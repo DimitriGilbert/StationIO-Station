@@ -1,4 +1,5 @@
 #include "./Station.h"
+#include "./html.h"
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -10,20 +11,24 @@ BaseStation::BaseStation(String name) {
   this->status = BaseStation::StatusStarting;
   this->sensorCount = 0;
   this->name = name;
+  // this->serial = Serial;
   this->stationTypeName = "Arduino";
   this->log("starting...");
 }
-BaseStation::~BaseStation() {}
 
+BaseStation::~BaseStation() {}
+void BaseStation::setSerial(HardwareSerial sr) {
+  this->serial = sr;
+}
 void BaseStation::log(const String& data) {
-  Serial.println(data);
+  this->serial.println(data);
 }
 void BaseStation::logt(const String& data) {
-  Serial.println("\t" + data);
+  this->serial.println("\t" + data);
 }
 
 void BaseStation::setup() {
-  Serial.begin(9600);
+  this->serial.begin(9600);
   Wire.begin();
   this->log("\nWelcome to StationIO");
   this->logt("on " + this->stationTypeName);
@@ -69,7 +74,7 @@ void BaseStation::setupOTA() {
   ArduinoOTA.onStart([this]() {
     this->log("Starting OTA update on :");
     String type;
-    if (ArduinoOTA.getCommand() == U_FLASH){
+    if (ArduinoOTA.getCommand() == U_FLASH) {
       this->logt("sketch");
     }
     // U_SPIFFS
@@ -79,11 +84,10 @@ void BaseStation::setupOTA() {
       this->logt("\tfs unmounted");
     }
   });
-  ArduinoOTA.onEnd([this]() {
-    this->log("OTA update ended");
-  });
+  ArduinoOTA.onEnd([this]() { this->log("OTA update ended"); });
   ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) {
-    this->logt("\tOTA update progress: " + String(progress) + "/" + String(total/100));
+    this->logt("\tOTA update progress: " + String(progress) + "/" +
+               String(total / 100));
     // Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
@@ -130,17 +134,17 @@ bool BaseStation::ready(int minStatus) {
 
 void BaseStation::loop() {
   ArduinoOTA.handle();
-  
+
   for (size_t i = 0; i < this->sensorCount; i++) {
     this->sensors[i]->loop();
   }
-  
+
   for (size_t i = 0; i < this->loopCallbackCount; i++) {
     this->loopCallbacks[i](this);
   }
-  
+
   for (size_t i = 0; i < this->timerCallbackCount; i++) {
-    int ti = millis();
+    u_int ti = millis();
     if (ti >= this->timerCallbacks[i].next) {
       this->timerCallbacks[i].callback(this);
       this->timerCallbacks[i].next = ti + this->timerCallbacks[i].interval;
@@ -190,7 +194,7 @@ String BaseStation::toString() {
   return out;
 }
 String BaseStation::toString(int index) {
-  return this->sensors[index]->toString();
+  return this->getSensor(index)->toString();
 }
 String BaseStation::toCsv() {
   String out = "";
@@ -200,7 +204,7 @@ String BaseStation::toCsv() {
   return out;
 }
 String BaseStation::toCsv(int index) {
-  return this->sensors[index]->toCsv();
+  return this->getSensor(index)->toCsv();
 }
 String BaseStation::toJson() {
   String out = "{\"name\":\"" + this->name + "\",\"sensors\":{";
@@ -215,7 +219,7 @@ String BaseStation::toJson() {
   return out;
 }
 String BaseStation::toJson(int index) {
-  return this->sensors[index]->toJson();
+  return this->getSensor(index)->toJson();
 }
 String BaseStation::toXml() {
   String out = "";
@@ -225,15 +229,44 @@ String BaseStation::toXml() {
   return out;
 }
 String BaseStation::toXml(int index) {
-  return this->sensors[index]->toXml();
+  return this->getSensor(index)->toXml();
+}
+String BaseStation::toHtml() {
+  String out =
+      HtmlElt("h1",
+              "Welcome to Station " +
+                  HtmlElt("span", this->name, HtmlClass("station-name")),
+              HtmlClass("welcome"));
+  for (size_t i = 0; i < this->sensorCount; i++) {
+    out.concat(this->toHtml(i));
+  }
+  return out;
+}
+String BaseStation::toHtml(int index) {
+  return HtmlDiv(this->getSensor(index)->toHtml(),
+                 HtmlClass("station-sensor") +
+                     HtmlAttribute("sensor-index", String(index), false) +
+                     HtmlId("sensor-" + String(index)));
+}
+Sensor* BaseStation::getSensor(int index) {
+  if (index >= this->sensorCount) {
+    index = this->sensorCount - 1;
+  }
+
+  return this->sensors[index];
+}
+String BaseStation::getSensorName(int index) {
+  return this->getSensor(index)->name;
 }
 
 // ESP Staion
 EspStation::EspStation(String name) : BaseStation(name), webServer(80) {
   this->stationTypeName = "ESP";
+  this->setWifiInformation({ssid : "", password : ""});
 }
 EspStation::EspStation(String name, WifiInformation wifiInformation)
     : BaseStation(name), webServer(80) {
+  this->stationTypeName = "ESP";
   this->setWifiInformation(wifiInformation);
 }
 EspStation::~EspStation() {}
@@ -267,19 +300,73 @@ void EspStation::initWebServer() {
   this->webServer.on("/", [this](AsyncWebServerRequest* request) {
     String data;
     AsyncWebHeader* hd = request->getHeader("Accept");
-    const char * accv = hd->value().c_str();
-    if (strcmp(accv, "application/json") == 0) {
-      data = this->toJson();
-    } else if (strcmp(accv, "application/xml") == 0) {
-      data = this->toXml();
-    } else if (strcmp(accv, "text/csv") == 0) {
-      data = this->toCsv();
+    const char* accv;
+    if (request->hasParam("format")) {
+      accv = request->getParam("format")->value().c_str();
     } else {
-      data = this->toString();
-      accv = "text/plain";
+      accv = hd->value().c_str();
     }
 
+    if (request->hasParam("sensor")) {
+      int sid = request->getParam("sensor")->value().toInt();
+      if (sid < this->sensorCount) {
+        if (request->hasParam("mesure")) {
+          int mesureid = request->getParam("mesure")->value().toInt();
+          if (strcmp(accv, "application/json") == 0) {
+            data = this->sensors[sid]->toJson(mesureid);
+          } else if (strcmp(accv, "application/xml") == 0) {
+            data = this->sensors[sid]->toXml(mesureid);
+          } else if (strcmp(accv, "text/csv") == 0) {
+            data = this->sensors[sid]->toCsv(mesureid);
+          } else if (strcmp(accv, "text/plain") == 0) {
+            data = this->sensors[sid]->toString(mesureid);
+          } else if (strcmp(accv, "text/raw") == 0) {
+            data = String(this->sensors[sid]->read(mesureid));
+          } else {
+            data = this->sensors[sid]->toHtml(mesureid);
+            accv = "text/html";
+          }
+        } else {
+          if (strcmp(accv, "application/json") == 0) {
+            data = this->sensors[sid]->toJson();
+          } else if (strcmp(accv, "application/xml") == 0) {
+            data = this->sensors[sid]->toXml();
+          } else if (strcmp(accv, "text/csv") == 0) {
+            data = this->sensors[sid]->toCsv();
+          } else if (strcmp(accv, "text/plain") == 0) {
+            data = this->sensors[sid]->toString();
+          } else {
+            data = this->sensors[sid]->toHtml();
+            accv = "text/html";
+          }
+        }
+      }
+    } else {
+      if (strcmp(accv, "application/json") == 0) {
+        data = this->toJson();
+      } else if (strcmp(accv, "application/xml") == 0) {
+        data = this->toXml();
+      } else if (strcmp(accv, "text/csv") == 0) {
+        data = this->toCsv();
+      } else if (strcmp(accv, "text/plain") == 0) {
+        data = this->toString();
+      } else {
+        data = this->toHtml();
+        accv = "text/html";
+      }
+    }
+
+    // if (strcmp(data.c_str(), "") == 0) {
+    //   data = this->toString();
+    //   accv = "text/plain";
+    // }
+
     request->send(200, accv, data);
+  });
+  this->webServer.on("/fancy", [this](AsyncWebServerRequest* request) {
+    String data = commonHtmlHeader(this->name + " : recap</title>") +
+                  commonBody(this->toHtml() + commonJs()) + "</html>";
+    request->send(200, "text/html", data);
   });
 }
 
@@ -309,23 +396,42 @@ void EspStation::connectWifi(WifiInformation wifiInformation) {
 }
 
 void EspStation::connectWifi() {
-  if (this->ready(EspStation::StatusConnecting) &&
-      this->wifi.status() != WL_CONNECTED &&
-      strlen(this->wifiInformation.ssid) > 0 &&
+  if (strlen(this->wifiInformation.ssid) > 0 &&
       strlen(this->wifiInformation.password) > 0) {
-    this->log("Wifi :");
-    this->logt("connecting to " + String(this->wifiInformation.ssid));
-    this->wifi.begin(this->wifiInformation.ssid,
-                     this->wifiInformation.password);
-    if (this->wifi.waitForConnectResult() != WL_CONNECTED) {
-      this->status = EspStation::StatusError;
-      this->error = EspStation::ErrorWifiConnection;
-      this->logt("connection failed ! error : " + String(this->wifi.status()));
-    } else {
-      this->status = EspStation::StatusConnected;
-      this->logt("connected as " + String(this->wifi.localIP().toString()));
+    if (this->ready(EspStation::StatusConnecting) &&
+        this->wifi.status() != WL_CONNECTED) {
+      this->log("Wifi :");
+      this->logt("connecting to " + String(this->wifiInformation.ssid));
+      this->wifi.begin(this->wifiInformation.ssid,
+                       this->wifiInformation.password);
+      if (this->wifi.waitForConnectResult() != WL_CONNECTED) {
+        this->status = EspStation::StatusError;
+        this->error = EspStation::ErrorWifiConnection;
+        this->logt("connection failed ! error : " +
+                   String(this->wifi.status()));
+      } else {
+        this->status = EspStation::StatusConnected;
+        this->logt("connected as " + String(this->wifi.localIP().toString()));
+      }
+    }
+  } else {
+    this->status = EspStation::StatusReady;
+  }
+}
+
+String EspStation::scanWifi() {
+  String out = "";
+  if (this->wifi.status() != WL_CONNECTED) {
+    byte available_networks = this->wifi.scanNetworks();
+
+    for (int network = 0; network < available_networks; network++) {
+      out.concat(this->wifi.SSID(network));
+      out.concat(" : ");
+      out.concat(this->wifi.RSSI(network));
+      out.concat("\n");
     }
   }
+  return out;
 }
 
 void EspStation::serve() {
@@ -333,8 +439,13 @@ void EspStation::serve() {
 }
 
 void EspStation::serveWeb() {
-  this->initWebServer();
-  this->webServer.begin();
+  // if (this->ready(EspStation::StatusReady) &&
+  if (this->wifi.status() == WL_CONNECTED &&
+      strlen(this->wifiInformation.ssid) > 0 &&
+      strlen(this->wifiInformation.password) > 0) {
+    this->initWebServer();
+    this->webServer.begin();
+  }
 }
 #ifdef ESP32
 // ESP32

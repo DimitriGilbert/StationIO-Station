@@ -30,6 +30,8 @@ public:
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String toHtml();
+  String toHtml(int index);
   SensorMesureData *read_();
   SensorMesureData read_(int index);
   void loop();

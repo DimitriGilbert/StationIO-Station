@@ -1,6 +1,7 @@
-#include <Arduino.h>
-
 #include "./bme280.h"
+
+#include <Arduino.h>
+#include <html.h>
 
 bme280::bme280() : Sensor("bme280") {
   this->bme.begin() || this->bme.begin(0x76)
@@ -31,6 +32,7 @@ const u_int* bme280::mesuresSampleRates[4] = {
     (const u_int*)60000,
 };
 
+size_t bme280::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* bme280::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     this->mesuresDatas[i] = this->read_(i);
@@ -69,7 +71,10 @@ Sensor::SensorMesureData bme280::read_(int index) {
   }
   return this->read_(0);
 }
-
+void bme280::setMesure(int index, float value) {
+  this->mesuresDatas[index] = value;
+  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+}
 void bme280::loop() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     if (millis() - this->mesuresSampleLast[i] >
@@ -79,9 +84,7 @@ void bme280::loop() {
   }
 }
 
-Sensor::SensorMesureData* bme280::read() {
-  return this->mesuresDatas;
-}
+Sensor::SensorMesureData* bme280::read() { return this->mesuresDatas; }
 
 Sensor::SensorMesureData bme280::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
@@ -159,7 +162,32 @@ String bme280::toXml() {
   return out;
 }
 String bme280::toXml(int index) {
-  return "<" + this->mesures[index].name +
-         " unit=\"+this->mesures[index].unit+\">" + String(this->read(index)) +
-         "</" + this->mesures[index].name + ">";
+  return "<" + this->mesures[index].name + " unit=\"" +
+         this->mesures[index].unit + "\">" + String(this->read(index)) + "</" +
+         this->mesures[index].name + ">";
+}
+String bme280::jsUtils() {
+  return HtmlElt(
+      "script",
+      "const bme280_utils = {format_pressure: (val) => parseFloat(val) / "
+      "100,inChart: (name) => name != '',};"
+  );
+}
+String bme280::toHtml() {
+  String out = "<div class=\"sensor " + this->name +
+               "\"><div class=\"sensor-name\">" + this->name +
+               "</div><div class=\"sensor-mesures\">";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toHtml(i));
+  }
+  out.concat("</div></div>"+this->jsUtils());
+  return out;
+}
+String bme280::toHtml(int index) {
+  return "<div class=\"sensor-mesure " + this->mesures[index].name +
+         "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
+         "</span> : <span class=\"sensor-mesure-value\">" +
+         String(this->read(index)) +
+         "</span><span class=\"sensor-mesure-unit\">" +
+         this->mesures[index].unit + "</span></div>";
 }

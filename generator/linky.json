@@ -3,11 +3,11 @@
   "includes":["<LibTeleinfo.h>"],
   "sensorInitializer": {
     "params": "",
-    "body": "this->bme.begin() || this->bme.begin(0x76)? this->status = Sensor::StatusReady: (this->status = Sensor::StatusReady)&&(this->error = Sensor::ErrorNotFound);"
+    "body": "this->lnk.init();"
   },
   "properties": {
     "private": [{
-      "name": "linky",
+      "name": "lnk",
       "type": "TInfo"
     }]
   },
@@ -17,25 +17,25 @@
     "unit":"w",
     "sampleRate":"5000",
     "delayFirst":"10000",
-    "body": "char * value;this->linky->getValue(\"HCHP\", value);"
+    "body": "char * value;this->lnk.getValue(\"HCHP\", value);"
   },{
     "name": "hc",
     "unit": "W",
     "sampleRate": "5000",
     "delayFirst": "10000",
-    "body": "char * value;this->linky->getValue(\"HCHC\", value);"
+    "body": "char * value;this->lnk.getValue(\"HCHC\", value);"
   },{
     "name": "tarif",
     "unit": "",
     "sampleRate": "5000",
     "delayFirst": "10000",
-    "body": "char * value;this->linky->getValue(\"PETC\", value);"
+    "body": "char * value;this->lnk.getValue(\"PETC\", value);"
   },{
     "name": "power",
     "unit": "va",
     "sampleRate": "5000",
     "delayFirst": "10000",
-    "body": "char * value;this->linky->getValue(\"PAPP\", value);"
+    "body": "char * value;this->lnk.getValue(\"PAPP\", value);"
   }],
   "mesuresDefault":[0],
   "mesuresBufferSize": 40
