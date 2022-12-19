@@ -1,10 +1,11 @@
 #include "./Station.h"
-#include "./html.h"
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
+
+#include "./html.h"
 
 // Base Station
 BaseStation::BaseStation(String name) {
@@ -17,12 +18,8 @@ BaseStation::BaseStation(String name) {
 }
 
 BaseStation::~BaseStation() {}
-void BaseStation::setSerial(HardwareSerial sr) {
-  this->serial = sr;
-}
-void BaseStation::log(const String& data) {
-  this->serial.println(data);
-}
+void BaseStation::setSerial(HardwareSerial sr) { this->serial = sr; }
+void BaseStation::log(const String& data) { this->serial.println(data); }
 void BaseStation::logt(const String& data) {
   this->serial.println("\t" + data);
 }
@@ -45,28 +42,31 @@ void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
   }
 }
 
-void BaseStation::setupLoopCallback(StationCallback_t* loopCallbacks,
-                                    int loopCallbackCount) {
+void BaseStation::setupLoopCallback(
+    StationCallback_t* loopCallbacks, int loopCallbackCount
+) {
   this->loopCallbacks = loopCallbacks;
   this->loopCallbackCount = loopCallbackCount;
   this->log("Loop calback :" + String(loopCallbackCount));
 }
 
-void BaseStation::setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
-                                     int timerCallbackCount) {
+void BaseStation::setupTimerCallback(
+    StationCallbackTimer_t* timerCallbacks, int timerCallbackCount
+) {
   this->setupTimerCallback(timerCallbacks, timerCallbackCount, 0);
 }
 
-void BaseStation::setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
-                                     int timerCallbackCount,
-                                     int delay) {
+void BaseStation::setupTimerCallback(
+    StationCallbackTimer_t* timerCallbacks, int timerCallbackCount, int delay
+) {
   this->timerCallbacks = timerCallbacks;
   this->timerCallbackCount = timerCallbackCount;
   this->log("Timer callbacks :" + String(timerCallbackCount));
   for (size_t i = 0; i < timerCallbackCount; i++) {
-    this->logt(String(i) + " -> every " +
-               String(this->timerCallbacks[i].interval) + " in " +
-               String(this->timerCallbacks[i].next));
+    this->logt(
+        String(i) + " -> every " + String(this->timerCallbacks[i].interval) +
+        " in " + String(this->timerCallbacks[i].next)
+    );
   }
 }
 
@@ -86,8 +86,9 @@ void BaseStation::setupOTA() {
   });
   ArduinoOTA.onEnd([this]() { this->log("OTA update ended"); });
   ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) {
-    this->logt("\tOTA update progress: " + String(progress) + "/" +
-               String(total / 100));
+    this->logt(
+        "\tOTA update progress: " + String(progress) + "/" + String(total / 100)
+    );
     // Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
@@ -112,25 +113,23 @@ void BaseStation::setup(Sensor** sensors, int sensorCount) {
   this->setupSensors(sensors, sensorCount);
 }
 
-void BaseStation::setup(StationCallback_t* loopCallbacks,
-                        int loopCallbackCount) {
+void BaseStation::setup(
+    StationCallback_t* loopCallbacks, int loopCallbackCount
+) {
   this->setup();
   this->setupLoopCallback(loopCallbacks, loopCallbackCount);
 }
 
-void BaseStation::setup(StationCallbackTimer_t* timerCallbacks,
-                        int timerCallbackCount) {
+void BaseStation::setup(
+    StationCallbackTimer_t* timerCallbacks, int timerCallbackCount
+) {
   this->setup();
   this->setupTimerCallback(timerCallbacks, timerCallbackCount);
 }
 
-bool BaseStation::ready() {
-  return this->ready(BaseStation::StatusReady);
-}
+bool BaseStation::ready() { return this->ready(BaseStation::StatusReady); }
 
-bool BaseStation::ready(int minStatus) {
-  return this->status >= minStatus;
-}
+bool BaseStation::ready(int minStatus) { return this->status >= minStatus; }
 
 void BaseStation::loop() {
   ArduinoOTA.handle();
@@ -167,15 +166,13 @@ I2CScan BaseStation::scanI2C() {
 
     if (error == 0) {
       devices.concat("0x");
-      if (address < 16)
-        devices.concat("0");
+      if (address < 16) devices.concat("0");
       devices.concat(String(address, HEX));
       devices.concat("\n");
       nDevices++;
     } else if (error == 4) {
       errors.concat("error @ 0x");
-      if (address < 16)
-        errors.concat("0");
+      if (address < 16) errors.concat("0");
       errors.concat(String(address, HEX));
     }
   }
@@ -203,9 +200,7 @@ String BaseStation::toCsv() {
   }
   return out;
 }
-String BaseStation::toCsv(int index) {
-  return this->getSensor(index)->toCsv();
-}
+String BaseStation::toCsv(int index) { return this->getSensor(index)->toCsv(); }
 String BaseStation::toJson() {
   String out = "{\"name\":\"" + this->name + "\",\"sensors\":{";
   for (size_t i = 0; i < this->sensorCount; i++) {
@@ -228,25 +223,25 @@ String BaseStation::toXml() {
   }
   return out;
 }
-String BaseStation::toXml(int index) {
-  return this->getSensor(index)->toXml();
-}
+String BaseStation::toXml(int index) { return this->getSensor(index)->toXml(); }
 String BaseStation::toHtml() {
-  String out =
-      HtmlElt("h1",
-              "Welcome to Station " +
-                  HtmlElt("span", this->name, HtmlClass("station-name")),
-              HtmlClass("welcome"));
+  String out = HtmlElt(
+      "h1",
+      "Welcome to Station " +
+          HtmlElt("span", this->name, HtmlClass("station-name")),
+      HtmlClass("welcome")
+  );
   for (size_t i = 0; i < this->sensorCount; i++) {
     out.concat(this->toHtml(i));
   }
   return out;
 }
 String BaseStation::toHtml(int index) {
-  return HtmlDiv(this->getSensor(index)->toHtml(),
-                 HtmlClass("station-sensor") +
-                     HtmlAttribute("sensor-index", String(index), false) +
-                     HtmlId("sensor-" + String(index)));
+  return HtmlDiv(
+      this->getSensor(index)->toHtml(),
+      HtmlClass("stSn") + HtmlAttribute("sn-i", String(index), false) +
+          HtmlId("sensor-" + String(index))
+  );
 }
 Sensor* BaseStation::getSensor(int index) {
   if (index >= this->sensorCount) {
@@ -288,9 +283,7 @@ void EspStation::setup(Sensor** sensors, int sensorCount) {
   this->serve();
 }
 
-void EspStation::connect() {
-  this->connectWifi();
-}
+void EspStation::connect() { this->connectWifi(); }
 
 void EspStation::initWebServer() {
   this->log("Web Server :");
@@ -335,6 +328,14 @@ void EspStation::initWebServer() {
             data = this->sensors[sid]->toCsv();
           } else if (strcmp(accv, "text/plain") == 0) {
             data = this->sensors[sid]->toString();
+          } else if (strcmp(accv, "raw") == 0) {
+            size_t tdataSize = this->sensors[sid]->getMesuresCount();
+            for (size_t i = 0; i < tdataSize; i++) {
+              data.concat(String(this->sensors[sid]->read(i)));
+              if (i < tdataSize - 1) {
+                data.concat("\n");
+              }
+            }
           } else {
             data = this->sensors[sid]->toHtml();
             accv = "text/html";
@@ -356,36 +357,115 @@ void EspStation::initWebServer() {
       }
     }
 
-    // if (strcmp(data.c_str(), "") == 0) {
-    //   data = this->toString();
-    //   accv = "text/plain";
-    // }
-
     request->send(200, accv, data);
+  });
+  this->webServer.on("/average", [this](AsyncWebServerRequest* request) {
+    String data;
+    if (!request->hasParam("sensor")) {
+      request->send(400, "text/plain", "Bad Request, missing sensor id");
+    } else if (!request->hasParam("mesure")) {
+      request->send(400, "text/plain", "Bad Request, missing mesure id");
+    } else if (!request->hasParam("count")) {
+      request->send(400, "text/plain", "Bad Request, missing count");
+    } else {
+      data = String(
+          this->sensors[request->getParam("sensor")->value().toInt()]->average(
+              request->getParam("count")->value().toInt(),
+              request->getParam("mesure")->value().toInt()
+          )
+      );
+      request->send(200, "text/plain", data);
+    }
+  });
+  this->webServer.on("/buffer", [this](AsyncWebServerRequest* request) {
+    String data;
+    if (!request->hasParam("sensor")) {
+      request->send(400, "text/plain", "Bad Request, missing sensor id");
+    } else if (!request->hasParam("mesure")) {
+      request->send(400, "text/plain", "Bad Request, missing mesure id");
+    } else if (!request->hasParam("count")) {
+      request->send(400, "text/plain", "Bad Request, missing count");
+    } else {
+      int msi = request->getParam("mesure")->value().toInt();
+      int cnt = request->getParam("count")->value().toInt();
+      Sensor* sn =
+          this->getSensor(request->getParam("sensor")->value().toInt());
+      // String msn = sn->getMesureName(msi);
+      String msn = "mesure";
+
+      String accv = "text/plain";
+      if (request->hasParam("format")) {
+        accv = request->getParam("format")->value();
+      } else {
+        accv = request->getHeader("Accept")->value();
+      }
+
+      if (accv == "application/json") {
+        data.concat("[");
+      } else if (accv == "application/xml") {
+        data.concat("<buffer>");
+      }
+      
+      for (int i = 0; i < cnt; i++) {
+        if (accv == "application/json") {
+          data.concat(String(sn->readBuffer(msi, i)));
+          if (i < cnt - 1) {
+            data.concat(",");
+          }
+        } else if (accv == "application/xml") {
+          data.concat(
+              "<" + msn + ">" + String(sn->readBuffer(msi, i)) + "</" + msn +
+              ">"
+          );
+        } else {
+          data.concat(String(sn->readBuffer(msi, i)) + "\n");
+        }
+      }
+      if (accv == "application/json") {
+        data.concat("]");
+      } else if (accv == "application/xml") {
+        data.concat("</buffer>");
+      }
+
+      request->send(200, accv, data);
+    }
   });
   this->webServer.on("/fancy", [this](AsyncWebServerRequest* request) {
     String data = commonHtmlHeader(this->name + " : recap</title>") +
-                  commonBody(this->toHtml() + commonJs()) + "</html>";
+                  commonBody(this->toHtml()) + "</html>";
     request->send(200, "text/html", data);
+  });
+  this->webServer.on("/js", [this](AsyncWebServerRequest* request) {
+    request->send(200, "application/javascript", commonJs());
+  });
+  this->webServer.on("/css", [this](AsyncWebServerRequest* request) {
+    request->send(200, "text/css", commonCss());
   });
 }
 
-void EspStation::setupWebServer(StationWebCallbackInfo_t** routes,
-                                int callbackCount) {
+void EspStation::setupWebServer(
+    StationWebCallbackInfo_t** routes, int callbackCount
+) {
   if (this->wifi.status() == WL_CONNECTED) {
     this->initWebServer();
     for (size_t i = 0; i < callbackCount; i++) {
-      this->webServer.on(routes[i]->route, [this, routes,
-                                            i](AsyncWebServerRequest* request) {
-        if (strcmp(routes[i]->login, "") != 0) {
-          if (!request->authenticate(routes[i]->login, routes[i]->password)) {
-            this->log("Web Server : \n\tAuthentication failed on " +
-                      String(routes[i]->route));
-            request->requestAuthentication();
+      this->webServer.on(
+          routes[i]->route,
+          [this, routes, i](AsyncWebServerRequest* request) {
+            if (strcmp(routes[i]->login, "") != 0) {
+              if (!request->authenticate(
+                      routes[i]->login, routes[i]->password
+                  )) {
+                this->log(
+                    "Web Server : \n\tAuthentication failed on " +
+                    String(routes[i]->route)
+                );
+                request->requestAuthentication();
+              }
+            }
+            routes[i]->callback(this, request);
           }
-        }
-        routes[i]->callback(this, request);
-      });
+      );
     }
   }
 }
@@ -402,13 +482,15 @@ void EspStation::connectWifi() {
         this->wifi.status() != WL_CONNECTED) {
       this->log("Wifi :");
       this->logt("connecting to " + String(this->wifiInformation.ssid));
-      this->wifi.begin(this->wifiInformation.ssid,
-                       this->wifiInformation.password);
+      this->wifi.begin(
+          this->wifiInformation.ssid, this->wifiInformation.password
+      );
       if (this->wifi.waitForConnectResult() != WL_CONNECTED) {
         this->status = EspStation::StatusError;
         this->error = EspStation::ErrorWifiConnection;
-        this->logt("connection failed ! error : " +
-                   String(this->wifi.status()));
+        this->logt(
+            "connection failed ! error : " + String(this->wifi.status())
+        );
       } else {
         this->status = EspStation::StatusConnected;
         this->logt("connected as " + String(this->wifi.localIP().toString()));
@@ -434,9 +516,7 @@ String EspStation::scanWifi() {
   return out;
 }
 
-void EspStation::serve() {
-  this->serveWeb();
-}
+void EspStation::serve() { this->serveWeb(); }
 
 void EspStation::serveWeb() {
   // if (this->ready(EspStation::StatusReady) &&

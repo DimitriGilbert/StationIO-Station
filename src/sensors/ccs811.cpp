@@ -92,6 +92,11 @@ Sensor::SensorMesureData ccs811::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
 }
 
+Sensor::SensorMesureData ccs811::readBuffer(int index, int bufferIndex) {
+  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
+  return this->mesuresBuffers[index][bufferIndex];
+}
+
 Sensor::SensorMesureData* ccs811::average(int last) {
   Sensor::SensorMesureData data[this->mesuresCount];
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -116,7 +121,7 @@ Sensor::SensorMesureData ccs811::average(int last, int index) {
   for (size_t i = 0; i < last; i++) {
     data = data + this->mesuresBuffers[index][i];
   }
-  return data / last;
+  return data / float(last);
 }
 
 String ccs811::toString() {
@@ -170,8 +175,8 @@ String ccs811::toXml(int index) {
 }
 String ccs811::toHtml() {
   String out = "<div class=\"sensor " + this->name +
-               "\"><div class=\"sensor-name\">" + this->name +
-               "</div><div class=\"sensor-mesures\">";
+               "\"><div class=\"snName\">" + this->name +
+               "</div><div class=\"snMss\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
@@ -179,10 +184,10 @@ String ccs811::toHtml() {
   return out;
 }
 String ccs811::toHtml(int index) {
-  return "<div class=\"sensor-mesure " + this->mesures[index].name +
-         "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"sensor-mesure-value\">" +
+  return "<div class=\"snMs " + this->mesures[index].name +
+         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
+         "</span> : <span class=\"snMs-value\">" +
          String(this->read(index)) +
-         "</span><span class=\"sensor-mesure-unit\">" +
+         "</span><span class=\"snMs-unit\">" +
          this->mesures[index].unit + "</span></div>";
 }

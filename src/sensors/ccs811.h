@@ -25,6 +25,7 @@ public:
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
+  SensorMesureData readBuffer(int index, int bufferIndex);
   void setMesure(int index, float value);
   SensorMesureData *average(int last);
   SensorMesureData average(int last, int index);

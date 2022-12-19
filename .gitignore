@@ -6,5 +6,5 @@
 node_modules
 src/main.cpp
 configs/
-src/*main.cpp.bak
-src/*main.cpp.test.bak
+src/**/*main.cpp.bak
+src/**/*main.cpp.test.bak

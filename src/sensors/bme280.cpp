@@ -90,6 +90,11 @@ Sensor::SensorMesureData bme280::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
 }
 
+Sensor::SensorMesureData bme280::readBuffer(int index, int bufferIndex) {
+  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
+  return this->mesuresBuffers[index][bufferIndex];
+}
+
 Sensor::SensorMesureData* bme280::average(int last) {
   Sensor::SensorMesureData data[this->mesuresCount];
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -114,7 +119,7 @@ Sensor::SensorMesureData bme280::average(int last, int index) {
   for (size_t i = 0; i < last; i++) {
     data = data + this->mesuresBuffers[index][i];
   }
-  return data / last;
+  return data / float(last);
 }
 
 String bme280::toString() {
@@ -175,19 +180,18 @@ String bme280::jsUtils() {
 }
 String bme280::toHtml() {
   String out = "<div class=\"sensor " + this->name +
-               "\"><div class=\"sensor-name\">" + this->name +
-               "</div><div class=\"sensor-mesures\">";
+               "\"><div class=\"snName\">" + this->name +
+               "</div><div class=\"snMss\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
-  out.concat("</div></div>"+this->jsUtils());
+  out.concat("</div></div>" + this->jsUtils());
   return out;
 }
 String bme280::toHtml(int index) {
-  return "<div class=\"sensor-mesure " + this->mesures[index].name +
-         "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"sensor-mesure-value\">" +
-         String(this->read(index)) +
-         "</span><span class=\"sensor-mesure-unit\">" +
-         this->mesures[index].unit + "</span></div>";
+  return "<div class=\"snMs " + this->mesures[index].name +
+         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
+         "</span> : <span class=\"snMs-value\">" + String(this->read(index)) +
+         "</span><span class=\"snMs-unit\">" + this->mesures[index].unit +
+         "</span></div>";
 }

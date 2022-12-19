@@ -28,5 +28,5 @@ Sensor::SensorMesureData Sensor::__average(
   for (size_t i = 0; i < last; i++) {
     data = data + buffers[index][i];
   }
-  return data / last;
+  return data / float(last);
 }

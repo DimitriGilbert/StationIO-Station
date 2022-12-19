@@ -36,87 +36,98 @@ String HtmlInput(String attributes) {
 String HtmlInput() { return HtmlElt("input", "", "", true); }
 
 String commonCss() {
-  return HtmlElt(
-             "link", "",
-             HtmlAttribute("rel", "stylesheet") +
-                 HtmlAttribute(
-                     "href",
-                     "https://cdn.jsdelivr.net/npm/purecss@3.0.0/"
-                     "build/pure-min.css"
-                 ) +
-                 HtmlAttribute("crossorigin", "anonymous")
-         ) +
-         HtmlElt(
-             "style",
-             "body{background-color:rgb(13, 17, 23);color:rgb(201, 209, "
-             "217)}.sensor-mesure-value,.sensor-name{font-weight:700}."
-             "welcome{font-size:2rem;text-align:center;}.welcome>.station-"
-             "name{font-weight::bold;font-style:italic}.sensor-name{font-"
-             "size:1.5rem}.station-sensor{width:33%;margin:0 "
-             "auto;}.sensor-mesure{margin-left:1rem}",
-             ""
-         );
+  return "body{background-color:rgb(13, 17, 23);color:rgb(201, 209, "
+         "217)}.snMs-value,.snName{font-weight:700}."
+         "welcome{font-size:2rem;text-align:center;}.welcome>.station-"
+         "name{font-weight::bold;font-style:italic}.snName{font-"
+         "size:1.5rem}.stSn{width:33%;margin:0 "
+         "auto;}.snMs{margin-left:1rem}";
 }
 
 String commonJs() {
-  return "<script>function "
-         "setUpdatable(){document.querySelectorAll(\".station-sensor\")."
-         "forEach(e=>{e.firstElementChild.firstElementChild.onclick=e=>{let "
+  return "function "
+         "setUpdatable(){document.querySelectorAll(\".stSn\").forEach(e=>{e."
+         "firstElementChild.firstElementChild.onclick=e=>{let "
          "t=e.target.parentNode.parentNode;fetch(\"/"
-         "?sensor=\"+t.getAttribute(\"sensor-index\"),{headers:{Accept:\"text/"
+         "?sensor=\"+t.getAttribute(\"sn-i\"),{headers:{Accept:\"text/"
          "html\"},method:\"GET\"}).then(e=>{e.text().then(e=>{t.innerHTML=e,"
          "setUpdatable()})})};e.firstElementChild.lastElementChild.childNodes."
          "forEach((e,t)=>{e.onclick=e=>{fetch(\"/"
          "?sensor=\"+e.target.parentNode.parentNode.parentNode.parentNode."
-         "getAttribute(\"sensor-index\")+\"&mesure=\"+t,{headers:{Accept:"
-         "\"text/"
+         "getAttribute(\"sn-i\")+\"&mesure=\"+t,{headers:{Accept:\"text/"
          "html\"},method:\"GET\"}).then(t=>{t.text().then(t=>{e.target."
          "parentNode.innerHTML=t,setUpdatable()})})}})})}function "
+         "mkDateLabel(){let e=new "
+         "Date(Date.now());return(10>e.getHours()?\"0\":\"\")+e.getHours()+\":"
+         "\"+(10>e.getMinutes()?\"0\":\"\")+e.getMinutes()+\":\"+(10>e."
+         "getSeconds()?\"0\":\"\")+e.getSeconds()}function "
          "getStationData(){return "
          "fetch(\"/?format=application/json\",{headers:{Accept:\"application/"
-         "json\"},method:\"GET\"})}function initChart(){let "
+         "json\"},method:\"GET\"})}function existsSensorUtils(sensorName){let "
+         "utils=!1;return eval(\"if(typeof \"+sensorName+'_utils !== "
+         "\"undefined\"){utils='+sensorName+\"_utils}\"),utils}function "
+         "formatSensorMesure(e,t,n){let s=existsSensorUtils(e);return "
+         "s&&Object.hasOwnProperty.call(s,\"format_\"+t)?s[\"format_\"+t](n):n}"
+         "function sensorMesureInChart(e,t){let "
+         "n=existsSensorUtils(e);return!(n&&Object.hasOwnProperty.call(n,"
+         "\"inChart\")&&!n.inChart(t))}function initChart(){let "
          "e=document.getElementsByTagName(\"body\")[0],t=document."
          "createElement(\"script\");t.setAttribute(\"src\",\"https://"
          "cdn.jsdelivr.net/npm/chart.js\"),e.appendChild(t);let "
-         "a=document.createElement(\"canvas\");a.setAttribute(\"id\",\"station-"
-         "chart\"),a=e.appendChild(a);let "
-         "n={labels:[],type:\"line\",data:{}};getStationData().then(e=>{let "
-         "t=new "
-         "Date(Date.now());n.labels.push(t.getHours()+\":\"+t.getMinutes()+\":"
-         "\"+t.getSeconds()),e.json().then(e=>{let t=[];for(let s in "
-         "e.sensors)if(Object.hasOwnProperty.call(e.sensors,s)){let "
-         "r=e.sensors[s];for(let l in "
+         "n=document.createElement(\"canvas\");n.setAttribute(\"id\",\"station-"
+         "chart\"),n=e.appendChild(n);let "
+         "s={labels:[],type:\"line\",data:{}};getStationData().then(e=>{s."
+         "labels.push(mkDateLabel()),e.json().then(e=>{let "
+         "t=[],a=[],r={},l=\"left\";for(let o in "
+         "e.sensors)if(Object.hasOwnProperty.call(e.sensors,o)){let "
+         "i=e.sensors[o];for(let d in "
+         "i)Object.hasOwnProperty.call(i,d)&&sensorMesureInChart(o,d)&&(t.push("
+         "{label:o+\"::\"+d,data:[formatSensorMesure(o,d,i[d]),],yAxisID:d,"
+         "pointRadius:1,pointHoverRadius:3}),a.includes(d)||(a.push(d),r[d]={"
+         "id:d,type:\"linear\",position:l},l=\"left\"===l?\"right\":\"left\"))}"
+         "s.data.datasets=t,s.options={responsive:!0,scales:r};let h=new "
+         "Chart(n,s);setTimeout(()=>{updateChart(h,22)},1e4)})})}function "
+         "updateChart(e,t){getStationData().then(n=>{e.data.labels.push("
+         "mkDateLabel()),n.json().then(n=>{let s=0;for(let a in "
+         "n.sensors)if(Object.hasOwnProperty.call(n.sensors,a)){let "
+         "r=n.sensors[a];for(let l in "
          "r)if(Object.hasOwnProperty.call(r,l)){let "
-         "o=r[l];t.push({label:`${s}::${l}`,data:[o],yAxisID:l})}}n.data."
-         "datasets=t;let i=new "
-         "Chart(a,n);setTimeout(()=>{updateChart(i,22)},1e4)}).catch(e=>{"
-         "console.error(e)})}).catch(e=>{console.error(e)})}function "
-         "updateChart(e,t){getStationData().then(a=>{let n=new "
-         "Date(Date.now());e.data.labels.push(n.getHours()+\":\"+n.getMinutes()"
-         "+\":\"+n.getSeconds()),a.json().then(a=>{let n=0;for(let s in "
-         "a.sensors)if(Object.hasOwnProperty.call(a.sensors,s)){let "
-         "r=a.sensors[s];for(let l in "
-         "r){if(Object.hasOwnProperty.call(r,l)){let "
-         "o=r[l];e.data.datasets[n].data.push(o),document.querySelectorAll(`."
-         "sensor.${s}>.sensor-mesures>.sensor-mesure.${l}>.sensor-mesure-value`"
-         ")[0].innerHTML=o}n++}}e.update(\"active\"),t>0&&setTimeout(()=>{"
-         "updateChart(e,t)},1e3*t)}).catch(e=>{console.error(e)})}).catch(e=>{"
-         "console.error(e)})}setTimeout(setUpdatable,250),setTimeout(()=>{"
-         "initChart()},1500);</script>";
+         "o=formatSensorMesure(a,l,r[l]);sensorMesureInChart(a,l)&&(e.data."
+         "datasets[s].data.push(o),s++),document.querySelectorAll(\".sensor.\"+"
+         "a+\">.snMss>.snMs.\"+l+\">.snMs-value\")[0].innerHTML=o}}e.update("
+         "\"active\"),t>0&&setTimeout(()=>{updateChart(e,t)},1e3*t)})})}"
+         "setTimeout(setUpdatable,250),setTimeout(()=>{initChart()},500);";
 }
 
-String commonBody(String body) { return "<body>" + body + "</body>"; }
+String commonBody(String body) {
+  return "<body>" + body + "</body><script src=\"/js\"></script>";
+}
 
 String commonHtmlHeader(String title) {
   return "<!DOCTYPE html><html>" +
          HtmlElt(
-             "head", HtmlElt(
-                         "meta", "",
+             "head",
+             HtmlElt(
+                 "meta", "",
+                 HtmlAttribute(
+                     "content", "width=device-width, initial-scale=1"
+                 ),
+                 true
+             ) + HtmlElt("title", title) +
+                 HtmlElt(
+                     "link", "",
+                     HtmlAttribute("rel", "stylesheet") +
                          HtmlAttribute(
-                             "content", "width=device-width, initial-scale=1"
-                         ),
-                         true
-                     ) + HtmlElt("title", title) +
-                         commonCss()
+                             "href",
+                             "https://cdn.jsdelivr.net/npm/purecss@3.0.0/"
+                             "build/pure-min.css"
+                         ) +
+                         HtmlAttribute("crossorigin", "anonymous")
+                 ) +
+                 HtmlElt(
+                     "link", "",
+                     HtmlAttribute("rel", "stylesheet") +
+                         HtmlAttribute("href", "/css")
+                 )
          );
 }

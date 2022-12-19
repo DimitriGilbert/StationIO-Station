@@ -85,7 +85,7 @@ Sensor::SensorMesureData <%= it.sensorName %>::average(int last, int index) {
   for (size_t i = 0; i < last; i++) {
     data = data + this->mesuresBuffers[index][i];
   }
-  return data / last;
+  return data / float(last);
 }
 
 String <%= it.sensorName %>::toString() {
@@ -137,8 +137,8 @@ String <%= it.sensorName %>::toXml(int index) {
 
 String <%= it.sensorName %>::toHtml() {
   String out = "<div class=\"sensor " + this->name +
-               "\"><div class=\"sensor-name\">" + this->name +
-               "</div><div class=\"sensor-mesures\">";
+               "\"><div class=\"snName\">" + this->name +
+               "</div><div class=\"snMss\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
@@ -146,10 +146,10 @@ String <%= it.sensorName %>::toHtml() {
   return out;
 }
 String <%= it.sensorName %>::toHtml(int index) {
-  return "<div class=\"sensor-mesure " + this->mesures[index].name +
-         "\"><span class=\"sensor-mesure-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"sensor-mesure-value\">" +
+  return "<div class=\"snMs " + this->mesures[index].name +
+         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
+         "</span> : <span class=\"snMs-value\">" +
          String(this->read(index)) +
-         "</span><span class=\"sensor-mesure-unit\">" +
+         "</span><span class=\"snMs-unit\">" +
          this->mesures[index].unit + "</span></div>";
 }

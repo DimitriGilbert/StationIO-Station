@@ -1,16 +1,16 @@
 #include <Arduino.h>
+#include <HTU2xD_SHT2x_Si70xx.h>
+
 #include "../Sensor.h"
- 
-#include <HTU2xD_SHT2x_Si70xx.h>  
 
 #ifndef StationIOSensor_sht21_h
 #define StationIOSensor_sht21_h
 
-class sht21 : public Sensor
-{
-private: 
-  HTU2xD_SHT2x_SI70xx sht;  
-public: 
+class sht21 : public Sensor {
+ private:
+  HTU2xD_SHT2x_SI70xx sht;
+
+ public:
   sht21();
   ~sht21();
 
@@ -20,11 +20,12 @@ public:
   unsigned long mesuresSampleLast[3];
 
   SensorMesureData mesuresDatas[3];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[3];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
+  SensorMesureData readBuffer(int index, int bufferIndex);
   void setMesure(int index, float value);
   SensorMesureData *average(int last);
   SensorMesureData average(int last, int index);

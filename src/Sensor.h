@@ -22,7 +22,7 @@ public:
   static const SensorMesure *mesures[];
   static const u_int *mesuresSampleRates[];
 
-  static String *getMesureName(u_int index);
+  static String getMesureName(u_int index);
 
   // status codes
   static const int StatusInitializing = 0;
@@ -40,6 +40,7 @@ public:
   virtual size_t getMesuresCount() = 0;
   virtual SensorMesureData *read() = 0;
   virtual SensorMesureData read(int index) = 0;
+  virtual SensorMesureData readBuffer(int index, int bufferIndex) = 0;
   virtual void setMesure(int index, float value) = 0;
   virtual SensorMesureData *average(int last) = 0;
   virtual SensorMesureData average(int last, int index) = 0;
