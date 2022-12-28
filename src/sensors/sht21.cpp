@@ -58,8 +58,7 @@ Sensor::SensorMesureData sht21::read_(int index) {
         value = this->sht.getCompensatedHumidity(this->read_(0));
         break;
     }
-    this->mesuresDatas[index] = value;
-    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    this->setMesure(index, value);
     return this->mesuresDatas[index];
   }
   return this->read_(0);

@@ -79,7 +79,7 @@ void setup() {
   station.setupLoopCallback(loopCallbacks, 2);
 
   # setup timers
-  station.setupTimerCallback(timerCallbacks, 2);
+  station.setupTimers(timerCallbacks, 2);
 
   # setup web server
   station.setupWebServer(webRoutes, 3);

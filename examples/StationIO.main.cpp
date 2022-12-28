@@ -34,7 +34,7 @@ void setup() {
   station.setupSensors(sensors, 1);
 
   // setting up timers
-  station.setupTimerCallback(timers, 1);
+  station.setupTimers(timers, 1);
 
   // ___ custom code goes here ___
 }

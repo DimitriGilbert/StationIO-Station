@@ -26,6 +26,8 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
+  SensorMesureData readBuffer(int index, int bufferIndex);
+  void setMesure(int index, float value);
   SensorMesureData *average(int last);
   SensorMesureData average(int last, int index);
   String toString();
@@ -36,6 +38,7 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String jsUtils();
   String toHtml();
   String toHtml(int index);
   SensorMesureData *read_();

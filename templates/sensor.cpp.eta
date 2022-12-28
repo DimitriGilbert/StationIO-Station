@@ -1,6 +1,8 @@
+#include "./<%= it.sensorName %>.h"
+
 #include <Arduino.h>
 
-#include "./<%= it.sensorName %>.h"
+#include "./html.h"
 
 <%= it.sensorName %>::<%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>) : Sensor("<%= it.sensorName %>") {<%= it.sensorInitializer!==undefined&&it.sensorInitializer.body!==undefined?it.sensorInitializer.body:"" %> 
 
@@ -41,11 +43,14 @@ Sensor::SensorMesureData <%= it.sensorName %>::read_(int index) {
         break;
 <% }) %>
     }
-    this->mesuresDatas[index] = value;
-    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    this->setMesure(index, value);
     return this->mesuresDatas[index];
   }
   return this->read_(<%= it.mesuresDefault!==undefined?it.mesuresDefault:"0" %>);
+}
+void <%= it.sensorName %>::setMesure(int index, float value) {
+  this->mesuresDatas[index] = value;
+  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
 }
 
 void <%= it.sensorName %>::loop() {
@@ -60,6 +65,11 @@ Sensor::SensorMesureData *<%= it.sensorName %>::read() { return this->mesuresDat
 
 Sensor::SensorMesureData <%= it.sensorName %>::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
+}
+
+Sensor::SensorMesureData sht21::readBuffer(int index, int bufferIndex) {
+  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
+  return this->mesuresBuffers[index][bufferIndex];
 }
 
 Sensor::SensorMesureData *<%= it.sensorName %>::average(int last) {
@@ -134,6 +144,9 @@ String <%= it.sensorName %>::toXml() {
 String <%= it.sensorName %>::toXml(int index) {
   return "<"+this->mesures[index].name+" unit=\""+this->mesures[index].unit+"\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
 }
+String <%= it.sensorName %>::jsUtils() {
+  return "";
+}
 
 String <%= it.sensorName %>::toHtml() {
   String out = "<div class=\"sensor " + this->name +
@@ -142,7 +155,7 @@ String <%= it.sensorName %>::toHtml() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
-  out.concat("</div></div>");
+  out.concat("</div></div>"+this->jsUtils());
   return out;
 }
 String <%= it.sensorName %>::toHtml(int index) {

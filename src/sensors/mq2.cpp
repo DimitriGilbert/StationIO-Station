@@ -74,8 +74,7 @@ Sensor::SensorMesureData mq2::read_(int index) {
         value = this->mq.sensor_volt;
         break;
     }
-    this->mesuresDatas[index] = value;
-    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    this->setMesure(index, value);
     return this->mesuresDatas[index];
   }
   return this->read_(0);

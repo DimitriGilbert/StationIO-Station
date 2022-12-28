@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- BOOTSTRAP -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+    <!-- Code input -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/code-input.min.css"
+    />
+    <link
+      id="import-theme"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.css"
+    />
+    <title>StationIO Generator</title>
+  </head>
+  <body>
+    <div class="container">
+      <nav class="nav nav-tabs">
+        <a href="#" class="nav-link active" id="nav-config" onclick="navTo('config')">Configuration</a>
+        <a href="#" class="nav-link" id="nav-install" onclick="navTo('install')">Install</a>
+        <a href="#" class="nav-link" id="nav-main-cpp" onclick="navTo('main-cpp')">main.cpp</a>
+      </nav>
+      <div id="stationio-config">
+        <form id="stationio-config-frm">
+          <div class="row gx-5" id="configs">
+            <div class="col">
+              <h2 class="text-center">Main config</h2>
+              <div class="row">
+                <label for="station-name">Station Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="station-name"
+                  id="station-name"
+                  placeholder="Station Name"
+                />
+              </div>
+              <div id="wifi-config">
+                <div class="row">
+                  <label for="wifi-ssid">WiFi SSID</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="wifi-ssid"
+                    name="wifi-ssid"
+                  />
+                </div>
+                <div class="row">
+                  <label for="wifi-pass">WiFi password</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="wifi-pass"
+                    name="wifi-pass"
+                  />
+                </div>
+              </div>
+              <div id="timers-config" class="row gt-4">
+                <h2>Timers config</h2>
+                <div>
+                  <input
+                    type="hidden"
+                    name="timers-count"
+                    id="timers-count"
+                    value="0"
+                  /><button
+                    type="button"
+                    id="addTimerButton"
+                    class="btn btn-primary btn-lg"
+                  >
+                    Add a timer
+                  </button>
+                </div>
+                <div id="timers-list"></div>
+              </div>
+            </div>
+            <div class="col">
+              <h2 class="text-center">Sensor config</h2>
+              <div id="sensor-config">
+                <div class="row align-items-center">
+                  <div class="col-10">
+                    <label for="sensor-select">Select a sensor</label>
+                    <select
+                      class="form-select"
+                      name="sensor-select"
+                      id="sensor-select"
+                    >
+                      <option value="dht11">dht11</option>
+                      <option value="bmp280">bmp280</option>
+                      <option value="bme280">bme280</option>
+                      <option value="bmp085">bmp085</option>
+                      <option value="sht21">sht21</option>
+                      <option value="mq2">mq2</option>
+                      <option value="ccs811">ccs811</option>
+                      <option value="linky">linky</option>
+                    </select>
+                  </div>
+                  <div class="col-2">
+                    <button
+                      class="btn btn-lg btn-primary"
+                      type="button"
+                      id="addSensorButton"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+                <div class="row" id="sensors-list"></div>
+              </div>
+              <div class="row gt-4" id="endpoint-config">
+                <h2>Endpoint Config</h2>
+                <div>
+                  <input
+                    type="hidden"
+                    name="endpoint-count"
+                    id="endpoint-count"
+                    value="0"
+                  /><button
+                    type="button"
+                    id="addEndpointButton"
+                    class="btn btn-primary btn-lg"
+                  >
+                    Add an endpoint
+                  </button>
+                </div>
+                <div id="endpoints-list"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div id="stationio-main-cpp" class="d-none">
+        <code-input lang="Arduino" id="main-cpp-output"></code-input>
+      </div>
+    </div>
+    <script>
+      function navTo(where) {
+        document.querySelectorAll(".nav-link").forEach((el) => {
+          el.classList.remove("active");
+        });
+        document.querySelector("#nav-" + where).classList.add("active");
+        document.querySelectorAll(".container > div").forEach((el) => {
+          el.classList.add("d-none");
+        });
+        document.querySelector("#stationio-" + where).classList.remove("d-none");
+      }
+      /**
+       * https://stackoverflow.com/a/35385518
+       * @param {String} HTML representing any number of sibling elements
+       * @return {NodeList}
+       */
+      function htmlToElements(html) {
+        var template = document.createElement("template");
+        template.innerHTML = html;
+        return template.content.firstChild;
+      }
+
+      var mainCppTpl = `#include <Arduino.h>
+#include "./Station.h"
+
+// including sensors
+<% if(it.sensors!==undefined && it.sensors.length > 0){
+  it.sensors.forEach(function(sensor){
+sensorname = sensor;
+if(typeof sensor !== "string"){
+  sensorname = sensor[0];
+}%>
+#include "./sensors/<%=sensorname %>.h"
+<%})}%>
+
+// initializing station
+StationClass station(
+  "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
+  {
+    ssid : "<%= it.wifi.ssid %>",
+    password : "<%= it.wifi.password %>"
+  }
+<% } %>);
+
+// ___ sensors ___
+<% if(it.sensors!==undefined && it.sensors.length > 0){%>
+Sensor* sensors[<%= it.sensors.length %>] = {<% it.sensors.forEach(function(sensor){
+sensorArg = "";
+sensorname = sensor;
+if(typeof sensor !== "string"){
+  sensorArg = sensor[1];
+  sensorname = sensor[0];
+}
+%> 
+  new <%= sensorname %>(<%= sensorArg %>),<%})%> 
+};
+
+<%}
+if(it.callbacks!==undefined && it.callbacks.length > 0){if(it.callbacks.length > 0){%>
+// ___ callbacks ___
+<% it.callbacks.forEach(function(cb){%>
+<%= cb %><%})%> 
+
+<%}}
+if(it.loops!==undefined && it.loops.length > 0){if(it.loops.length > 0){%>
+// ___ loops ___
+BaseStation::StationCallback_t* loopsCallbacks[<%= it.loops.length %>] = {<% it.loops.forEach(function(loop){%> 
+  <%= loop %>,<%})%> 
+};
+
+<%}}
+if(it.timers!==undefined && it.timers.length > 0){if(it.timers.length > 0){%>
+// ___ timers ___
+BaseStation::StationCallbackTimer_t timers[<%= it.timers.length %>] = {<% it.timers.forEach(function(timer){%> 
+  // <%= timer.name!==undefined?timer.name:"" %> 
+  {
+    <%~ timer.callback %>,
+    <%= timer.interval %>
+  },<%})%> 
+};
+
+<%}}
+if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>
+// ___ web Server ___
+EspStation::StationWebCallbackInfo_t**  webServerRoutes[<%= it.webServerRoutes.length %>] = {<% it.webServerRoutes.forEach(function(route){%> 
+  {<%~ route.callback %>, "<%= route.url %>", "<%= route.login %>", "<%= route.password %>"},<%})%> 
+};
+
+<%}}%>
+
+void setup() {
+  station.setup();
+
+  <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors
+  station.setupSensors(sensors, <%= it.sensors.length %>);
+
+  <%}
+  if(it.loops!==undefined && it.loops.length > 0){if(it.loops.length > 0){%>// setting up loops
+  station.setupLoopCallback(loops, <%= it.loops.length %>);
+
+  <%}}
+  if(it.timers!==undefined && it.timers.length > 0){if(it.timers.length > 0){%>// setting up timers
+  station.setupTimers(timers, <%= it.timers.length %>);
+
+  <%}}
+  if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>// setting up web Server
+  station.setupWebServer(webServerRoutes, <%= it.webServerRoutes.length %>);
+<%}}%>
+  // setting up OTA
+  station.setupOTA();
+
+  // ___ custom code goes here ___
+}
+
+void loop() {
+  station.loop();
+  // ___ custom code goes here ___
+}
+`;
+      const sensorSelect = document.getElementById("sensor-select");
+      const stationName = document.getElementById("station-name");
+      const wifiSSID = document.getElementById("wifi-ssid");
+      const wifiPass = document.getElementById("wifi-pass");
+      const sensorsList = document.getElementById("sensors-list");
+
+      const sensorForms = {
+        dht11: () => {
+          return `<div class="row">
+            <label for="dht11-pin">pin</label>
+            <input type="number" class="form-control" id="dht11-pin" name="dht11-pin" />
+          </div>`;
+        },
+        mq2: () => {
+          return `<div class="row">
+            <label for="mq2-pin">pin</label>
+            <input type="text" class="form-control" id="mq2-pin" name="mq2-pin" value="A0"/>
+          </div><div class="row">
+            <label for="mq2-res">voltage resolution</label>
+            <input type="number" class="form-control" id="mq2-res" name="mq2-res" value="5" />
+          </div><div class="row">
+            <label for="mq2-adc-bit">ADC resolution</label>
+            <input type="number" class="form-control" id="mq2-adc-bit" name="mq2-adc-bit" value="10" />
+          </div>`;
+        },
+      };
+
+      const sensorParseForms = {
+        dht11: (form) => {
+          return ["dht11", form.get("dht11-pin")];
+        },
+        mq2: (form) => {
+          return [
+            "mq2",
+            `${form.get("mq2-pin")}, ${form.get("mq2-res")}, ${form.get("mq2-adc-bit")}`,
+          ];
+        },
+      };
+
+      document
+        .getElementById("addSensorButton")
+        .addEventListener("click", () => {
+          const sensor = sensorSelect.value;
+          let sensorForm = `<div class="row">
+          <h3>${sensor} <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode)">X</button></h3>
+          <input type="hidden" name="sensors[]" value="${sensor}"/>`;
+          if (Object.keys(sensorForms).includes(sensor)) {
+            sensorForm += sensorForms[sensor]();
+          }
+          sensorsList.appendChild(htmlToElements(sensorForm + "</div>"));
+        });
+
+      const timersList = document.getElementById("timers-list");
+      const timersCount = document.getElementById("timers-count");
+      const addTimerButton = document.getElementById("addTimerButton");
+
+      addTimerButton.addEventListener("click", () => {
+        const timerId = timersCount.value;
+        timersCount.value++;
+        timersList.appendChild(
+          htmlToElements(`<div class="row">
+          <input type="hidden" name="timers[]" value="${timerId}"/>
+          <h3><span id="timer-${timerId}-name-display">Timer ${timerId}</span> <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);">X</button></h3>
+          <div class="row">
+            <label for="timer-${timerId}-name">Name</label>
+            <input type="text" class="form-control" id="timer-${timerId}-name" name="timer-${timerId}-name" onKeyUp="document.getElementById('timer-${timerId}-name-display').innerHTML=this.value" />
+          </div>
+          <div class="row">
+            <label for="timer-${timerId}-callback">Type</label>
+            <code-input lang="Arduino" class="form-textarea" id="timer-${timerId}-callback" name="timer-${timerId}-callback">
+// Example callback
+// @param station the station instance you will use to do stuff if you want
+[](BaseStation* station) {
+  station->log(station->toString());
+}
+</code-input>
+          </div>
+          <div class="row">
+            <label for="timer-${timerId}-interval">Interval in milli seconds</label>
+            <input type="number" class="form-control" id="timer-${timerId}-interval" name="timer-${timerId}-interval" />
+          </div>
+        </div>`)
+        );
+      });
+
+      const endpointsList = document.getElementById("endpoints-list");
+      const endpointsCount = document.getElementById("endpoint-count");
+      const addEndpointButton = document.getElementById("addEndpointButton");
+
+      addEndpointButton.addEventListener("click", () => {
+        const endpointId = endpointsCount.value;
+        endpointsCount.value++;
+        endpointsList.appendChild(
+          htmlToElements(`<div class="row">
+          <input type="hidden" name="endpoints[]" value="${endpointId}"/>
+          <h3><span id="endpoint-${endpointId}-route-display">Endpoint ${endpointId}</span> <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);">X</button></h3>
+          <div class="row">
+            <label for="endpoint-${endpointId}-route">Route, starts with a "/" ("/", "/fancy", "/js" and "/css" are reserved)</label>
+            <input type="text" class="form-control" id="endpoint-${endpointId}-route" name="endpoint-${endpointId}-route" onKeyUp="document.getElementById('endpoint-${endpointId}-route-display').innerHTML=this.value" />
+          </div>
+          <div class="row">
+            <label for="endpoint-${endpointId}-login">Login</label>
+            <input type="text" class="form-control" id="endpoint-${endpointId}-login" name="endpoint-${endpointId}-login"/>
+          </div>
+          <div class="row">
+            <label for="endpoint-${endpointId}-password">Password</label>
+            <input type="text" class="form-control" id="endpoint-${endpointId}-password" name="endpoint-${endpointId}-password"/>
+          </div>
+          <div class="row">
+            <label for="endpoint-${endpointId}-callback">Callback</label>
+            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback"></code-input>
+          </div>
+        </div>`)
+        );
+      });
+
+      document
+        .getElementById("stationio-config-frm")
+        .addEventListener("change", (e) => {
+          let frmData = new FormData(e.target.form);
+          
+          const data = {
+            name: frmData.get("station-name"),
+            wifi: {
+              ssid: frmData.get("wifi-ssid"),
+              password: frmData.get("wifi-password"),
+            },
+            sensors: [],
+            // callbacks: [],
+            // loops:frmData,
+            timers: [],
+            webServerRoutes: [],
+          };
+          frmData.getAll("sensors[]").forEach((sensor) => {
+            if (Object.keys(sensorParseForms).includes(sensor)) {
+              data.sensors.push(sensorParseForms[sensor](frmData));
+            }
+            else {
+              data.sensors.push(sensor);
+            }
+          });
+          frmData.getAll("timers[]").forEach((timer) => {
+              data.timers.push({
+                name: frmData.get(`timer-${timer}-name`),
+                interval: frmData.get(`timer-${timer}-interval`),
+                callback: frmData.get(`timer-${timer}-callback`),
+              });
+          });
+          frmData.getAll("endpoints[]").forEach((endpts) => {
+              data.webServerRoutes.push({
+                url: frmData.get(`endpoint-${endpts}-route`),
+                login: frmData.get(`endpoint-${endpts}-login`),
+                password: frmData.get(`endpoint-${endpts}-password`),
+                callback: frmData.get(`endpoint-${endpts}-callback`),
+              });
+          });
+          document.getElementById("main-cpp-output").value = Eta.render(mainCppTpl, data);
+        });
+      // onload event for the page
+      window.addEventListener("load", () => {
+        codeInput.registerTemplate(
+          "code-input",
+          codeInput.templates.prism(Prism, [new codeInput.plugins.Indent()])
+        );
+        document.getElementById("main-cpp-output").style.height = window.innerHeight - 100 + "px";
+      });
+      window.addEventListener("resize", () => {
+        document.getElementById("main-cpp-output").style.height = window.innerHeight - 100 + "px";
+      });
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/components/prism-core.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/plugins/autoloader/prism-autoloader.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/code-input.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/plugins/indent.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/plugins/autodetect.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/eta"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

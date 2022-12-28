@@ -50,13 +50,13 @@ void BaseStation::setupLoopCallback(
   this->log("Loop calback :" + String(loopCallbackCount));
 }
 
-void BaseStation::setupTimerCallback(
+void BaseStation::setupTimers(
     StationCallbackTimer_t* timerCallbacks, int timerCallbackCount
 ) {
-  this->setupTimerCallback(timerCallbacks, timerCallbackCount, 0);
+  this->setupTimers(timerCallbacks, timerCallbackCount, 0);
 }
 
-void BaseStation::setupTimerCallback(
+void BaseStation::setupTimers(
     StationCallbackTimer_t* timerCallbacks, int timerCallbackCount, int delay
 ) {
   this->timerCallbacks = timerCallbacks;
@@ -124,7 +124,7 @@ void BaseStation::setup(
     StationCallbackTimer_t* timerCallbacks, int timerCallbackCount
 ) {
   this->setup();
-  this->setupTimerCallback(timerCallbacks, timerCallbackCount);
+  this->setupTimers(timerCallbacks, timerCallbackCount);
 }
 
 bool BaseStation::ready() { return this->ready(BaseStation::StatusReady); }

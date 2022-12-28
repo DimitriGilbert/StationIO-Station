@@ -54,8 +54,7 @@ Sensor::SensorMesureData bmp085::read_(int index) {
         value = this->bmp.readAltitude(1013);
         break;
     }
-    this->mesuresDatas[index] = value;
-    this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+    this->setMesure(index, value);
     return this->mesuresDatas[index];
   }
   return this->read_(0);

@@ -86,9 +86,9 @@ class BaseStation {
   void setupSensors(Sensor** sensors, size_t sensorCount);
   void setupLoopCallback(StationCallback_t* loopCallbacks,
                          int loopCallbackCount);
-  void setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
+  void setupTimers(StationCallbackTimer_t* timerCallbacks,
                           int timerCallbackCount);
-  void setupTimerCallback(StationCallbackTimer_t* timerCallbacks,
+  void setupTimers(StationCallbackTimer_t* timerCallbacks,
                           int timerCallbackCount,
                           int delay);
   void setupOTA();
@@ -113,12 +113,12 @@ class BaseStation {
 class EspStation : public BaseStation {
  private:
  public:
-  using StationWebCallback_t = void (*)(BaseStation*, AsyncWebServerRequest*);
+  using StationWebCallback_t = void (*)(BaseStation* station_, AsyncWebServerRequest* req);
   typedef struct {
-    EspStation::StationWebCallback_t callback;
     const char* route;
     const char* login;
     const char* password;
+    EspStation::StationWebCallback_t callback;
   } StationWebCallbackInfo_t;
   AsyncWebServer webServer;
   WifiInformation wifiInformation;
