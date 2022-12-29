@@ -25,12 +25,16 @@
   </head>
   <body>
     <div class="container">
+      <h1>StationIO</h1>
       <nav class="nav nav-tabs">
         <a
           href="#"
           class="nav-link active"
-          id="nav-config"
-          onclick="navTo('config')"
+          id="nav-about"
+          onclick="navTo('about')"
+          >About</a
+        >
+        <a href="#" class="nav-link" id="nav-config" onclick="navTo('config')"
           >Configuration</a
         >
         <a href="#" class="nav-link" id="nav-install" onclick="navTo('install')"
@@ -44,7 +48,65 @@
           >main.cpp</a
         >
       </nav>
-      <div id="stationio-config" class="stio-tab">
+      <div id="stationio-about" class="stio-tab">
+        <h2>What is StationIO ?</h2>
+        <p>
+          An Arduino framework-ish thingy that takes care of the (my?) basics !
+        </p>
+        <h2>How does it work ?</h2>
+        <p>
+          It uses a set of classes to simply handle sensors, callbacks on a
+          timer and web server endpoints, while still being arduino code.<br />
+          That way you can hookup your custom code in a breeze.
+        </p>
+        <h2>But.... WHY ?</h2>
+        <p>
+          I know there are plenty of great iot stack out there but I do not like
+          their architecture, it is too centralized to my taste. <br />
+          I'd rather have independent microservices that can be queried by
+          whatever wants to. <br />
+          So instead of stations reporting to a central hub, I can have my hub
+          query the stations, stations querying eachothers, computers querying
+          stations and even stations reporting to a hub (....yep, I know). <br />
+          Freedooooooom.... <br/>
+          Also, I find it a bit annoying to waste "so much" computing power (I know it sounds weird to read) on an interpreter (for micropython) or doing nothing (a few MQQT message an hour). <br/>
+          ESPes have a good chunk of power and can easily handle a webserver and "on the edge" processing, not just executing command and reporting values.
+          And I really HATE copy/pasting....!
+        </p>
+        <h2>Huuum.... how do you do that then ?</h2>
+        <p>
+          <ul>
+            <li>Grab an esp8266 board (for now, esp32 soon...tm)</li>
+            <li>Plug it to your conputer</li>
+            <li>Use the <a href="#" onclick="navTo('config')">Configuration</a> tool</li>
+            <li>Follow the <a href="#" onclick="navTo('install')">Install</a> script</li>
+            <li>Go to your device ip (you can use the "/fancy" endpoint for more eyecandy-ish, me no designer ok ! oh, and I don't care how it looks :P)</li>
+            <li>Voila !!(maybe...tm)</li>
+          </ul>
+        </p>
+        <h2>Can you integrate with other iot stacks ?</h2>
+        <p>
+          Huuuum, ...., I did not even try ^^'. <br/>
+          It should be easy though, if your stack can fetch info with http queries, no problemo ! <br/>
+          You can set the "Accept" header to "application/json", "application/xml","text/csv", "text/plain" and you'll get a corresponding response. Default is html<br/>
+          If you need MQTT, or other protocols, you should be able to integrate with timer callbacks, I think... <br/>
+          If timer callbacks do not work, fear not, you can still use standard arduino code, in the exact same way as before. (declaration, setup, loop)
+        </p>
+        <h2>What's your use case ?</h2>
+        <p>
+          At home I have several stations (more or less in every room) that run StationIO with a panache of sensors (the ones implemented as a matter of suprising fact). <br/>
+          I have a Rpi running a docker-compose stack with a mysql database, a grafana instance and a nodejs instance. <br/>
+          A cronjob on the Rpi fetches the data from the stations and inserts it into the database. <br/>
+          Also, my computer displays several widgets that fetch data from the stations in real time. <br/>
+          And, to finish off, some stations talk to eachother in order to decide what actions to execute (my hot air system fan control, which runs StationIO for example). <br/>
+        </p>
+      </div>
+      <div id="stationio-config" class="d-none stio-tab">
+        <p>
+          This tool will help you to generate a StationIO station. You can
+          configure your station, each modification regenerates the code for the main file in <a href="#" onclick="navTo('main-cpp')">main.cpp</a>
+          as well as installation instructions (soon...tm).
+        </p>
         <form id="stationio-config-frm">
           <div class="row gx-5" id="configs">
             <div class="col">
@@ -156,15 +218,19 @@
       <div id="stationio-install" class="d-none stio-tab">
         <div>
           <p>This install guide is for linux systems.</p>
-          <p>You need <a href="https://platformio.org/install/cli">PlateformIO</a> installed (core or IDE) to use the following command. It should work with other IDE (arduinoIDE et al) but I didn't try for now as I focus on the "framework" itself</p>
+          <p>
+            You need
+            <a href="https://platformio.org/install/cli">PlateformIO</a>
+            installed (core or IDE) to use the following command. It should work
+            with other IDE (arduinoIDE et al) but I didn't try for now as I
+            focus on the "framework" itself
+          </p>
         </div>
-        <code-input lang="bash">
-# Install PlatformIO
+        <code-input lang="bash"># Install PlatformIO 
 # https://docs.platformio.org/en/latest/installation.html
 python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
-
-# Install StationIO
-git clone git@github.com:DimitriGilbert/StationIO-Station.git "[station-name]"
+# Install StationIO 
+git clone git@github.com:DimitriGilbert/StationIO-Station.git "[station-name]" 
 
 # Go to the station directory
 cd "[station-name]"
@@ -172,9 +238,7 @@ cd "[station-name]"
 # copy "main.cpp" output to "src/main.cpp"
 
 # upload code to project board
-pio run -t upload -e nodemcuv2
-        </code-input>
-        </div>
+pio run -t upload -e nodemcuv2</code-input>
       </div>
       <div id="stationio-main-cpp" class="d-none stio-tab">
         <code-input lang="Arduino" id="main-cpp-output"></code-input>
@@ -221,13 +285,18 @@ if(typeof sensor !== "string"){
 StationClass station(
   "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
   {
-    ssid : "<%= it.wifi.ssid %>",
-    password : "<%= it.wifi.password %>"
+    ssid : "NEVER PUT YOUR WIFI INFO",
+    password : "IN A RANDOM FORM ON THE WEB !! !"
   }
 <% } %>);
 
 <% if(it.sensors!==undefined && it.sensors.length > 0){%>
 // ___ sensors ___
+<% it.sensors.forEach(function(sensor){
+if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 2){%> 
+<%~ sensor[2] %> 
+<%}})
+%>
 Sensor* sensors[<%= it.sensors.length %>] = {<% it.sensors.forEach(function(sensor){
 sensorArg = "";
 sensorname = sensor;
@@ -338,6 +407,46 @@ void loop() {
             `${form.get("mq2-pin")}, ${form.get("mq2-res")}, ${form.get(
               "mq2-adc-bit"
             )}`,
+          ];
+        },
+        linky: (form) => {
+          return [
+            "linky",
+            "tinfo",
+            `// linky sensor init
+void onLinkyData(ValueList* vallnk, uint8_t flag) {
+  // data in, light on
+  digitalWrite(LED_BUILTIN_AUX, LOW);
+  int index = -1;
+  float value = -1;
+  // interesting data point ?
+  if (strcmp(vallnk->name, "PAPP") == 0) {
+    index = 3;
+    value = atof(vallnk->value);
+    digitalWrite(LED_BUILTIN, LOW);
+  } else if (strcmp(vallnk->name, "HCHP") == 0) {
+    index = 0;
+    value = atof(vallnk->value);
+    digitalWrite(LED_BUILTIN, LOW);
+  } else if (strcmp(vallnk->name, "HCHC") == 0) {
+    index = 1;
+    value = atof(vallnk->value);
+    digitalWrite(LED_BUILTIN, LOW);
+  } else if (strcmp(vallnk->name, "PTEC") == 0) {
+    index = 2;
+    value = strcmp(vallnk->value, "HC..") == 0 ? 1 : 0;
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+  if (index != -1) {
+    // setting datapoint in station sensor
+    station.sensors[0]->setMesure(index, value);
+  }
+  // lights off
+  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_BUILTIN_AUX, HIGH);
+}
+TInfo tinfo;
+`,
           ];
         },
       };
