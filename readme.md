@@ -34,13 +34,7 @@ void loop() {
 
 ### main.cpp generator
 
-A tool to generate main.cpp file from json configs exists, configs are located in ./config/*.json and an example is available, to run it :
-
-```bash
-npx ts-node generator/main.ts
-```
-
-to run on a different config edit line 4 of generator/main.ts.
+You can use the built in web generator. Just open generator/index.html in your favorite browser, fill out the form and follow the install instructions ;)
 
 ### sensor generator generator
 
@@ -207,16 +201,6 @@ void cb1(BaseStation* station) {
   station->log(station->toString());
 }
 
-# ___ loop callback ___
-
-# just for example sake, do not do that, or do but don't tell me it's spitting tons of stuff in Serial ^^
-StationCallback_t* loopCallbacks[2] = {
-  # using the declared function as a callback
-  cb1,
-  # using a lambda function as a callback
-  [](BaseStation * station){station->log(station->toString());}
-};
-
 # ___ timer callback ___
 
 # just for example sake, do not do that, or do but don't tell me it's spitting tons of stuff in Serial ^^
@@ -257,14 +241,9 @@ void setup() {
   # sensors setup
   station.setupSensors(sensors, 3);
 
-  # setup loop
-  station.setupLoopCallback(loopCallbacks, 2);
-
   # setup timers
   station.setupTimers(timerCallbacks, 2);
 
-  # setup web server
-  station.setupWebServer(webRoutes, 3);
 
   # ___ custom setup code goes here ___
 

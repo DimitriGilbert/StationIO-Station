@@ -267,7 +267,7 @@ BaseStation::StationCallbackTimer_t timers[<%= it.timers.length %>] = {<% it.tim
 if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>
 // ___ web Server ___
 EspStation::StationWebCallbackInfo_t**  webServerRoutes[<%= it.webServerRoutes.length %>] = {<% it.webServerRoutes.forEach(function(route){%> 
-  {<%~ route.callback %>, "<%= route.url %>", "<%= route.login %>", "<%= route.password %>"},<%})%> 
+  {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>},<%})%> 
 };
 
 <%}}%>
@@ -413,7 +413,12 @@ void loop() {
           </div>
           <div class="row">
             <label for="endpoint-${endpointId}-callback">Callback</label>
-            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback"></code-input>
+            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback">
+[](BaseStation* station, AsyncWebServerRequest* request) {
+  station->log("web server query");
+  request->send(200, "text/html", station->toHtml());
+}  
+            </code-input>
           </div>
         </div>`)
         );
