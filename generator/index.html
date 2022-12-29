@@ -21,6 +21,14 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.css"
     />
+    <!-- theme -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.3/solar/bootstrap.min.css"
+      integrity="sha512-SGLY63IpxQgjNZfOfmayBxXeh5Uw6/b3ZgAxONQb9OW5MosjvFOPmT6aTgLEerDOTc03knEaeeTdV6q5lOkLKw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <title>StationIO Station Generator</title>
   </head>
   <body>
@@ -67,11 +75,15 @@
           whatever wants to. <br />
           So instead of stations reporting to a central hub, I can have my hub
           query the stations, stations querying eachothers, computers querying
-          stations and even stations reporting to a hub (....yep, I know). <br />
-          Freedooooooom.... <br/>
-          Also, I find it a bit annoying to waste "so much" computing power (I know it sounds weird to read) on an interpreter (for micropython) or doing nothing (a few MQQT message an hour). <br/>
-          ESPes have a good chunk of power and can easily handle a webserver and "on the edge" processing, not just executing command and reporting values.
-          And I really HATE copy/pasting....!
+          stations and even stations reporting to a hub (....yep, I know).
+          <br />
+          Freedooooooom.... <br />
+          Also, I find it a bit annoying to waste "so much" computing power (I
+          know it sounds weird to read) on an interpreter (for micropython) or
+          doing nothing (a few MQQT message an hour). <br />
+          ESPes have a good chunk of power and can easily handle a webserver and
+          "on the edge" processing, not just executing command and reporting
+          values. And I really HATE copy/pasting....!
         </p>
         <h2>Huuum.... how do you do that then ?</h2>
         <p>
@@ -86,26 +98,40 @@
         </p>
         <h2>Can you integrate with other iot stacks ?</h2>
         <p>
-          Huuuum, ...., I did not even try ^^'. <br/>
-          It should be easy though, if your stack can fetch info with http queries, no problemo ! <br/>
-          You can set the "Accept" header to "application/json", "application/xml","text/csv", "text/plain" and you'll get a corresponding response. Default is html<br/>
-          If you need MQTT, or other protocols, you should be able to integrate with timer callbacks, I think... <br/>
-          If timer callbacks do not work, fear not, you can still use standard arduino code, in the exact same way as before. (declaration, setup, loop)
+          Huuuum, ...., I did not even try ^^'. <br />
+          It should be easy though, if your stack can fetch info with http
+          queries, no problemo ! <br />
+          You can set the "Accept" header to "application/json",
+          "application/xml","text/csv", "text/plain" and you'll get a
+          corresponding response. Default is html<br />
+          If you need MQTT, or other protocols, you should be able to integrate
+          with timer callbacks, I think... <br />
+          If timer callbacks do not work, fear not, you can still use standard
+          arduino code, in the exact same way as before. (declaration, setup,
+          loop)
         </p>
         <h2>What's your use case ?</h2>
         <p>
-          At home I have several stations (more or less in every room) that run StationIO with a panache of sensors (the ones implemented as a matter of suprising fact). <br/>
-          I have a Rpi running a docker-compose stack with a mysql database, a grafana instance and a nodejs instance. <br/>
-          A cronjob on the Rpi fetches the data from the stations and inserts it into the database. <br/>
-          Also, my computer displays several widgets that fetch data from the stations in real time. <br/>
-          And, to finish off, some stations talk to eachother in order to decide what actions to execute (my hot air system fan control, which runs StationIO for example). <br/>
+          At home I have several stations (more or less in every room) that run
+          StationIO with a panache of sensors (the ones implemented as a matter
+          of suprising fact). <br />
+          I have a Rpi running a docker-compose stack with a mysql database, a
+          grafana instance and a nodejs instance. <br />
+          A cronjob on the Rpi fetches the data from the stations and inserts it
+          into the database. <br />
+          Also, my computer displays several widgets that fetch data from the
+          stations in real time. <br />
+          And, to finish off, some stations talk to eachother in order to decide
+          what actions to execute (my hot air system fan control, which runs
+          StationIO for example). <br />
         </p>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
         <p>
           This tool will help you to generate a StationIO station. You can
-          configure your station, each modification regenerates the code for the main file in <a href="#" onclick="navTo('main-cpp')">main.cpp</a>
-          as well as installation instructions (soon...tm).
+          configure your station, each modification regenerates the code for the
+          main file in <a href="#" onclick="navTo('main-cpp')">main.cpp</a>
+          as well as <a href="#" onclick="navTo('install')">installation</a> instructions/script.
         </p>
         <form id="stationio-config-frm">
           <div class="row gx-5" id="configs">
@@ -226,7 +252,43 @@
             focus on the "framework" itself
           </p>
         </div>
-        <code-input lang="bash"># Install PlatformIO 
+        <form action="" id="install-config-frm">
+          <div class="row">
+            <div class="col">
+              <label for="install-station-name">Station Name</label>
+              <input
+                type="text"
+                class="form-control"
+                name="install-station-name"
+                id="install-station-name"
+                placeholder="Station Name"
+              />
+            </div>
+            <div class="col">
+              <label for="install-station-type">install type</label>
+              <select
+                type="checkbox"
+                class="form-select"
+                name="install-station-type"
+                id="install-station-type"
+              >
+              <option value="git">git</option>
+              <option value="tgz">tgz</option>
+            </select>
+            </div>
+            <div class="col">
+              <label class="form-check-label" for="install-station-pio">install PlatformIO</label>
+              <input
+                type="checkbox"
+                class="form-check-input"
+                name="install-station-pio"
+                id="install-station-pio"
+                placeholder="Station pio"
+              />
+            </div>
+          </div>
+        </form>
+        <code-input lang="bash" id="install-output"># Install PlatformIO 
 # https://docs.platformio.org/en/latest/installation.html
 python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
 # Install StationIO 
@@ -235,7 +297,7 @@ git clone git@github.com:DimitriGilbert/StationIO-Station.git "[station-name]"
 # Go to the station directory
 cd "[station-name]"
 
-# copy "main.cpp" output to "src/main.cpp"
+# copy "main.cpp" output to "src/main.cpp" 
 
 # upload code to project board
 pio run -t upload -e nodemcuv2</code-input>
@@ -370,6 +432,29 @@ void loop() {
   // ___ custom code goes here ___
 }
 `;
+      
+      // Install tpl
+      var installPIOtpl = `# Install PlatformIO 
+# https://docs.platformio.org/en/latest/installation.html
+python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"`;
+      var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`
+      var installStioTgzTpl = `STIOinstall_TMP_FILE=$(mktemp);
+curl -LJ --output $STIOinstall_TMP_FILE "https://github.com/DimitriGilbert/StationIO-Station/archive/refs/heads/main.tar.gz";
+tar -xzf $STIOinstall_TMP_FILE -C "./<%~ it.stationName %>";
+rm $STIOinstall_TMP_FILE;`
+      var installStioTpl = `# Install StationIO
+<%~ it.stationInstall!=='undefined'?it.stationInstall:"" %>
+
+# Go to the station directory
+cd "<%~ it.stationName %>"
+
+# copy "main.cpp" output to "src/main.cpp"
+
+# upload code to project board
+pio run -t upload -e nodemcuv2
+`;
+
+
       const sensorSelect = document.getElementById("sensor-select");
       const stationName = document.getElementById("station-name");
       const wifiSSID = document.getElementById("wifi-ssid");
@@ -573,7 +658,29 @@ TInfo tinfo;
             mainCppTpl,
             data
           );
+          document.getElementById("install-station-name").value = data.name;
+          document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
         });
+      document.getElementById("install-config-frm").addEventListener("change", (evt)=>{
+        let frmData = new FormData(evt.target.form!==undefined?evt.target.form:evt.target);
+        let data = {stationName: frmData.get("install-station-name")};
+        let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
+        switch (frmData.get("install-station-type")) {
+          case "tgz":
+            data.stationInstall = Eta.render(installStioTgzTpl, data)+"\n";
+            break;
+          case "git":
+          default:
+            data.stationInstall = Eta.render(installStioGitTpl, data)+"\n";
+            break;
+        }
+        installTpl += "\n"+installStioTpl;
+        
+        document.getElementById("install-output").value = Eta.render(
+          installTpl,
+          data
+        );
+      });
       // onload event for the page
       window.addEventListener("load", () => {
         codeInput.registerTemplate(
