@@ -244,6 +244,9 @@ void setup() {
   # setup timers
   station.setupTimers(timerCallbacks, 2);
 
+  # setup web server
+  station.setupWebServer(webRoutes, 3);
+
 
   # ___ custom setup code goes here ___
 

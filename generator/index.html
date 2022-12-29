@@ -21,7 +21,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.css"
     />
-    <title>StationIO Generator</title>
+    <title>StationIO Station Generator</title>
   </head>
   <body>
     <div class="container">
@@ -207,9 +207,9 @@ pio run -t upload -e nodemcuv2
       var mainCppTpl = `#include <Arduino.h>
 #include "./Station.h"
 
+<% if(it.sensors!==undefined && it.sensors.length > 0){%>
 // including sensors
-<% if(it.sensors!==undefined && it.sensors.length > 0){
-  it.sensors.forEach(function(sensor){
+<% it.sensors.forEach(function(sensor){
 sensorname = sensor;
 if(typeof sensor !== "string"){
   sensorname = sensor[0];
@@ -226,8 +226,8 @@ StationClass station(
   }
 <% } %>);
 
-// ___ sensors ___
 <% if(it.sensors!==undefined && it.sensors.length > 0){%>
+// ___ sensors ___
 Sensor* sensors[<%= it.sensors.length %>] = {<% it.sensors.forEach(function(sensor){
 sensorArg = "";
 sensorname = sensor;
@@ -266,9 +266,8 @@ BaseStation::StationCallbackTimer_t timers[<%= it.timers.length %>] = {<% it.tim
 <%}}
 if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>
 // ___ web Server ___
-EspStation::StationWebCallbackInfo_t**  webServerRoutes[<%= it.webServerRoutes.length %>] = {<% it.webServerRoutes.forEach(function(route){%> 
-  {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>},<%})%> 
-};
+<% it.webServerRoutes.forEach(function(route, epi){%> 
+  EspStation::StationWebCallbackInfo_t endpoint_<%= epi %> = {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>};<%})%> 
 
 <%}}%>
 
@@ -279,17 +278,18 @@ void setup() {
   station.setupSensors(sensors, <%= it.sensors.length %>);
 
   <%}
-  if(it.loops!==undefined && it.loops.length > 0){if(it.loops.length > 0){%>// setting up loops
+  if(it.loops!==undefined && it.loops.length > 0){%>// setting up loops
   station.setupLoopCallback(loops, <%= it.loops.length %>);
 
-  <%}}
-  if(it.timers!==undefined && it.timers.length > 0){if(it.timers.length > 0){%>// setting up timers
+  <%}
+  if(it.timers!==undefined && it.timers.length > 0){%>// setting up timers
   station.setupTimers(timers, <%= it.timers.length %>);
 
-  <%}}
-  if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>// setting up web Server
-  station.setupWebServer(webServerRoutes, <%= it.webServerRoutes.length %>);
-<%}}%>
+  <%}
+  if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){%>// setting up web Server
+  <% it.webServerRoutes.forEach((ret,epi) => {%>station.addEndpoint(endpoint_<%= epi %>);
+  <%}) %>
+<%}%>
   // setting up OTA
   station.setupOTA();
 
@@ -371,18 +371,17 @@ void loop() {
             <input type="text" class="form-control" id="timer-${timerId}-name" name="timer-${timerId}-name" onKeyUp="document.getElementById('timer-${timerId}-name-display').innerHTML=this.value" />
           </div>
           <div class="row">
-            <label for="timer-${timerId}-callback">Type</label>
+            <label for="timer-${timerId}-interval">Interval in milli seconds</label>
+            <input type="number" class="form-control" id="timer-${timerId}-interval" name="timer-${timerId}-interval" value="1000" />
+          </div>
+          <div class="row">
+            <label for="timer-${timerId}-callback">Callback</label>
             <code-input lang="Arduino" class="form-textarea" id="timer-${timerId}-callback" name="timer-${timerId}-callback">
 // Example callback
 // @param station the station instance you will use to do stuff if you want
 [](BaseStation* station) {
   station->log(station->toString());
-}
-</code-input>
-          </div>
-          <div class="row">
-            <label for="timer-${timerId}-interval">Interval in milli seconds</label>
-            <input type="number" class="form-control" id="timer-${timerId}-interval" name="timer-${timerId}-interval" />
+}</code-input>
           </div>
         </div>`)
         );
@@ -413,12 +412,10 @@ void loop() {
           </div>
           <div class="row">
             <label for="endpoint-${endpointId}-callback">Callback</label>
-            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback">
-[](BaseStation* station, AsyncWebServerRequest* request) {
+            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback">[](BaseStation* station, AsyncWebServerRequest* request) {
   station->log("web server query");
   request->send(200, "text/html", station->toHtml());
-}  
-            </code-input>
+}</code-input>
           </div>
         </div>`)
         );

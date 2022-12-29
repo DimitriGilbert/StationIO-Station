@@ -470,6 +470,24 @@ void EspStation::setupWebServer(
   }
 }
 
+void EspStation::addEndpoint(StationWebCallbackInfo_t endpoint) {
+  this->webServer.on(
+      endpoint.route,
+      [this, endpoint](AsyncWebServerRequest* request) {
+        if (strcmp(endpoint.login, "") != 0) {
+          if (!request->authenticate(endpoint.login, endpoint.password)) {
+            this->log(
+                "Web Server : \n\tAuthentication failed on " +
+                String(endpoint.route)
+            );
+            request->requestAuthentication();
+          }
+        }
+        endpoint.callback(this, request);
+      }
+  );
+}
+
 void EspStation::connectWifi(WifiInformation wifiInformation) {
   this->setWifiInformation(wifiInformation);
   this->connectWifi();
