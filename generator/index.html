@@ -26,11 +26,25 @@
   <body>
     <div class="container">
       <nav class="nav nav-tabs">
-        <a href="#" class="nav-link active" id="nav-config" onclick="navTo('config')">Configuration</a>
-        <a href="#" class="nav-link" id="nav-install" onclick="navTo('install')">Install</a>
-        <a href="#" class="nav-link" id="nav-main-cpp" onclick="navTo('main-cpp')">main.cpp</a>
+        <a
+          href="#"
+          class="nav-link active"
+          id="nav-config"
+          onclick="navTo('config')"
+          >Configuration</a
+        >
+        <a href="#" class="nav-link" id="nav-install" onclick="navTo('install')"
+          >Install</a
+        >
+        <a
+          href="#"
+          class="nav-link"
+          id="nav-main-cpp"
+          onclick="navTo('main-cpp')"
+          >main.cpp</a
+        >
       </nav>
-      <div id="stationio-config">
+      <div id="stationio-config" class="stio-tab">
         <form id="stationio-config-frm">
           <div class="row gx-5" id="configs">
             <div class="col">
@@ -139,7 +153,30 @@
           </div>
         </form>
       </div>
-      <div id="stationio-main-cpp" class="d-none">
+      <div id="stationio-install" class="d-none stio-tab">
+        <div>
+          <p>This install guide is for linux systems.</p>
+          <p>You need <a href="https://platformio.org/install/cli">PlateformIO</a> installed (core or IDE) to use the following command. It should work with other IDE (arduinoIDE et al) but I didn't try for now as I focus on the "framework" itself</p>
+        </div>
+        <code-input lang="bash">
+# Install PlatformIO
+# https://docs.platformio.org/en/latest/installation.html
+python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+
+# Install StationIO
+git clone git@github.com:DimitriGilbert/StationIO-Station.git "[station-name]"
+
+# Go to the station directory
+cd "[station-name]"
+
+# copy "main.cpp" output to "src/main.cpp"
+
+# upload code to project board
+pio run -t upload -e nodemcuv2
+        </code-input>
+        </div>
+      </div>
+      <div id="stationio-main-cpp" class="d-none stio-tab">
         <code-input lang="Arduino" id="main-cpp-output"></code-input>
       </div>
     </div>
@@ -149,10 +186,12 @@
           el.classList.remove("active");
         });
         document.querySelector("#nav-" + where).classList.add("active");
-        document.querySelectorAll(".container > div").forEach((el) => {
+        document.querySelectorAll(".stio-tab").forEach((el) => {
           el.classList.add("d-none");
         });
-        document.querySelector("#stationio-" + where).classList.remove("d-none");
+        document
+          .querySelector("#stationio-" + where)
+          .classList.remove("d-none");
       }
       /**
        * https://stackoverflow.com/a/35385518
@@ -296,7 +335,9 @@ void loop() {
         mq2: (form) => {
           return [
             "mq2",
-            `${form.get("mq2-pin")}, ${form.get("mq2-res")}, ${form.get("mq2-adc-bit")}`,
+            `${form.get("mq2-pin")}, ${form.get("mq2-res")}, ${form.get(
+              "mq2-adc-bit"
+            )}`,
           ];
         },
       };
@@ -382,7 +423,7 @@ void loop() {
         .getElementById("stationio-config-frm")
         .addEventListener("change", (e) => {
           let frmData = new FormData(e.target.form);
-          
+
           const data = {
             name: frmData.get("station-name"),
             wifi: {
@@ -398,27 +439,29 @@ void loop() {
           frmData.getAll("sensors[]").forEach((sensor) => {
             if (Object.keys(sensorParseForms).includes(sensor)) {
               data.sensors.push(sensorParseForms[sensor](frmData));
-            }
-            else {
+            } else {
               data.sensors.push(sensor);
             }
           });
           frmData.getAll("timers[]").forEach((timer) => {
-              data.timers.push({
-                name: frmData.get(`timer-${timer}-name`),
-                interval: frmData.get(`timer-${timer}-interval`),
-                callback: frmData.get(`timer-${timer}-callback`),
-              });
+            data.timers.push({
+              name: frmData.get(`timer-${timer}-name`),
+              interval: frmData.get(`timer-${timer}-interval`),
+              callback: frmData.get(`timer-${timer}-callback`),
+            });
           });
           frmData.getAll("endpoints[]").forEach((endpts) => {
-              data.webServerRoutes.push({
-                url: frmData.get(`endpoint-${endpts}-route`),
-                login: frmData.get(`endpoint-${endpts}-login`),
-                password: frmData.get(`endpoint-${endpts}-password`),
-                callback: frmData.get(`endpoint-${endpts}-callback`),
-              });
+            data.webServerRoutes.push({
+              url: frmData.get(`endpoint-${endpts}-route`),
+              login: frmData.get(`endpoint-${endpts}-login`),
+              password: frmData.get(`endpoint-${endpts}-password`),
+              callback: frmData.get(`endpoint-${endpts}-callback`),
+            });
           });
-          document.getElementById("main-cpp-output").value = Eta.render(mainCppTpl, data);
+          document.getElementById("main-cpp-output").value = Eta.render(
+            mainCppTpl,
+            data
+          );
         });
       // onload event for the page
       window.addEventListener("load", () => {
@@ -426,10 +469,12 @@ void loop() {
           "code-input",
           codeInput.templates.prism(Prism, [new codeInput.plugins.Indent()])
         );
-        document.getElementById("main-cpp-output").style.height = window.innerHeight - 100 + "px";
+        document.getElementById("main-cpp-output").style.height =
+          window.innerHeight - 100 + "px";
       });
       window.addEventListener("resize", () => {
-        document.getElementById("main-cpp-output").style.height = window.innerHeight - 100 + "px";
+        document.getElementById("main-cpp-output").style.height =
+          window.innerHeight - 100 + "px";
       });
     </script>
     <script
