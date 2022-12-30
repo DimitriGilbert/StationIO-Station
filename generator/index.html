@@ -169,8 +169,8 @@
                   />
                 </div>
               </div>
-              <div id="timers-config" class="row gt-4">
-                <h2>Timers config</h2>
+              <div id="timers-config" class="row">
+                <h2 class="text-center">Timers config</h2>
                 <div>
                   <input
                     type="hidden"
@@ -221,8 +221,8 @@
                 </div>
                 <div class="row" id="sensors-list"></div>
               </div>
-              <div class="row gt-4" id="endpoint-config">
-                <h2>Endpoint Config</h2>
+              <div class="row" id="endpoint-config">
+                <h2 class="text-center">Endpoint Config</h2>
                 <div>
                   <input
                     type="hidden"
@@ -438,7 +438,23 @@ void loop() {
       // Install tpl
       var installPIOtpl = `# Install PlatformIO 
 # https://docs.platformio.org/en/latest/installation.html
-python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"`;
+python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+# Install udev rules
+# https://docs.platformio.org/en/latest/core/installation/udev-rules.html
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+sudo service udev restart
+# setting up users
+# if Debian/Ubuntu
+sudo usermod -a -G dialout $USER
+sudo usermod -a -G plugdev $USER
+# if Arch
+sudo usermod -a -G uucp $USER
+sudo usermod -a -G lock $USER
+# If your board was plugged, please unplug and plug it again
+# add to you .bashrc or .zshrc
+export PATH="$PATH:$HOME/.platformio/penv/bin"
+# or
+alias pio="$HOME/.platformio/penv/bin/pio"`;
       var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`
       var installStioTgzTpl = `STIOinstall_TMP_FILE=$(mktemp);
 curl -LJ --output $STIOinstall_TMP_FILE "https://github.com/DimitriGilbert/StationIO-Station/archive/refs/heads/main.tar.gz";
@@ -663,26 +679,28 @@ TInfo tinfo;
           document.getElementById("install-station-name").value = data.name;
           document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
         });
-      document.getElementById("install-config-frm").addEventListener("change", (evt)=>{
-        let frmData = new FormData(evt.target.form!==undefined?evt.target.form:evt.target);
-        let data = {stationName: frmData.get("install-station-name")};
-        let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
-        switch (frmData.get("install-station-type")) {
-          case "tgz":
-            data.stationInstall = Eta.render(installStioTgzTpl, data)+"\n";
-            break;
-          case "git":
-          default:
-            data.stationInstall = Eta.render(installStioGitTpl, data)+"\n";
-            break;
-        }
-        installTpl += "\n"+installStioTpl;
-        
-        document.getElementById("install-output").value = Eta.render(
-          installTpl,
-          data
-        );
-      });
+      document
+        .getElementById("install-config-frm")
+        .addEventListener("change", (evt)=>{
+          let frmData = new FormData(evt.target.form!==undefined?evt.target.form:evt.target);
+          let data = {stationName: frmData.get("install-station-name")};
+          let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
+          switch (frmData.get("install-station-type")) {
+            case "tgz":
+              data.stationInstall = Eta.render(installStioTgzTpl, data)+"\n";
+              break;
+            case "git":
+            default:
+              data.stationInstall = Eta.render(installStioGitTpl, data)+"\n";
+              break;
+          }
+          installTpl += "\n"+installStioTpl;
+          
+          document.getElementById("install-output").value = Eta.render(
+            installTpl,
+            data
+          );
+        });
       // onload event for the page
       window.addEventListener("load", () => {
         codeInput.registerTemplate(
