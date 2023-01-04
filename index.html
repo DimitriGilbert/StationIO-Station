@@ -29,7 +29,7 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <title>StationIO Station Generator</title>
+    <title>StationIO</title>
   </head>
   <body>
     <div class="container">
@@ -55,6 +55,13 @@
             id="nav-main-cpp"
             onclick="navTo('main-cpp')"
             >main.cpp</a
+          >
+          <a
+            href="#"
+            class="nav-link"
+            id="nav-custom-sensors"
+            onclick="navTo('custom-sensors')"
+            >Sensors</a
           >
         </nav>
       </div>
@@ -149,8 +156,8 @@
                   placeholder="Station Name"
                 />
               </div>
-              <div id="wifi-config">
-                <div class="row">
+              <div id="wifi-config" class="row">
+                <div class="col">
                   <label for="wifi-ssid">WiFi SSID</label>
                   <input
                     type="text"
@@ -159,7 +166,7 @@
                     name="wifi-ssid"
                   />
                 </div>
-                <div class="row">
+                <div class="col">
                   <label for="wifi-pass">WiFi password</label>
                   <input
                     type="password"
@@ -207,6 +214,7 @@
                       <option value="mq2">mq2</option>
                       <option value="ccs811">ccs811</option>
                       <option value="linky">linky</option>
+                      <option value="custom">custom</option>
                     </select>
                   </div>
                   <div class="col-2">
@@ -219,6 +227,7 @@
                     </button>
                   </div>
                 </div>
+                <input type="hidden" name="sensor-index" id="sensor-index" value="0">
                 <div class="row" id="sensors-list"></div>
               </div>
               <div class="row" id="endpoint-config">
@@ -269,14 +278,13 @@
             <div class="col">
               <label for="install-station-type">install type</label>
               <select
-                type="checkbox"
                 class="form-select"
                 name="install-station-type"
                 id="install-station-type"
               >
-              <option value="git">git</option>
-              <option value="tgz">tgz</option>
-            </select>
+                <option value="git">git</option>
+                <option value="tgz">tgz</option>
+              </select>
             </div>
             <div class="col">
               <label class="form-check-label" for="install-station-pio">install PlatformIO</label>
@@ -305,10 +313,14 @@ cd "[station-name]"
 pio run -t upload -e nodemcuv2</code-input>
       </div>
       <div id="stationio-main-cpp" class="d-none stio-tab">
-        <code-input lang="Arduino" id="main-cpp-output"></code-input>
+        <code-input lang="Arduino" id="main-cpp-output">// Nothing to see here
+// please fill the configuration form !</code-input>
+      </div>
+      <div id="stationio-custom-sensors" class="d-none stio-tab">
+        No custom sensor defined yet
       </div>
     </div>
-    <script>
+    <script id="common.js">
       function navTo(where) {
         document.querySelectorAll(".nav-link").forEach((el) => {
           el.classList.remove("active");
@@ -332,6 +344,7 @@ pio run -t upload -e nodemcuv2</code-input>
         return template.content.firstChild;
       }
 
+      // main tpl
       var mainCppTpl = `#include <Arduino.h>
 #include "./Station.h"
 
@@ -472,7 +485,228 @@ cd "<%~ it.stationName %>"
 pio run -t upload -e nodemcuv2
 `;
 
+      // Sensor tpl
+      var sensorHTpl = `#include <Arduino.h>
+#include "../Sensor.h"
+<% it.includes!==undefined?it.includes.forEach(function(i){ %> 
+#include <<%= i %>> <%}):""; %> 
 
+#ifndef StationIOSensor_<%= it.sensorName %>_h
+#define StationIOSensor_<%= it.sensorName %>_h
+
+class <%= it.sensorName %> : public Sensor
+{
+private:<% it.properties!==undefined&&it.properties.private!==undefined?it.properties.private.forEach(function(p){ %> 
+  <%= p.type %> <%= p.name %>; <%}):""; %> 
+public:<% it.properties!==undefined&&it.properties.public!==undefined?it.properties.public.forEach(function(p){ %> 
+  <%= p.type %> <%= p.name %>; <%}):""; %> 
+  <%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>);
+  ~<%= it.sensorName %>();
+
+  static const size_t mesuresCount = <%= it.mesuresCount %>;
+  static const SensorMesure mesures[<%= it.mesuresCount %>];
+  static const u_int *mesuresSampleRates[<%= it.mesuresCount %>];
+  unsigned long mesuresSampleLast[<%= it.mesuresCount %>];
+
+  SensorMesureData mesuresDatas[<%= it.mesuresCount %>];
+  CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
+  
+  size_t getMesuresCount();
+  SensorMesureData *read();
+  SensorMesureData read(int index);
+  SensorMesureData readBuffer(int index, int bufferIndex);
+  void setMesure(int index, float value);
+  SensorMesureData *average(int last);
+  SensorMesureData average(int last, int index);
+  String toString();
+  String toString(int index);
+  String toCsv();
+  String toCsv(int index);
+  String toJson();
+  String toJson(int index);
+  String toXml();
+  String toXml(int index);
+  String jsUtils();
+  String toHtml();
+  String toHtml(int index);
+  SensorMesureData *read_();
+  SensorMesureData read_(int index);
+  void loop();
+};
+
+#endif`;
+      var sensorCppTpl = `#include <Arduino.h>
+#include "./<%= it.sensorName %>.h"
+
+#include "./html.h"
+
+<%= it.sensorName %>::<%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>) : Sensor("<%= it.sensorName %>") {<%= it.sensorInitializer!==undefined&&it.sensorInitializer.body!==undefined?it.sensorInitializer.body:"" %> 
+
+  <% it.mesures.forEach(function(m, i){ %> 
+    this->mesuresSampleLast[<%= i %>] = (unsigned long)<%= m.delayFirst!==undefined?m.delayFirst:"0" %>; 
+<% }) %>
+};
+<%= it.sensorName %>::~<%= it.sensorName %>(){};
+
+const <%= it.sensorName %>::SensorMesure <%= it.sensorName %>::mesures[<%= it.mesuresCount %>] = {<% it.mesures.forEach(function(m){ %> 
+    {
+      "<%= m.name %>",
+      "<%= m.unit %>"
+    },<%
+  }) %>
+};
+const u_int *<%= it.sensorName %>::mesuresSampleRates[<%= it.mesuresCount %>] = {<% it.mesures.forEach(function(m){ %> 
+    (const u_int *)<%= m.sampleRate %>,<%
+  }) %>
+};
+
+size_t <%= it.sensorName %>::getMesuresCount() { return this->mesuresCount; }
+Sensor::SensorMesureData *<%= it.sensorName %>::read_() {
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    this->mesuresDatas[i] = this->read_(i);
+    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
+  }
+  return this->mesuresDatas;
+}
+Sensor::SensorMesureData <%= it.sensorName %>::read_(int index) {
+  if (index < this->mesuresCount) {
+    Sensor::SensorMesureData value = 0;
+    this->mesuresSampleLast[index] = millis();
+    switch (index) {<% it.mesures.forEach(function(m, i){ %> 
+      // mesure <%= m.name %> 
+      case <%= i %>:
+        <%= m.body!==undefined?m.body:"return 0;" %> 
+        break;
+<% }) %>
+    }
+    this->setMesure(index, value);
+    return this->mesuresDatas[index];
+  }
+  return this->read_(<%= it.mesuresDefault!==undefined?it.mesuresDefault:"0" %>);
+}
+void <%= it.sensorName %>::setMesure(int index, float value) {
+  this->mesuresDatas[index] = value;
+  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
+}
+
+void <%= it.sensorName %>::loop() {
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    if (millis() - this->mesuresSampleLast[i] > (unsigned long)this->mesuresSampleRates[i]) {
+      this->read_(i);
+    }
+  }
+}
+
+Sensor::SensorMesureData *<%= it.sensorName %>::read() { return this->mesuresDatas; }
+
+Sensor::SensorMesureData <%= it.sensorName %>::read(int index) {
+  return this->__read(index, this->mesuresCount, this->mesuresDatas);
+}
+
+Sensor::SensorMesureData <%= it.sensorName %>::readBuffer(int index, int bufferIndex) {
+  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
+  return this->mesuresBuffers[index][bufferIndex];
+}
+
+Sensor::SensorMesureData *<%= it.sensorName %>::average(int last) {
+  Sensor::SensorMesureData data[this->mesuresCount];
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    data[i] = this->average(last, i);
+  }
+
+  return data;
+}
+
+Sensor::SensorMesureData <%= it.sensorName %>::average(int last, int index) {
+  // return this->__average(last, index, this->mesuresCount, this->mesuresBuffers);
+  if (index > this->mesuresCount) {
+    return 0;
+  }
+  SensorMesureData data = 0;
+
+  if (last > this->mesuresBuffers[index].size()) {
+    last = this->mesuresBuffers[index].size();
+  }
+
+  for (size_t i = 0; i < last; i++) {
+    data = data + this->mesuresBuffers[index][i];
+  }
+  return data / float(last);
+}
+
+String <%= it.sensorName %>::toString() {
+  String out = this->name+"\\n";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat("\\t"+this->toString(i));
+  }
+  return out;
+}
+String <%= it.sensorName %>::toString(int index) {
+  return this->mesures[index].name + ": " + String(this->read(index))+" "+this->mesures[index].unit+"\\n";
+}
+String <%= it.sensorName %>::toCsv() {
+  String out = "";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toCsv(i));
+  }
+  return out;
+}
+String <%= it.sensorName %>::toCsv(int index) {
+  return "\\""+this->name+"\\", \\""+this->mesures[index].name+"\\", \\""+this->read(index)+"\\", \\""+this->mesures[index].unit+"\\"\\n";
+}
+String <%= it.sensorName %>::toJson() {
+  String out = "\\""+this->name+"\\": {";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    if (i > 0)
+    {
+      out.concat(", ");
+    }
+    out.concat(this->toJson(i));
+  }
+  out.concat("}");
+  return out;
+}
+String <%= it.sensorName %>::toJson(int index) {
+  return "\\""+this->mesures[index].name + "\\":" + String(this->read(index));
+}
+String <%= it.sensorName %>::toXml() {
+  String out = "<"+this->name+">";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toXml(i));
+  }
+  out.concat("</"+this->name+">");
+  return out;
+}
+String <%= it.sensorName %>::toXml(int index) {
+  return "<"+this->mesures[index].name+" unit=\\""+this->mesures[index].unit+"\\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
+}
+String <%= it.sensorName %>::jsUtils() {
+  return "";
+}
+
+String <%= it.sensorName %>::toHtml() {
+  String out = "<div class=\\"sensor " + this->name +
+               "\\"><div class=\\"snName\\">" + this->name +
+               "</div><div class=\\"snMss\\">";
+  for (size_t i = 0; i < this->mesuresCount; i++) {
+    out.concat(this->toHtml(i));
+  }
+  out.concat("</div></div>"+this->jsUtils());
+  return out;
+}
+String <%= it.sensorName %>::toHtml(int index) {
+  return "<div class=\\"snMs " + this->mesures[index].name +
+         "\\"><span class=\\"snMs-name\\">" + this->mesures[index].name +
+         "</span> : <span class=\\"snMs-value\\">" +
+         String(this->read(index)) +
+         "</span><span class=\\"snMs-unit\\">" +
+         this->mesures[index].unit + "</span></div>";
+}
+`;
+    
+    
+    </script>
+    <script id="sensor.js">
       const sensorSelect = document.getElementById("sensor-select");
       const stationName = document.getElementById("station-name");
       const wifiSSID = document.getElementById("wifi-ssid");
@@ -490,12 +724,34 @@ pio run -t upload -e nodemcuv2
           return `<div class="row">
             <label for="mq2-pin">pin</label>
             <input type="text" class="form-control" id="mq2-pin" name="mq2-pin" value="A0"/>
+          </div>`;
+        },
+        custom:(sensorIndex) => {
+          return `<input type="hidden" name="custom-index-${sensorIndex}" id="custom-index-${sensorIndex}" value="${sensorIndex}"/><div class="row">
+            <label for="custom-name-${sensorIndex}">Name</label>
+            <input type="text" class="form-control" id="custom-name-${sensorIndex}" name="custom-name-${sensorIndex}" onkeyup="this.parentNode.parentNode.firstElementChild.firstChild.textContent=this.value" />
           </div><div class="row">
-            <label for="mq2-res">voltage resolution</label>
-            <input type="number" class="form-control" id="mq2-res" name="mq2-res" value="5" />
-          </div><div class="row">
-            <label for="mq2-adc-bit">ADC resolution</label>
-            <input type="number" class="form-control" id="mq2-adc-bit" name="mq2-adc-bit" value="10" />
+            <label for="custom-mesure-${sensorIndex}-gen" class="form-check-label">Generate code</label>
+            <input type="checkbox" class="form-check-input" id="custom-mesure-${sensorIndex}-gen" name="custom-mesure-${sensorIndex}-gen" onclick="this.checked?parentNode.nextElementSibling.classList.remove('d-none'):parentNode.nextElementSibling.classList.add('d-none')" />
+          </div>
+          <div class="d-none">
+            <div class="row">
+              <div class="col">
+                <label for="custom-init-params-${sensorIndex}">Initialization parameter(-s comma separated)</label>
+                <input type="text" class="form-control" id="custom-init-${sensorIndex}" name="custom-init-${sensorIndex}" />
+              </div>
+              <div class="col">
+              <label for="custom-include-${sensorIndex}">Library(-ies comma separated)</label>
+              <input type="text" class="form-control" id="custom-include-${sensorIndex}" name="custom-include-${sensorIndex}" />
+              </div>
+            </div><div class="row">
+                <label for="custom-init-body-${sensorIndex}">Initialization body</label>
+                <code-input lang="Arduino" class="form-control" id="custom-init-${sensorIndex}" name="custom-init-${sensorIndex}" ></code-input>
+            </div><div class="row">
+              <h3>Mesures <button type="button" class="btn btn-secondary" onclick="customSensorMesureFrm(${sensorIndex})">+</button></h3>
+              <input type="hidden" name="custom-mesure-count-${sensorIndex}" id="custom-mesure-count-${sensorIndex}" value="0"/>
+              <div id="custom-mesure-list-${sensorIndex}"></div>
+            </div>
           </div>`;
         },
       };
@@ -507,9 +763,7 @@ pio run -t upload -e nodemcuv2
         mq2: (form) => {
           return [
             "mq2",
-            `${form.get("mq2-pin")}, ${form.get("mq2-res")}, ${form.get(
-              "mq2-adc-bit"
-            )}`,
+            `${form.get("mq2-pin")}}`,
           ];
         },
         linky: (form) => {
@@ -552,21 +806,127 @@ TInfo tinfo;
 `,
           ];
         },
+        custom: (form, index) => {
+          let name = form.get(`custom-name-${index}`);
+          let generate = form.get(`custom-mesure-${index}-gen`);
+          let ret = name;
+          if (generate == "on") {
+            let tplData = {
+              sensorName: name
+            };
+            
+            let includes = form.get(`custom-include-${index}`);
+            if (includes !== "" && includes !== null) {
+              tplData.includes = includes.split(",");
+            }
+
+            let initParams = form.get(`custom-init-params-${index}`);
+            if (initParams !== "" && initParams !== null) {
+              tplData.init = {params:initParams.split(",")};
+            }
+
+            let initBody = form.get(`custom-init-body-${index}`);
+            if (initBody !== "" && initBody !== null) {
+              if (tplData.init === undefined) {
+                tplData.init = {};
+              }
+              tplData.init.body = initBody;
+            }
+            
+            let mcount = parseInt(form.get(`custom-mesure-count-${index}`));
+            if (mcount > 0) {
+              tplData.mesures = [];
+              for(let i=0; i<mcount; i++){
+                if (form.has(`custom-mesure-${index}-${i}-name`)) {
+
+                  let mesure = {
+                    name: form.get(`custom-mesure-${index}-${i}-name`),
+                    unit: form.get(`custom-mesure-${index}-${i}-unit`),
+                    sampleRate: form.get(`custom-mesure-${index}-${i}-sample`),
+                  };
+  
+                  let sdelay = form.get(`custom-mesure-${index}-${i}-sample-delay`);
+                  if (sdelay !== "") {
+                    mesure.delayFirst = sdelay;
+                  }
+  
+                  let body = form.get(`custom-mesure-${index}-${i}-body`);
+                  if (body !== "") {
+                    mesure.body = body;
+                  }
+  
+                  tplData.mesures.push(mesure);
+                }
+              }
+              tplData.mesuresCount = tplData.mesures.length;
+            }
+            
+            ret = tplData.init===undefined?name:tplData.init.params===undefined?name:[name, tplData.init.params.join(",")];
+            let soutEl = document.getElementById("stationio-custom-sensors").appendChild(
+              htmlToElements(`<div id="stationio-custom-sensor-${index}">
+                <p>Copy and paste the following code in your src/sensors/${name}.h and  src/sensors/${name}.cpp files</p>
+                <div class="row">
+                  <div class="col"><h3>${name}.h</h3><code-input lang="Arduino" id="${name}.h" value=""></code-input></div>
+                  <div class="col"><h3>${name}.cpp</h3><code-input lang="Arduino" id="${name}.cpp" value=""></code-input></div>
+                </div>
+              </div>`)
+            );
+            soutEl.lastElementChild.firstElementChild.lastElementChild.value = Eta.render(sensorHTpl, tplData);
+            soutEl.lastElementChild.lastElementChild.lastElementChild.value = Eta.render(sensorCppTpl, tplData);
+          }
+          return ret;
+        },
       };
+
+      function customSensorMesureFrm(sensorIndex) {
+        let mcel = document.getElementById(`custom-mesure-count-${sensorIndex}`);
+        let mcount = parseInt(mcel.value);
+        mcel.value = mcount+1;
+        document.getElementById(`custom-mesure-list-${sensorIndex}`).appendChild(htmlToElements(`<div id="custom-mesure-${sensorIndex}-${mcount}">
+          <span id="custom-mesure-${sensorIndex}-${mcount}-name-display"></span>
+          <button type="button" class="btn btn-sm btn-danger" onclick="this.parentNode.parentNode.removeChild(this.parentNode)">X</button>
+          <div class="row">
+            <div class="col">
+              <label for="custom-mesure-${sensorIndex}-${mcount}-name">Name</label>
+              <input type="text" class="form-control" id="custom-mesure-${sensorIndex}-${mcount}-name" name="custom-mesure-${sensorIndex}-${mcount}-name" onkeyup="this.parentNode.parentNode.parentNode.firstElementChild.innerHTML=this.value" />
+            </div><div class="col">
+              <label for="custom-mesure-${sensorIndex}-${mcount}-unit">Unit</label>
+              <input type="text" class="form-control" id="custom-mesure-${sensorIndex}-${mcount}-unit" name="custom-mesure-${sensorIndex}-${mcount}-unit" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label for="custom-mesure-${sensorIndex}-${mcount}-sample">Sample Rate</label>
+              <input type="number" class="form-control" id="custom-mesure-${sensorIndex}-${mcount}-sample" name="custom-mesure-${sensorIndex}-${mcount}-sample" value="2000" step="100" />
+            </div><div class="col">
+              <label for="custom-mesure-${sensorIndex}-${mcount}-sample-delay">Delay first sample</label>
+              <input type="number" class="form-control" id="custom-mesure-${sensorIndex}-${mcount}-sample-delay" name="custom-mesure-${sensorIndex}-${mcount}-sample-delay" value="2000" step="100" />
+            </div>
+          </div>
+          <div class="row">
+            <label for="custom-mesure-${sensorIndex}-${mcount}-body">body</label>
+            <code-input class="form-control" id="custom-mesure-${sensorIndex}-${mcount}-body" name="custom-mesure-${sensorIndex}-${mcount}-body" value="// set 'value' variable with the sensor read value\n// value = sensor->libObject->read();\nvalue = 42;"></code-input>
+          </div>
+          <div>`
+        ));
+      }
 
       document
         .getElementById("addSensorButton")
         .addEventListener("click", () => {
+          let sensorIndex = parseInt(document.getElementById("sensor-index").value);
           const sensor = sensorSelect.value;
           let sensorForm = `<div class="row">
-          <h3>${sensor} <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode)">X</button></h3>
-          <input type="hidden" name="sensors[]" value="${sensor}"/>`;
+          <h3>${sensor} <button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode)">X</button></h3>
+          <input type="hidden" name="sensors[]" value="${sensor}::${sensorIndex}"/>`;
           if (Object.keys(sensorForms).includes(sensor)) {
-            sensorForm += sensorForms[sensor]();
+            sensorForm += sensorForms[sensor](sensorIndex);
           }
           sensorsList.appendChild(htmlToElements(sensorForm + "</div>"));
+          document.getElementById("sensor-index").value = sensorIndex + 1;
         });
-
+    </script>
+    <script id="timer.js">
       const timersList = document.getElementById("timers-list");
       const timersCount = document.getElementById("timers-count");
       const addTimerButton = document.getElementById("addTimerButton");
@@ -579,26 +939,24 @@ TInfo tinfo;
           <input type="hidden" name="timers[]" value="${timerId}"/>
           <h3><span id="timer-${timerId}-name-display">Timer ${timerId}</span> <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);">X</button></h3>
           <div class="row">
-            <label for="timer-${timerId}-name">Name</label>
-            <input type="text" class="form-control" id="timer-${timerId}-name" name="timer-${timerId}-name" onKeyUp="document.getElementById('timer-${timerId}-name-display').innerHTML=this.value" />
-          </div>
-          <div class="row">
-            <label for="timer-${timerId}-interval">Interval in milli seconds</label>
-            <input type="number" class="form-control" id="timer-${timerId}-interval" name="timer-${timerId}-interval" value="1000" />
+            <div class="col">
+              <label for="timer-${timerId}-name">Name</label>
+              <input type="text" class="form-control" id="timer-${timerId}-name" name="timer-${timerId}-name" onKeyUp="document.getElementById('timer-${timerId}-name-display').innerHTML=this.value" />
+            </div>
+            <div class="col">
+              <label for="timer-${timerId}-interval">Interval in milli seconds</label>
+              <input type="number" class="form-control" id="timer-${timerId}-interval" name="timer-${timerId}-interval" value="1000" />
+            </div>
           </div>
           <div class="row">
             <label for="timer-${timerId}-callback">Callback</label>
-            <code-input lang="Arduino" class="form-textarea" id="timer-${timerId}-callback" name="timer-${timerId}-callback">
-// Example callback
-// @param station the station instance you will use to do stuff if you want
-[](BaseStation* station) {
-  station->log(station->toString());
-}</code-input>
+            <code-input lang="Arduino" class="form-textarea" id="timer-${timerId}-callback" name="timer-${timerId}-callback" value="// Example callback\n// @param station the station instance you will use to do stuff if you want\n[](BaseStation* station) {\n\tstation->log(station->toString());\n}"></code-input>
           </div>
         </div>`)
         );
       });
-
+    </script>
+    <script id="endpoint.js">
       const endpointsList = document.getElementById("endpoints-list");
       const endpointsCount = document.getElementById("endpoint-count");
       const addEndpointButton = document.getElementById("addEndpointButton");
@@ -606,7 +964,7 @@ TInfo tinfo;
       addEndpointButton.addEventListener("click", () => {
         const endpointId = endpointsCount.value;
         endpointsCount.value++;
-        endpointsList.appendChild(
+        let epEl = endpointsList.appendChild(
           htmlToElements(`<div class="row">
           <input type="hidden" name="endpoints[]" value="${endpointId}"/>
           <h3><span id="endpoint-${endpointId}-route-display">Endpoint ${endpointId}</span> <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);">X</button></h3>
@@ -624,19 +982,20 @@ TInfo tinfo;
           </div>
           <div class="row">
             <label for="endpoint-${endpointId}-callback">Callback</label>
-            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback">[](BaseStation* station, AsyncWebServerRequest* request) {
-  station->log("web server query");
-  request->send(200, "text/html", station->toHtml());
-}</code-input>
+            <code-input lang="Arduino" class="form-textarea" id="endpoint-${endpointId}-callback" name="endpoint-${endpointId}-callback"></code-input>
           </div>
         </div>`)
         );
+        epEl.lastElementChild.lastElementChild.value = `[](BaseStation* station, AsyncWebServerRequest* request) {\n\tstation->log("web server query");\n\trequest->send(200, "text/html", station->toHtml());\n}`;
       });
-
+    </script>
+    <script id="init.js">
       document
         .getElementById("stationio-config-frm")
         .addEventListener("change", (e) => {
           let frmData = new FormData(e.target.form);
+          // reset sensor output
+          document.getElementById("stationio-custom-sensors").innerHTML = "";
 
           const data = {
             name: frmData.get("station-name"),
@@ -650,11 +1009,12 @@ TInfo tinfo;
             timers: [],
             webServerRoutes: [],
           };
-          frmData.getAll("sensors[]").forEach((sensor) => {
-            if (Object.keys(sensorParseForms).includes(sensor)) {
-              data.sensors.push(sensorParseForms[sensor](frmData));
+          frmData.getAll("sensors[]").forEach((sensor, sensI) => {
+            let snA = sensor.split("::");
+            if (Object.keys(sensorParseForms).includes(snA[0])) {
+              data.sensors.push(sensorParseForms[snA[0]](frmData, snA[1]));
             } else {
-              data.sensors.push(sensor);
+              data.sensors.push(snA[0]);
             }
           });
           frmData.getAll("timers[]").forEach((timer) => {
@@ -672,12 +1032,18 @@ TInfo tinfo;
               callback: frmData.get(`endpoint-${endpts}-callback`),
             });
           });
+
           document.getElementById("main-cpp-output").value = Eta.render(
             mainCppTpl,
             data
           );
+          
           document.getElementById("install-station-name").value = data.name;
           document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
+          
+          if (document.getElementById("stationio-custom-sensors").innerHTML == "") {
+            document.getElementById("stationio-custom-sensors").innerHTML = 'No custom sensors defined yet';
+          }
         });
       document
         .getElementById("install-config-frm")
@@ -701,6 +1067,7 @@ TInfo tinfo;
             data
           );
         });
+      
       // onload event for the page
       window.addEventListener("load", () => {
         codeInput.registerTemplate(
@@ -734,10 +1101,6 @@ TInfo tinfo;
     ></script>
     <script
       src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/plugins/indent.js"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/plugins/autodetect.js"
       crossorigin="anonymous"
     ></script>
     <script

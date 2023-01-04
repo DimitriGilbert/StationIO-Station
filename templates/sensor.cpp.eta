@@ -67,7 +67,7 @@ Sensor::SensorMesureData <%= it.sensorName %>::read(int index) {
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
 }
 
-Sensor::SensorMesureData sht21::readBuffer(int index, int bufferIndex) {
+Sensor::SensorMesureData <%= it.sensorName %>::readBuffer(int index, int bufferIndex) {
   bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
   return this->mesuresBuffers[index][bufferIndex];
 }
