@@ -19,9 +19,9 @@
     <link
       id="import-theme"
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism-okaidia.css"
     />
-    <!-- theme -->
+    <!-- bootswatch theme -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.3/solar/bootstrap.min.css"
@@ -452,10 +452,12 @@ void loop() {
       var installPIOtpl = `# Install PlatformIO 
 # https://docs.platformio.org/en/latest/installation.html
 python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+
 # Install udev rules
 # https://docs.platformio.org/en/latest/core/installation/udev-rules.html
 curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
 sudo service udev restart
+
 # setting up users
 # if Debian/Ubuntu
 sudo usermod -a -G dialout $USER
@@ -463,11 +465,20 @@ sudo usermod -a -G plugdev $USER
 # if Arch
 sudo usermod -a -G uucp $USER
 sudo usermod -a -G lock $USER
-# If your board was plugged, please unplug and plug it again
-# add to you .bashrc or .zshrc
+
+# platformIO cli command configuration
+# add path or alias to you .bashrc or .zshrc
 export PATH="$PATH:$HOME/.platformio/penv/bin"
 # or
-alias pio="$HOME/.platformio/penv/bin/pio"`;
+alias pio="$HOME/.platformio/penv/bin/pio"
+
+# then reload your shell
+source ~/.bashrc
+# or
+source ~/.zshrc
+
+# If your board was plugged, please unplug and plug it again
+`;
       var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`
       var installStioTgzTpl = `STIOinstall_TMP_FILE=$(mktemp);
 curl -LJ --output $STIOinstall_TMP_FILE "https://github.com/DimitriGilbert/StationIO-Station/archive/refs/heads/main.tar.gz";
@@ -480,6 +491,8 @@ rm $STIOinstall_TMP_FILE;`
 cd "<%~ it.stationName %>"
 
 # copy "main.cpp" output to "src/main.cpp"
+# 
+# if you have custom sensors copy the code from the "sensors" tab to the relevant files
 
 # upload code to project board
 pio run -t upload -e nodemcuv2
@@ -747,12 +760,39 @@ String <%= it.sensorName %>::toHtml(int index) {
             </div><div class="row">
                 <label for="custom-init-body-${sensorIndex}">Initialization body</label>
                 <code-input lang="Arduino" class="form-control" id="custom-init-${sensorIndex}" name="custom-init-${sensorIndex}" ></code-input>
-            </div><div class="row">
-              <h3>Mesures <button type="button" class="btn btn-secondary" onclick="customSensorMesureFrm(${sensorIndex})">+</button></h3>
-              <input type="hidden" name="custom-mesure-count-${sensorIndex}" id="custom-mesure-count-${sensorIndex}" value="0"/>
-              <div id="custom-mesure-list-${sensorIndex}"></div>
-            </div>
-          </div>`;
+            </div><div class="row d-none">
+              <label for="custom-mesure-${sensorIndex}-gen-adv" class="form-check-label">advanced</label>
+              <input type="checkbox" class="form-check-input" id="custom-mesure-${sensorIndex}-gen-adv" name="custom-mesure-${sensorIndex}-gen-adv" onclick="this.checked?parentNode.nextElementSibling.classList.remove('d-none'):parentNode.nextElementSibling.classList.add('d-none')" />
+            </div><div class="d-none">
+              <div class="row">
+                <h3>Private properties<button class="btn btn-secondary btn-sm">+</button></h3>
+                <div class="col">
+                  <label for="custom-private-prop-name-${sensorIndex}">name</label>
+                  <input type="text" class="form-control" id="custom-private-prop-name-${sensorIndex}" name="custom-private-prop-name-${sensorIndex}" />
+                </div>
+                <div class="col">
+                  <label for="custom-private-prop-type-${sensorIndex}">name</label>
+                  <input type="text" class="form-control" id="custom-private-prop-type-${sensorIndex}" name="custom-private-prop-type-${sensorIndex}" />
+                </div>
+              </div>
+              <div class="row">
+                <h3>Public properties<button class="btn btn-secondary btn-sm">+</button></h3>
+                <div class="col">
+                  <label for="custom-private-prop-name-${sensorIndex}">name</label>
+                  <input type="text" class="form-control" id="custom-private-prop-name-${sensorIndex}" name="custom-private-prop-name-${sensorIndex}" />
+                </div>
+                <div class="col">
+                  <label for="custom-private-prop-type-${sensorIndex}">name</label>
+                  <input type="text" class="form-control" id="custom-private-prop-type-${sensorIndex}" name="custom-private-prop-type-${sensorIndex}" />
+                </div>
+              </div>
+              </div>
+              <div class="row">
+                <h3>Mesures <button type="button" class="btn btn-secondary" onclick="customSensorMesureFrm(${sensorIndex})">+</button></h3>
+                <input type="hidden" name="custom-mesure-count-${sensorIndex}" id="custom-mesure-count-${sensorIndex}" value="0"/>
+                <div id="custom-mesure-list-${sensorIndex}"></div>
+              </div>
+            </div>`;
         },
       };
 
@@ -973,12 +1013,14 @@ TInfo tinfo;
             <input type="text" class="form-control" id="endpoint-${endpointId}-route" name="endpoint-${endpointId}-route" onKeyUp="document.getElementById('endpoint-${endpointId}-route-display').innerHTML=this.value" />
           </div>
           <div class="row">
-            <label for="endpoint-${endpointId}-login">Login</label>
-            <input type="text" class="form-control" id="endpoint-${endpointId}-login" name="endpoint-${endpointId}-login"/>
-          </div>
-          <div class="row">
-            <label for="endpoint-${endpointId}-password">Password</label>
-            <input type="text" class="form-control" id="endpoint-${endpointId}-password" name="endpoint-${endpointId}-password"/>
+            <div class="col">
+              <label for="endpoint-${endpointId}-login">Login</label>
+              <input type="text" class="form-control" id="endpoint-${endpointId}-login" name="endpoint-${endpointId}-login"/>
+            </div>
+            <div class="col">
+              <label for="endpoint-${endpointId}-password">Password</label>
+              <input type="text" class="form-control" id="endpoint-${endpointId}-password" name="endpoint-${endpointId}-password"/>
+            </div>
           </div>
           <div class="row">
             <label for="endpoint-${endpointId}-callback">Callback</label>
@@ -1082,11 +1124,14 @@ TInfo tinfo;
           window.innerHeight - 100 + "px";
       });
     </script>
+    
+    <!-- bootstrap -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
       crossorigin="anonymous"
     ></script>
+    <!-- code-input -->
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/components/prism-core.min.js"
       crossorigin="anonymous"
@@ -1103,6 +1148,7 @@ TInfo tinfo;
       src="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/plugins/indent.js"
       crossorigin="anonymous"
     ></script>
+    <!-- eta -->
     <script
       src="https://cdn.jsdelivr.net/npm/eta"
       crossorigin="anonymous"
