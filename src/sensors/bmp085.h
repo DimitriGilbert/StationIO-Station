@@ -1,7 +1,8 @@
-#include <Arduino.h>
-#include "../Sensor.h"
-
 #include <Adafruit_BMP085.h>
+#include <Arduino.h>
+
+#include "../Sensor.h"
+#include "../Station.h"
 
 #ifndef StationIOSensor_bmp085_h
 #define StationIOSensor_bmp085_h
@@ -22,6 +23,7 @@ class bmp085 : public Sensor {
   SensorMesureData mesuresDatas[4];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
 
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData* read();
   SensorMesureData read(int index);

@@ -25,7 +25,7 @@ const u_int* bmp085::mesuresSampleRates[4] = {
     (const u_int*)5000,
     (const u_int*)60000,
 };
-
+void bmp085::onSetup(StationClass station, int index) {}
 size_t bmp085::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* bmp085::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

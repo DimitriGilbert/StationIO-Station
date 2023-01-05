@@ -49,6 +49,8 @@ String linky::getValue(String name) {
   }
   return data;
 }
+
+void linky::onSetup(StationClass station, int index) {}
 size_t linky::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData *linky::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

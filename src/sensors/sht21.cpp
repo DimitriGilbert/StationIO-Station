@@ -28,6 +28,7 @@ const u_int* sht21::mesuresSampleRates[3] = {
     (const u_int*)5000,
 };
 
+void sht21::onSetup(StationClass station, int index) {}
 size_t sht21::getMesuresCount() {
   return this->mesuresCount;
 }

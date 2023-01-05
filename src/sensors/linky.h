@@ -2,6 +2,7 @@
 #include <LibTeleinfo.h>
 
 #include "../Sensor.h"
+#include "../Station.h"
 
 #ifndef StationIOSensor_linky_h
 #define StationIOSensor_linky_h
@@ -20,6 +21,7 @@ class linky : public Sensor {
   SensorMesureData mesuresDatas[4];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
 
+  void onSetup(StationClass station, int index);
   String getValue(String name);
   size_t getMesuresCount();
   SensorMesureData *read();

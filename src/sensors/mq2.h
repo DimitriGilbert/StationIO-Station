@@ -1,16 +1,17 @@
 #include <Arduino.h>
+#include <MQ2.h>
+
 #include "../Sensor.h"
- 
-#include <MQ2.h>  
+#include "../Station.h"
 
 #ifndef StationIOSensor_mq2_h
 #define StationIOSensor_mq2_h
 
-class mq2 : public Sensor
-{
-private: 
-  MQ2 mq;  
-public: 
+class mq2 : public Sensor {
+ private:
+  MQ2 mq;
+
+ public:
   mq2(int pin);
   ~mq2();
 
@@ -20,8 +21,9 @@ public:
   unsigned long mesuresSampleLast[6];
 
   SensorMesureData mesuresDatas[6];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[6];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[6];
 
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

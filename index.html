@@ -444,6 +444,14 @@ void setup() {
 
 void loop() {
   station.loop();
+  <% if(it.sensors!==undefined && it.sensors.length > 0){%>
+<% it.sensors.forEach(function(sensor){
+if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 3){%> 
+  // <%= sensor[0] %>
+
+<%~ sensor[3] %> 
+
+<%}})}%>
   // ___ custom code goes here ___
 }
 `;
@@ -524,6 +532,7 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   SensorMesureData mesuresDatas[<%= it.mesuresCount %>];
   CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
   
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
@@ -573,6 +582,7 @@ const u_int *<%= it.sensorName %>::mesuresSampleRates[<%= it.mesuresCount %>] = 
   }) %>
 };
 
+void <%= it.sensorName %>::onSetup(StationClass station, int index) {<%= it.onSetup!=undefined?it.onSetup:"" %>}
 size_t <%= it.sensorName %>::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData *<%= it.sensorName %>::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -760,7 +770,7 @@ String <%= it.sensorName %>::toHtml(int index) {
             </div><div class="row">
                 <label for="custom-init-body-${sensorIndex}">Initialization body</label>
                 <code-input lang="Arduino" class="form-control" id="custom-init-${sensorIndex}" name="custom-init-${sensorIndex}" ></code-input>
-            </div><div class="row d-none">
+            </div><div class="row">
               <label for="custom-mesure-${sensorIndex}-gen-adv" class="form-check-label">advanced</label>
               <input type="checkbox" class="form-check-input" id="custom-mesure-${sensorIndex}-gen-adv" name="custom-mesure-${sensorIndex}-gen-adv" onclick="this.checked?parentNode.nextElementSibling.classList.remove('d-none'):parentNode.nextElementSibling.classList.add('d-none')" />
             </div><div class="d-none">
@@ -785,6 +795,14 @@ String <%= it.sensorName %>::toHtml(int index) {
                   <label for="custom-private-prop-type-${sensorIndex}">name</label>
                   <input type="text" class="form-control" id="custom-private-prop-type-${sensorIndex}" name="custom-private-prop-type-${sensorIndex}" />
                 </div>
+              </div>
+              <div class="row">
+                <label for="custom-setup-${sensorIndex}">Setup</label>
+                <code-input type="text" class="form-control" id="custom-setup-${sensorIndex}" name="custom-setup-${sensorIndex}" ></code-input>
+              </div>
+              <div class="row">
+                <label for="custom-loop-${sensorIndex}">Loop</label>
+                <code-input type="text" class="form-control" id="custom-loop-${sensorIndex}" name="custom-loop-${sensorIndex}" ></code-input>
               </div>
               </div>
               <div class="row">
@@ -844,6 +862,12 @@ void onLinkyData(ValueList* vallnk, uint8_t flag) {
 }
 TInfo tinfo;
 `,
+          `// linky sensor loop
+  if (Serial.available()) {
+    char c = Serial.read();
+    tinfo.process(c);
+  }
+`
           ];
         },
         custom: (form, index) => {
@@ -902,6 +926,7 @@ TInfo tinfo;
             }
             
             ret = tplData.init===undefined?name:tplData.init.params===undefined?name:[name, tplData.init.params.join(",")];
+            
             let soutEl = document.getElementById("stationio-custom-sensors").appendChild(
               htmlToElements(`<div id="stationio-custom-sensor-${index}">
                 <p>Copy and paste the following code in your src/sensors/${name}.h and  src/sensors/${name}.cpp files</p>
@@ -913,6 +938,23 @@ TInfo tinfo;
             );
             soutEl.lastElementChild.firstElementChild.lastElementChild.value = Eta.render(sensorHTpl, tplData);
             soutEl.lastElementChild.lastElementChild.lastElementChild.value = Eta.render(sensorCppTpl, tplData);
+
+            if (form.get(`custom-mesure-${index}-gen-adv`) == "on") {
+              if (typeof ret == "string") {
+                ret = [ret, ""];
+              }
+              let setupBody = form.get(`custom-setup-${index}`);
+              if (setupBody !== null && setupBody !== "") {
+                ret.push(setupBody);
+              }
+              let loopBody = form.get(`custom-loop-${index}`);
+              if (loopBody !== null && loopBody !== "") {
+                if (setupBody === null || setupBody === ""){ 
+                  ret.push("");
+                }
+                ret.push(loopBody);
+              }
+            }
           }
           return ret;
         },

@@ -2,6 +2,7 @@
 #include <HTU2xD_SHT2x_Si70xx.h>
 
 #include "../Sensor.h"
+#include "../Station.h"
 
 #ifndef StationIOSensor_sht21_h
 #define StationIOSensor_sht21_h
@@ -22,6 +23,7 @@ class sht21 : public Sensor {
   SensorMesureData mesuresDatas[3];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

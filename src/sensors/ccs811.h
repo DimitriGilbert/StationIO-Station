@@ -1,16 +1,17 @@
+#include <Adafruit_CCS811.h>
 #include <Arduino.h>
+
 #include "../Sensor.h"
- 
-#include <Adafruit_CCS811.h>  
+#include "../Station.h"
 
 #ifndef StationIOSensor_ccs811_h
 #define StationIOSensor_ccs811_h
 
-class ccs811 : public Sensor
-{
-private: 
-  Adafruit_CCS811 ccs;  
-public: 
+class ccs811 : public Sensor {
+ private:
+  Adafruit_CCS811 ccs;
+
+ public:
   ccs811();
   ~ccs811();
 
@@ -20,8 +21,9 @@ public:
   unsigned long mesuresSampleLast[3];
 
   SensorMesureData mesuresDatas[3];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[3];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

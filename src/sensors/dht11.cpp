@@ -26,6 +26,7 @@ const u_int* dht11::mesuresSampleRates[3] = {
     (const u_int*)5000,
 };
 
+void dht11::onSetup(StationClass station, int index) {}
 size_t dht11::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* dht11::read_() {
   for (int i = 0; i < this->mesuresCount; i++) {

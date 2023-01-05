@@ -1,16 +1,17 @@
+#include <Adafruit_BME280.h>
 #include <Arduino.h>
+
 #include "../Sensor.h"
- 
-#include <Adafruit_BME280.h>  
+#include "../Station.h"
 
 #ifndef StationIOSensor_bme280_h
 #define StationIOSensor_bme280_h
 
-class bme280 : public Sensor
-{
-private: 
-  Adafruit_BME280 bme;  
-public: 
+class bme280 : public Sensor {
+ private:
+  Adafruit_BME280 bme;
+
+ public:
   bme280();
   ~bme280();
 
@@ -20,8 +21,9 @@ public:
   unsigned long mesuresSampleLast[4];
 
   SensorMesureData mesuresDatas[4];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[4];
-  
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
+
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

@@ -30,6 +30,7 @@ const u_int* mq2::mesuresSampleRates[6] = {
     (const u_int*)5000, (const u_int*)5000, (const u_int*)2000,
 };
 
+void mq2::onSetup(StationClass station, int index) {}
 size_t mq2::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* mq2::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

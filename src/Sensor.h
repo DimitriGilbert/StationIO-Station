@@ -36,7 +36,11 @@ public:
 
   bool ready();
   SensorMesureData __read(int index, size_t count, SensorMesureData *datas);
-  SensorMesureData __average(int last, int index, size_t count, CircularBuffer<SensorMesureData, 20>buffers[]);
+  SensorMesureData __average(
+      int last, int index, size_t count,
+      CircularBuffer<SensorMesureData, 20> buffers[]
+  );
+  virtual void onSetup(StationClass station, int index) = 0;
   virtual size_t getMesuresCount() = 0;
   virtual SensorMesureData *read() = 0;
   virtual SensorMesureData read(int index) = 0;

@@ -1,16 +1,17 @@
 #include <Arduino.h>
+#include <DHT.h>
+
 #include "../Sensor.h"
- 
-#include <DHT.h>  
+#include "../Station.h"
 
 #ifndef StationIOSensor_dht11_h
 #define StationIOSensor_dht11_h
 
-class dht11 : public Sensor
-{
-private: 
-  DHT dht;  
-public: 
+class dht11 : public Sensor {
+ private:
+  DHT dht;
+
+ public:
   dht11(int pin);
   ~dht11();
 
@@ -20,8 +21,9 @@ public:
   unsigned long mesuresSampleLast[3];
 
   SensorMesureData mesuresDatas[3];
-  CircularBuffer<SensorMesureData,40> mesuresBuffers[3];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

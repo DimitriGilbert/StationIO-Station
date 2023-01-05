@@ -28,6 +28,7 @@ const u_int* ccs811::mesuresSampleRates[3] = {
     (const u_int*)5000,
 };
 
+void ccs811::onSetup(StationClass station, int index) {}
 size_t ccs811::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* ccs811::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
