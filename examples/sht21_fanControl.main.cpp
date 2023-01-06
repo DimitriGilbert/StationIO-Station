@@ -18,7 +18,7 @@ StationClass station(
 
 String fanMode = "custom";
 int fanSpeed = 100;
-int nanoPWM = D5;
+int pwmPin = D5;
 
 // curves common
 float minITemp = 20;
@@ -35,7 +35,7 @@ WiFiClient wifiClient;
 
 void setFanSpeed(int speed) {
   fanSpeed = speed;
-  analogWrite(nanoPWM, fanSpeed);
+  analogWrite(pwmPin, fanSpeed);
   // station.logt(String(fanSpeed));
 }
 float getIntakeTemp() {
@@ -319,8 +319,8 @@ void setup() {
   // ___ custom code goes here ___
 
   // setting up fan control
-  pinMode(nanoPWM, OUTPUT);
-  // analogWrite(nanoPWM, fanSpeed);
+  pinMode(pwmPin, OUTPUT);
+  // analogWrite(pwmPin, fanSpeed);
   setFanSpeed(fanSpeed);
 }
 

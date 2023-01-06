@@ -7,7 +7,7 @@
 
 // initializing station
 StationClass station(
-    "DualSensorStation", {ssid : "MyWifiSSID", password : "null"}
+    "AirQuality", {ssid : "MyWifiSSID", password : "null"}
 );
 
 // ___ sensors ___

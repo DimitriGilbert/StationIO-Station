@@ -487,23 +487,31 @@ source ~/.zshrc
 
 # If your board was plugged, please unplug and plug it again
 `;
-      var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`
+      var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`;
       var installStioTgzTpl = `STIOinstall_TMP_FILE=$(mktemp);
 curl -LJ --output $STIOinstall_TMP_FILE "https://github.com/DimitriGilbert/StationIO-Station/archive/refs/heads/main.tar.gz";
 tar -xzf $STIOinstall_TMP_FILE -C "./<%~ it.stationName %>";
-rm $STIOinstall_TMP_FILE;`
+rm $STIOinstall_TMP_FILE;`;
       var installStioTpl = `# Install StationIO
 <%~ it.stationInstall!=='undefined'?it.stationInstall:"" %>
 
 # Go to the station directory
 cd "<%~ it.stationName %>"
 
-# copy "main.cpp" output to "src/main.cpp"
-# 
+# create your station and copy "main.cpp" output to "stations/<%~ it.stationName %>.main.cpp"
+./utils/createStation "<%~ it.stationName %>" -b nodemcuv2
+
 # if you have custom sensors copy the code from the "sensors" tab to the relevant files
 
 # upload code to project board
-pio run -t upload -e nodemcuv2
+./utils/uploadStation "<%~ it.stationName %>" --no-ota
+
+# use serial monitor to get the IP address
+# reset your board to see the initialisation output
+pio device monitor -e nodemcuv2
+
+# upload with an ip address, --ip is needed only the first time (it will be saved in ./stations/stations)
+./utils/uploadStation "<%~ it.stationName %>" --ip <ip address>
 `;
 
       // Sensor tpl
