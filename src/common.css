@@ -1,0 +1,26 @@
+body {
+  background-color: rgb(13, 17, 23);
+  color: rgb(201, 209, 217);
+}
+.snMs-value,
+.snName {
+  font-weight: 700;
+}
+.welcome {
+  font-size: 2rem;
+  text-align: center;
+}
+.welcome > .station-name {
+  font-weight: bold;
+  font-style: italic;
+}
+.snName {
+  font-size: 1.5rem;
+}
+.stSn {
+  width: 33%;
+  margin: 0 auto;
+}
+.snMs {
+  margin-left: 1rem;
+}

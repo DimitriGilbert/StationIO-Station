@@ -190,7 +190,7 @@ String linky::jsUtils() {
       "1000,format_hc: (val) => parseFloat(val) / 1000,format_tarif: (val) => "
       "(val == 'HC..' ? 'heures creuses' : 'heures pleines'),inChart: (name) "
       "=> "
-      "name == 'power',};","",false
+      "name == 'power',};"
   );
 }
 String linky ::toHtml() {

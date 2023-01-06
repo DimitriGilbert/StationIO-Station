@@ -1,12 +1,12 @@
 #include <Arduino.h>
+
 #include "./Sensor.h"
 #include "./Station.h"
 
-String HtmlElt(String tagName,
-               String inner,
-               String attributes,
-               bool selfClosing = false);
-String HtmlElt(String tagName, bool selfClosing = false);
+String HtmlElt(
+    String tagName, String inner, String attributes, bool selfClosing
+);
+String HtmlElt(String tagName, String inner, String attributes);
 String HtmlElt(String tagName, String inner);
 String HtmlAttribute(String name, String value, bool noSpace = false);
 String HtmlClass(String value);

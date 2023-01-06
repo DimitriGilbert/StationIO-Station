@@ -4,14 +4,14 @@
 #include "./Station.h"
 
 String HtmlElt(
-    String tagName, String inner, String attributes, bool selfClosing = false
+    String tagName, String inner, String attributes, bool selfClosing
 ) {
   return "<" + tagName + (attributes != "" ? " " + attributes : "") +
          (selfClosing ? "/>" : ">" + inner + "</" + tagName + ">");
 }
 
-String HtmlElt(String tagName, bool selfClosing = false) {
-  return HtmlElt(tagName, "", "", selfClosing);
+String HtmlElt(String tagName, String inner, String attributes) {
+  return HtmlElt(tagName, inner, attributes, false);
 }
 
 String HtmlElt(String tagName, String inner) {
@@ -36,67 +36,15 @@ String HtmlInput(String attributes) {
 String HtmlInput() { return HtmlElt("input", "", "", true); }
 
 String commonCss() {
-  return "body{background-color:rgb(13, 17, 23);color:rgb(201, 209, "
-         "217)}.snMs-value,.snName{font-weight:700}."
-         "welcome{font-size:2rem;text-align:center;}.welcome>.station-"
-         "name{font-weight::bold;font-style:italic}.snName{font-"
-         "size:1.5rem}.stSn{width:33%;margin:0 "
-         "auto;}.snMs{margin-left:1rem}";
+  // commoncss-start
+  return "body{background-color:#0d1117;color:#c9d1d9}.snMs-value,.snName{font-weight:700}.welcome{font-size:2rem;text-align:center}.welcome>.station-name{font-weight:700;font-style:italic}.snName{font-size:1.5rem}.stSn{width:33%;margin:0 auto}.snMs{margin-left:1rem}";
+  // commoncss-end
 }
 
 String commonJs() {
-  return "function "
-         "setUpdatable(){document.querySelectorAll(\".stSn\").forEach(e=>{e."
-         "firstElementChild.firstElementChild.onclick=e=>{let "
-         "t=e.target.parentNode.parentNode;fetch(\"/"
-         "?sensor=\"+t.getAttribute(\"sn-i\"),{headers:{Accept:\"text/"
-         "html\"},method:\"GET\"}).then(e=>{e.text().then(e=>{t.innerHTML=e,"
-         "setUpdatable()})})};e.firstElementChild.lastElementChild.childNodes."
-         "forEach((e,t)=>{e.onclick=e=>{fetch(\"/"
-         "?sensor=\"+e.target.parentNode.parentNode.parentNode.parentNode."
-         "getAttribute(\"sn-i\")+\"&mesure=\"+t,{headers:{Accept:\"text/"
-         "html\"},method:\"GET\"}).then(t=>{t.text().then(t=>{e.target."
-         "parentNode.innerHTML=t,setUpdatable()})})}})})}function "
-         "mkDateLabel(){let e=new "
-         "Date(Date.now());return(10>e.getHours()?\"0\":\"\")+e.getHours()+\":"
-         "\"+(10>e.getMinutes()?\"0\":\"\")+e.getMinutes()+\":\"+(10>e."
-         "getSeconds()?\"0\":\"\")+e.getSeconds()}function "
-         "getStationData(){return "
-         "fetch(\"/?format=application/json\",{headers:{Accept:\"application/"
-         "json\"},method:\"GET\"})}function existsSensorUtils(sensorName){let "
-         "utils=!1;return eval(\"if(typeof \"+sensorName+'_utils !== "
-         "\"undefined\"){utils='+sensorName+\"_utils}\"),utils}function "
-         "formatSensorMesure(e,t,n){let s=existsSensorUtils(e);return "
-         "s&&Object.hasOwnProperty.call(s,\"format_\"+t)?s[\"format_\"+t](n):n}"
-         "function sensorMesureInChart(e,t){let "
-         "n=existsSensorUtils(e);return!(n&&Object.hasOwnProperty.call(n,"
-         "\"inChart\")&&!n.inChart(t))}function initChart(){let "
-         "e=document.getElementsByTagName(\"body\")[0],t=document."
-         "createElement(\"script\");t.setAttribute(\"src\",\"https://"
-         "cdn.jsdelivr.net/npm/chart.js\"),e.appendChild(t);let "
-         "n=document.createElement(\"canvas\");n.setAttribute(\"id\",\"station-"
-         "chart\"),n=e.appendChild(n);let "
-         "s={labels:[],type:\"line\",data:{}};getStationData().then(e=>{s."
-         "labels.push(mkDateLabel()),e.json().then(e=>{let "
-         "t=[],a=[],r={},l=\"left\";for(let o in "
-         "e.sensors)if(Object.hasOwnProperty.call(e.sensors,o)){let "
-         "i=e.sensors[o];for(let d in "
-         "i)Object.hasOwnProperty.call(i,d)&&sensorMesureInChart(o,d)&&(t.push("
-         "{label:o+\"::\"+d,data:[formatSensorMesure(o,d,i[d]),],yAxisID:d,"
-         "pointRadius:1,pointHoverRadius:3}),a.includes(d)||(a.push(d),r[d]={"
-         "id:d,type:\"linear\",position:l},l=\"left\"===l?\"right\":\"left\"))}"
-         "s.data.datasets=t,s.options={responsive:!0,scales:r};let h=new "
-         "Chart(n,s);setTimeout(()=>{updateChart(h,22)},1e4)})})}function "
-         "updateChart(e,t){getStationData().then(n=>{e.data.labels.push("
-         "mkDateLabel()),n.json().then(n=>{let s=0;for(let a in "
-         "n.sensors)if(Object.hasOwnProperty.call(n.sensors,a)){let "
-         "r=n.sensors[a];for(let l in "
-         "r)if(Object.hasOwnProperty.call(r,l)){let "
-         "o=formatSensorMesure(a,l,r[l]);sensorMesureInChart(a,l)&&(e.data."
-         "datasets[s].data.push(o),s++),document.querySelectorAll(\".sensor.\"+"
-         "a+\">.snMss>.snMs.\"+l+\">.snMs-value\")[0].innerHTML=o}}e.update("
-         "\"active\"),t>0&&setTimeout(()=>{updateChart(e,t)},1e3*t)})})}"
-         "setTimeout(setUpdatable,250),setTimeout(()=>{initChart()},500);";
+  // commonjs-start
+  return "function setUpdatable(){document.querySelectorAll(\".stSn\").forEach((t=>{t.firstElementChild.firstElementChild.onclick=t=>{let e=t.target.parentNode.parentNode;fetch(\"/?sensor=\"+e.getAttribute(\"sn-i\"),{headers:{Accept:\"text/html\"},method:\"GET\"}).then((t=>{t.text().then((t=>{e.innerHTML=t,setUpdatable()}))}))},t.firstElementChild.lastElementChild.childNodes.forEach(((t,e)=>{t.onclick=t=>{let s=t.target.parentNode.parentNode.parentNode.parentNode;fetch(\"/?sensor=\"+s.getAttribute(\"sn-i\")+\"&mesure=\"+e,{headers:{Accept:\"text/html\"},method:\"GET\"}).then((e=>{e.text().then((e=>{t.target.parentNode.innerHTML=e,setUpdatable()}))}))}}))}))}function mkDateLabel(){let t=new Date(Date.now());return(t.getHours()<10?\"0\":\"\")+t.getHours()+\":\"+(t.getMinutes()<10?\"0\":\"\")+t.getMinutes()+\":\"+(t.getSeconds()<10?\"0\":\"\")+t.getSeconds()}function getStationData(){return fetch(\"/?format=application/json\",{headers:{Accept:\"application/json\"},method:\"GET\"})}function existsSensorUtils(sensorName){let utils=!1;return eval(\"if(typeof \"+sensorName+'_utils !== \"undefined\"){utils='+sensorName+\"_utils}\"),utils}function formatSensorMesure(t,e,s){let n=existsSensorUtils(t);return n&&Object.hasOwnProperty.call(n,\"format_\"+e)?n[\"format_\"+e](s):s}function sensorMesureInChart(t,e){let s=existsSensorUtils(t);return!(s&&Object.hasOwnProperty.call(s,\"inChart\")&&!s.inChart(e))}function initChart(){let t=document.getElementsByTagName(\"body\")[0],e=document.createElement(\"script\");e.setAttribute(\"src\",\"https://cdn.jsdelivr.net/npm/chart.js\"),t.appendChild(e);let s=document.createElement(\"canvas\");s.setAttribute(\"id\",\"station-chart\"),s=t.appendChild(s);const n={labels:[],type:\"line\",data:{}};getStationData().then((t=>{n.labels.push(mkDateLabel()),t.json().then((t=>{let e=[],a=[],r={},o=\"left\";for(const s in t.sensors)if(Object.hasOwnProperty.call(t.sensors,s)){const n=t.sensors[s];for(const t in n)Object.hasOwnProperty.call(n,t)&&sensorMesureInChart(s,t)&&(e.push({label:s+\"::\"+t,data:[formatSensorMesure(s,t,n[t])],yAxisID:t,pointRadius:1,pointHoverRadius:3}),a.includes(t)||(a.push(t),r[t]={id:t,type:\"linear\",position:o},o=\"left\"===o?\"right\":\"left\"))}n.data.datasets=e,n.options={responsive:!0,scales:r};const i=new Chart(s,n);setTimeout((()=>{updateChart(i,22)}),1e4)}))}))}function updateChart(t,e){getStationData().then((s=>{t.data.labels.push(mkDateLabel()),s.json().then((s=>{let n=0;for(const e in s.sensors)if(Object.hasOwnProperty.call(s.sensors,e)){const a=s.sensors[e];for(const s in a)if(Object.hasOwnProperty.call(a,s)){const r=formatSensorMesure(e,s,a[s]);sensorMesureInChart(e,s)&&(t.data.datasets[n].data.push(r),n++),document.querySelectorAll(\".sensor.\"+e+\">.snMss>.snMs.\"+s+\">.snMs-value\")[0].innerHTML=r}}t.update(\"active\"),e>0&&setTimeout((()=>{updateChart(t,e)}),1e3*e)}))}))}setTimeout(setUpdatable,250),setTimeout((()=>{initChart()}),500);";
+  // commonjs-end
 }
 
 String commonBody(String body) {
