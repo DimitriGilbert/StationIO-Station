@@ -1,5 +1,5 @@
 #include <Arduino.h>
-
+#include "../html.h"
 #include "./bmp085.h"
 
 bmp085::bmp085() : Sensor("bmp085") {
@@ -162,9 +162,9 @@ String bmp085::toXml(int index) {
          "</" + this->mesures[index].name + ">";
 }
 String bmp085::toHtml() {
-  String out = "<div class=\"sensor " + this->name +
+  String out = "<div class=\"text-center sensor " + this->name +
                "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss\">";
+               "</div><div class=\"snMss row\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
@@ -172,10 +172,17 @@ String bmp085::toHtml() {
   return out;
 }
 String bmp085::toHtml(int index) {
-  return "<div class=\"snMs " + this->mesures[index].name +
-         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"snMs-value\">" +
-         String(this->read(index)) +
-         "</span><span class=\"snMs-unit\">" +
-         this->mesures[index].unit + "</span></div>";
+  // return "<div class=\"snMs " + this->mesures[index].name +
+  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
+  //        "</span> : <span class=\"snMs-value\">" +
+  //        String(this->read(index)) +
+  //        "</span><span class=\"snMs-unit\">" +
+  //        this->mesures[index].unit + "</span></div>";
+  return HtmlDiv(
+      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
+          " : " +
+          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
+          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
+      HtmlClass("col snMs " + this->mesures[index].name)
+  );
 }

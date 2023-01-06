@@ -149,9 +149,9 @@ String <%= it.sensorName %>::jsUtils() {
 }
 
 String <%= it.sensorName %>::toHtml() {
-  String out = "<div class=\"sensor " + this->name +
+  String out = "<div class=\"text-center sensor " + this->name +
                "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss\">";
+               "</div><div class=\"snMss row\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }

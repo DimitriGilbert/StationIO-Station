@@ -225,21 +225,22 @@ String BaseStation::toXml() {
 }
 String BaseStation::toXml(int index) { return this->getSensor(index)->toXml(); }
 String BaseStation::toHtml() {
-  String out = HtmlElt(
-      "h1",
-      "Welcome to Station " +
-          HtmlElt("span", this->name, HtmlClass("station-name")),
-      HtmlClass("welcome")
-  );
+  String out = "";
   for (size_t i = 0; i < this->sensorCount; i++) {
     out.concat(this->toHtml(i));
   }
+  out = HtmlElt(
+      "h1",
+      "Welcome to Station " +
+          HtmlElt("span", this->name, HtmlClass("station-name")),
+      HtmlClass("welcome text-center")
+  ) + HtmlDiv(HtmlDiv(out, HtmlClass("row")), HtmlClass("container"));
   return out;
 }
 String BaseStation::toHtml(int index) {
   return HtmlDiv(
       this->getSensor(index)->toHtml(),
-      HtmlClass("stSn") + HtmlAttribute("sn-i", String(index), false) +
+      HtmlClass("stSn col") + HtmlAttribute("sn-i", String(index), false) +
           HtmlId("sensor-" + String(index))
   );
 }

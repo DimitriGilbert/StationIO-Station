@@ -1,6 +1,8 @@
+#include "./ccs811.h"
+
 #include <Arduino.h>
 
-#include "./ccs811.h"
+#include "../html.h"
 
 ccs811::ccs811() : Sensor("ccs811") {
   this->ccs.begin() ? this->status = Sensor::StatusReady
@@ -174,9 +176,9 @@ String ccs811::toXml(int index) {
          "</" + this->mesures[index].name + ">";
 }
 String ccs811::toHtml() {
-  String out = "<div class=\"sensor " + this->name +
+  String out = "<div class=\"text-center sensor " + this->name +
                "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss\">";
+               "</div><div class=\"snMss row\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
@@ -184,10 +186,17 @@ String ccs811::toHtml() {
   return out;
 }
 String ccs811::toHtml(int index) {
-  return "<div class=\"snMs " + this->mesures[index].name +
-         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"snMs-value\">" +
-         String(this->read(index)) +
-         "</span><span class=\"snMs-unit\">" +
-         this->mesures[index].unit + "</span></div>";
+  // return "<div class=\"snMs " + this->mesures[index].name +
+  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
+  //        "</span> : <span class=\"snMs-value\">" +
+  //        String(this->read(index)) +
+  //        "</span><span class=\"snMs-unit\">" +
+  //        this->mesures[index].unit + "</span></div>";
+  return HtmlDiv(
+      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
+          " : " +
+          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
+          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
+      HtmlClass("col snMs " + this->mesures[index].name)
+  );
 }

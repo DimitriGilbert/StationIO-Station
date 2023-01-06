@@ -284,6 +284,7 @@
               >
                 <option value="git">git</option>
                 <option value="tgz">tgz</option>
+                <option value="none">none</option>
               </select>
             </div>
             <div class="col">
@@ -487,21 +488,20 @@ source ~/.zshrc
 
 # If your board was plugged, please unplug and plug it again
 `;
-      var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git "<%~ it.stationName %>"`;
+      var installStioGitTpl = `git clone git@github.com:DimitriGilbert/StationIO-Station.git StationIO`;
       var installStioTgzTpl = `STIOinstall_TMP_FILE=$(mktemp);
 curl -LJ --output $STIOinstall_TMP_FILE "https://github.com/DimitriGilbert/StationIO-Station/archive/refs/heads/main.tar.gz";
-tar -xzf $STIOinstall_TMP_FILE -C "./<%~ it.stationName %>";
+tar -xzf $STIOinstall_TMP_FILE -C "./StationIO";
 rm $STIOinstall_TMP_FILE;`;
-      var installStioTpl = `# Install StationIO
-<%~ it.stationInstall!=='undefined'?it.stationInstall:"" %>
+      var installStioTpl = `<%~ it.stationInstall!==undefined?"# Install StationIO\\n"+it.stationInstall:"" %>
 
 # Go to the station directory
-cd "<%~ it.stationName %>"
+cd StationIO
 
 # create your station and copy "main.cpp" output to "stations/<%~ it.stationName %>.main.cpp"
 ./utils/createStation "<%~ it.stationName %>" -b nodemcuv2
 
-# if you have custom sensors copy the code from the "sensors" tab to the relevant files
+# if you have custom sensors copy the code from the "sensors" tab to the relevant files in src/sensors/
 
 # upload code to project board
 ./utils/uploadStation "<%~ it.stationName %>" --no-ota
@@ -716,7 +716,7 @@ String <%= it.sensorName %>::jsUtils() {
 }
 
 String <%= it.sensorName %>::toHtml() {
-  String out = "<div class=\\"sensor " + this->name +
+  String out = "<div class=\\"text-center sensor " + this->name +
                "\\"><div class=\\"snName\\">" + this->name +
                "</div><div class=\\"snMss\\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -1144,6 +1144,8 @@ TInfo tinfo;
           let data = {stationName: frmData.get("install-station-name")};
           let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
           switch (frmData.get("install-station-type")) {
+            case "none":
+              break;
             case "tgz":
               data.stationInstall = Eta.render(installStioTgzTpl, data)+"\n";
               break;

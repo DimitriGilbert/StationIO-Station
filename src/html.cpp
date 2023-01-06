@@ -67,8 +67,8 @@ String commonHtmlHeader(String title) {
                      HtmlAttribute("rel", "stylesheet") +
                          HtmlAttribute(
                              "href",
-                             "https://cdn.jsdelivr.net/npm/purecss@3.0.0/"
-                             "build/pure-min.css"
+                             "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/"
+                             "dist/css/bootstrap.min.css"
                          ) +
                          HtmlAttribute("crossorigin", "anonymous")
                  ) +
