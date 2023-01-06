@@ -14,15 +14,18 @@ linky::linky(TInfo &lnk) : Sensor("linky") {
   this->mesuresSampleLast[1] = (unsigned long)10000;
   this->mesuresSampleLast[2] = (unsigned long)10000;
   this->mesuresSampleLast[3] = (unsigned long)10000;
+  // this->mesuresSampleLast[4] = (unsigned long)10000;
 };
 linky::~linky(){};
 
-const linky::SensorMesure linky::mesures[5] = {
-    {"hp", "W"}, {"hc", "W"}, {"tarif", ""}, {"power", "va"}, {"ADC0", "va"},
+const linky::SensorMesure linky::mesures[4] = {
+    {"hp", "W"}, {"hc", "W"}, {"tarif", ""}, {"power", "va"}, 
+    // {"ADCO", "va"},
 };
-const u_int *linky::mesuresSampleRates[5] = {
+const u_int *linky::mesuresSampleRates[4] = {
     (const u_int *)5000, (const u_int *)5000, (const u_int *)5000,
-    (const u_int *)5000, (const u_int *)5000,
+    (const u_int *)5000, 
+    // (const u_int *)5000,
 };
 
 String linky::getValue(String name) {
@@ -81,7 +84,7 @@ Sensor::SensorMesureData linky::read_(int index) {
 
       // mesure ADC index power
       case 4:
-        value = this->getValue("ADC0").toFloat();
+        value = this->getValue("ADCO").toFloat();
         break;
     }
     this->setMesure(index, value);
@@ -189,7 +192,7 @@ String linky::jsUtils() {
       "const linky_utils = {format_hp:val=>parseFloat(val)/1000+'K'"
       ",format_hc:val=>parseFloat(val)/1000+'K'"
       ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
-      ",inChart:name=>name==='power'||name==='ADC0'};"
+      ",inChart:name=>name==='power'};"
   );
 }
 String linky ::toHtml() {

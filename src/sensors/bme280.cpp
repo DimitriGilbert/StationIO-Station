@@ -174,8 +174,8 @@ String bme280::toXml(int index) {
 String bme280::jsUtils() {
   return HtmlElt(
       "script",
-      "const bme280_utils = {format_pressure: (val) => parseFloat(val) / "
-      "100,inChart: (name) => name != '',};"
+      "const bme280_utils = {format_pressure:val=>(parseFloat(val)/100)+'h'"
+      ",inChart: (name) => name != 'altitude',};"
   );
 }
 String bme280::toHtml() {

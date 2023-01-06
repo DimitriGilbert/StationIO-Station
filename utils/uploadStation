@@ -1,0 +1,194 @@
+#!/bin/bash
+# @parseArger-begin
+# @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
+# @parseArger-declarations
+# @parseArger pos name "station name"
+# @parseArger opt ip "station ip"
+# @parseArger opt board "PIO build environement name" --short b
+# @parseArger flag ota "OTA update" --on
+# @parseArger-declarations-end
+
+# @parseArger-parsing
+die()
+{
+	local _ret="${2:-1}"
+	test "${_PRINT_HELP:-no}" = yes && print_help >&2
+	echo "$1" >&2
+	exit "${_ret}"
+}
+
+
+begins_with_short_option()
+{
+	local first_option all_short_options=''
+	first_option="${1:0:1}"
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+}
+
+# POSITIONALS ARGUMENTS
+_positionals=();
+_arg_name="";
+# OPTIONALS ARGUMENTS
+_arg_ip=
+_arg_board=
+# FLAGS
+_arg_ota="on"
+
+
+print_help()
+{
+	echo -e "I send an SOS to the world:"
+	echo -e "	name: station name"
+	echo -e "	--ip <ip>: station ip"
+	echo -e "	-b, --board <board>: PIO build environement name"
+	echo -e "	--ota|--no-ota: OTA update, on by default (use --no-ota to turn it off)"
+	echo -e "Usage :
+	$0 <name> [--ip <value>] [--board <value>] [--[no-]ota]"
+}
+
+parse_commandline()
+{
+	_positionals_count=0
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			--ip)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_ip="$2"
+				shift
+				;;
+			--ip=*)
+				_arg_ip="${_key##--ip=}"
+				;;
+			
+			-b|--board)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_board="$2"
+				shift
+				;;
+			--board=*)
+				_arg_board="${_key##--board=}"
+				;;
+			-b*)
+				_arg_board="${_key##-b}"
+				;;
+			
+			--no-ota|--ota)
+				_arg_ota="on"
+				test "${1:0:5}" = "--no-" && _arg_ota="off"
+				;;
+			-h|--help)
+				print_help;
+				exit 0;
+				;;
+			-h*)
+				print_help;
+				exit 0;
+				;;
+			*)
+				_last_positional="$1"
+				_positionals+=("$_last_positional")
+				_positionals_count=$((_positionals_count + 1))
+				;;
+		esac
+		shift
+	done
+}
+
+
+handle_passed_args_count()
+{
+	local _required_args_string="name"
+	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+}
+
+
+assign_positional_args()
+{
+	local _positional_name _shift_for=$1;
+	_positional_names="_arg_name ";
+	shift "$_shift_for"
+	for _positional_name in ${_positional_names};do
+		test $# -gt 0 || break;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1
+eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an Argbash bug." 1;
+		shift;
+	done
+}
+
+print_debug()
+{
+	print_help
+	# shellcheck disable=SC2145
+	echo "DEBUG: $0 $@";
+	
+	echo -e "\tname: ${_arg_name}";
+	echo -e "\tip: ${_arg_ip | sed 's/-/_/g'}";
+	echo -e "\tboard: ${_arg_board | sed 's/-/_/g'}";
+	echo -e "\tota: ${_arg_ota | sed 's/-/_/g'}";
+
+}
+
+parse_commandline "$@"
+handle_passed_args_count
+assign_positional_args 1 "${_positionals[@]}"
+
+# @parseArger-parsing-end
+# print_debug "$@"
+# @parseArger-end
+
+if [ -f "stations/${_arg_name}.main.cpp" ]; then
+	# shellcheck source="../stations/stations"
+	source "./stations/stations";
+	cmd="$HOME/.platformio/penv/bin/pio run -t upload";
+
+	vn="${_arg_name}_board"
+	if [ "${!vn}" == "" ]; then
+		echo "${_arg_name}_board=">>"stations/stations"
+	fi
+
+	if [ "$_arg_board" == "" ]; then
+		_arg_board="${!vn}";
+	else
+		sed "s/${_arg_name}_board.*/${_arg_name}_board=${_arg_board}/g" -i "stations/stations"
+	fi
+	if [ "$_arg_board" != "" ]; then
+		cmd="$cmd -e ${_arg_board}";
+	fi
+
+	ipn="${_arg_name}_ip";
+	if [ "${!ipn}" == "" ]; then
+		echo "${_arg_name}_ip=">>"stations/stations"
+	fi
+
+	if [ "$_arg_ip" == "" ]; then
+		_arg_ip="${!ipn}";
+	else
+		sed "s/${_arg_name}_ip.*/${_arg_name}_ip=${_arg_ip}/g" -i "stations/stations"
+	fi
+
+	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
+		cmd="$cmd --upload-port ${_arg_ip}";
+	fi
+
+	if [ -f "src/main.cpp" ]; then
+		mv "src/main.cpp" "src/main.cpp.bak";
+	fi
+
+	cp "stations/${_arg_name}.main.cpp" "src/main.cpp";
+
+	$cmd;
+
+	# if success
+	if [ $? -eq 0 ]; then
+		rm "src/main.cpp";
+		if [ -f "src/main.cpp.bak" ]; then
+			mv "src/main.cpp.bak" "src/main.cpp";
+		fi
+	fi
+else
+	die "Station ${_arg_name} not found";
+fi
+
