@@ -8,3 +8,4 @@ src/main.cpp
 configs/
 src/**/*main.cpp.bak
 src/**/*main.cpp.test.bak
+package-lock.json

@@ -23,7 +23,7 @@ class mq2 : public Sensor {
   SensorMesureData mesuresDatas[6];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[6];
 
-  void onSetup(StationClass station, int index);
+  // void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

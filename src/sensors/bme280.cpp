@@ -32,7 +32,7 @@ const u_int* bme280::mesuresSampleRates[4] = {
     (const u_int*)60000,
 };
 
-void bme280::onSetup(StationClass station, int index) {}
+// void bme280::onSetup(StationClass station, int index) {}
 size_t bme280::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* bme280::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

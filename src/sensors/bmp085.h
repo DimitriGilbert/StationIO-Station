@@ -23,7 +23,7 @@ class bmp085 : public Sensor {
   SensorMesureData mesuresDatas[4];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
 
-  void onSetup(StationClass station, int index);
+  // void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData* read();
   SensorMesureData read(int index);

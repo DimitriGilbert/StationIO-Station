@@ -30,7 +30,7 @@ const u_int* mq2::mesuresSampleRates[6] = {
     (const u_int*)5000, (const u_int*)5000, (const u_int*)2000,
 };
 
-void mq2::onSetup(StationClass station, int index) {}
+// void mq2::onSetup(StationClass station, int index) {}
 size_t mq2::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* mq2::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -182,7 +182,7 @@ String mq2::toXml(int index) {
          this->mesures[index].name + ">";
 }
 String mq2::jsUtils() {
-  return HtmlElt("script", "const mq2_utils = {inChart: name => name==='raw'}");
+  return HtmlElt("script", "const mq2_utils={inChart:name=>name==='raw'};");
 }
 String mq2::toHtml() {
   String out = "<div class=\"sensor " + this->name +
@@ -191,8 +191,7 @@ String mq2::toHtml() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
-  out.concat("</div></div>"+this->jsUtils());
-  return out;
+  return out + "</div></div>" + this->jsUtils();
 }
 String mq2::toHtml(int index) {
   return "<div class=\"snMs " + this->mesures[index].name +

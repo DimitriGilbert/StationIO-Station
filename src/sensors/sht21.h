@@ -23,7 +23,7 @@ class sht21 : public Sensor {
   SensorMesureData mesuresDatas[3];
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
-  void onSetup(StationClass station, int index);
+  // void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

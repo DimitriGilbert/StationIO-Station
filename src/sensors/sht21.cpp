@@ -28,7 +28,7 @@ const u_int* sht21::mesuresSampleRates[3] = {
     (const u_int*)5000,
 };
 
-void sht21::onSetup(StationClass station, int index) {}
+// void sht21::onSetup(StationClass station, int index) {}
 size_t sht21::getMesuresCount() {
   return this->mesuresCount;
 }
@@ -168,7 +168,10 @@ String sht21::toXml(int index) {
          "</" + this->mesures[index].name + ">";
 }
 String sht21::jsUtils() {
-  return "";
+  return HtmlElt(
+      "script",
+      "const sht21_utils={inChart: name=>name!=='compensated_humidity'};"
+  );
 }
 String sht21::toHtml() {
   String out = "<div class=\"sensor " + this->name +
@@ -177,11 +180,7 @@ String sht21::toHtml() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
-  out.concat(
-      "</div></div><script>const sht21_utils={inChart: name=>"
-      "name!=='compensated_humidity'}</script>"
-  );
-  return out;
+  return out + "</div></div>"+this->jsUtils();
 }
 String sht21::toHtml(int index) {
   return "<div class=\"snMs " + this->mesures[index].name +

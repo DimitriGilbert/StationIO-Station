@@ -17,17 +17,12 @@ linky::linky(TInfo &lnk) : Sensor("linky") {
 };
 linky::~linky(){};
 
-const linky::SensorMesure linky::mesures[4] = {
-    {"hp", "w"},
-    {"hc", "W"},
-    {"tarif", ""},
-    {"power", "va"},
+const linky::SensorMesure linky::mesures[5] = {
+    {"hp", "W"}, {"hc", "W"}, {"tarif", ""}, {"power", "va"}, {"ADC0", "va"},
 };
-const u_int *linky::mesuresSampleRates[4] = {
-    (const u_int *)5000,
-    (const u_int *)5000,
-    (const u_int *)5000,
-    (const u_int *)5000,
+const u_int *linky::mesuresSampleRates[5] = {
+    (const u_int *)5000, (const u_int *)5000, (const u_int *)5000,
+    (const u_int *)5000, (const u_int *)5000,
 };
 
 String linky::getValue(String name) {
@@ -50,7 +45,7 @@ String linky::getValue(String name) {
   return data;
 }
 
-void linky::onSetup(StationClass station, int index) {}
+// void linky::onSetup(StationClass station, int index) {}
 size_t linky::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData *linky::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -82,6 +77,11 @@ Sensor::SensorMesureData linky::read_(int index) {
       // mesure power
       case 3:
         value = this->getValue("PAPP").toFloat();
+        break;
+
+      // mesure ADC index power
+      case 4:
+        value = this->getValue("ADC0").toFloat();
         break;
     }
     this->setMesure(index, value);
@@ -186,11 +186,10 @@ String linky::toXml(int index) {
 String linky::jsUtils() {
   return HtmlElt(
       "script",
-      "const linky_utils = {format_hp: (val) => parseFloat(val) / "
-      "1000,format_hc: (val) => parseFloat(val) / 1000,format_tarif: (val) => "
-      "(val == 'HC..' ? 'heures creuses' : 'heures pleines'),inChart: (name) "
-      "=> "
-      "name == 'power',};"
+      "const linky_utils = {format_hp:val=>parseFloat(val)/1000+'K'"
+      ",format_hc:val=>parseFloat(val)/1000+'K'"
+      ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
+      ",inChart:name=>name==='power'||name==='ADC0'};"
   );
 }
 String linky ::toHtml() {

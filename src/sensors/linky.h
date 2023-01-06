@@ -13,15 +13,15 @@ class linky : public Sensor {
   ~linky();
 
   TInfo lnk;
-  static const size_t mesuresCount = 4;
-  static const SensorMesure mesures[4];
-  static const u_int *mesuresSampleRates[4];
-  unsigned long mesuresSampleLast[4];
+  static const size_t mesuresCount = 5;
+  static const SensorMesure mesures[5];
+  static const u_int *mesuresSampleRates[5];
+  unsigned long mesuresSampleLast[5];
 
-  SensorMesureData mesuresDatas[4];
-  CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
+  SensorMesureData mesuresDatas[5];
+  CircularBuffer<SensorMesureData, 40> mesuresBuffers[5];
 
-  void onSetup(StationClass station, int index);
+  // void onSetup(StationClass station, int index);
   String getValue(String name);
   size_t getMesuresCount();
   SensorMesureData *read();
