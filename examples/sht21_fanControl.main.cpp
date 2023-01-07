@@ -301,15 +301,15 @@ void setup() {
             "value=\"linear\">linear</option><option value=\"stepped\"" +
             (customMode != "linear" ? " selected" : "") +
             ">stepped</option></select></div>"
-            "</div></fieldset><button type=\"button\" class=\"pure-button\" "
+            "</div></fieldset><button type=\"button\" class=\"btn\" "
             "onclick=\"let "
             "adv=document.getElementById('advanced');adv.hasAttribute('hidden')"
             "?adv.removeAttribute('hidden'):adv.setAttribute('hidden', "
             "true);document.getElementById('mode').onchange()\">"
             "Advanced</"
             "button><button "
-            "type=\"submit\" class=\"pure-button "
-            "pure-button-primary\">Set</button></form></div></div>"
+            "type=\"submit\" class=\"btn "
+            "btn-primary\">Set</button></form></div></div>"
         ) +
         "</html>";
     // #endregion

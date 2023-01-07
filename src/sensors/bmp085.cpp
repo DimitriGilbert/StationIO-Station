@@ -15,12 +15,12 @@ bmp085::bmp085() : Sensor("bmp085") {
 };
 bmp085::~bmp085(){};
 
-const bmp085::SensorMesure bmp085::mesures[4] = {
+const bmp085::SensorMesure bmp085::mesures[3] = {
     {"temperature", "*C"},
     {"pressure", "Pa"},
     {"altitude", "m"},
 };
-const u_int* bmp085::mesuresSampleRates[4] = {
+const u_int* bmp085::mesuresSampleRates[3] = {
     (const u_int*)5000,
     (const u_int*)5000,
     (const u_int*)60000,

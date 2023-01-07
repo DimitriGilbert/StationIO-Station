@@ -27,7 +27,7 @@ const mq2::SensorMesure mq2::mesures[6] = {
 };
 const u_int* mq2::mesuresSampleRates[6] = {
     (const u_int*)5000, (const u_int*)5000, (const u_int*)5000,
-    (const u_int*)5000, (const u_int*)5000, (const u_int*)2000,
+    (const u_int*)5000, (const u_int*)5000, (const u_int*)1000,
 };
 
 // void mq2::onSetup(StationClass station, int index) {}
@@ -97,6 +97,9 @@ void mq2::loop() {
 Sensor::SensorMesureData* mq2::read() { return this->mesuresDatas; }
 
 Sensor::SensorMesureData mq2::read(int index) {
+  if (index == 5) {
+    return this->average(5, index);
+  }
   return this->__read(index, this->mesuresCount, this->mesuresDatas);
 }
 

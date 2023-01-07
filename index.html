@@ -299,19 +299,7 @@
             </div>
           </div>
         </form>
-        <code-input lang="bash" id="install-output"># Install PlatformIO 
-# https://docs.platformio.org/en/latest/installation.html
-python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
-# Install StationIO 
-git clone git@github.com:DimitriGilbert/StationIO-Station.git "[station-name]" 
-
-# Go to the station directory
-cd "[station-name]"
-
-# copy "main.cpp" output to "src/main.cpp" 
-
-# upload code to project board
-pio run -t upload -e nodemcuv2</code-input>
+        <code-input lang="bash" id="install-output">Please fill the config form</code-input>
       </div>
       <div id="stationio-main-cpp" class="d-none stio-tab">
         <code-input lang="Arduino" id="main-cpp-output">// Nothing to see here
@@ -829,7 +817,7 @@ String <%= it.sensorName %>::toHtml(int index) {
         mq2: (form) => {
           return [
             "mq2",
-            `${form.get("mq2-pin")}}`,
+            `${form.get("mq2-pin")}`,
           ];
         },
         linky: (form) => {
