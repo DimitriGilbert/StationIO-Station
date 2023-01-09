@@ -5,16 +5,8 @@
 #include "../html.h"
 
 ccs811::ccs811() : Sensor("ccs811") {
-  this->ccs.begin() ? this->status = Sensor::StatusReady
-                    : (this->status = Sensor::StatusError) &&
-                          (this->error = Sensor::ErrorNotFound);
-  ;
-  while (!ccs.available()) {Serial.println("\t waiting for ccs811");}
-
   this->mesuresSampleLast[0] = (unsigned long)1000;
-
   this->mesuresSampleLast[1] = (unsigned long)1000;
-
   this->mesuresSampleLast[2] = (unsigned long)1000;
 };
 ccs811::~ccs811(){};
@@ -31,6 +23,14 @@ const u_int* ccs811::mesuresSampleRates[3] = {
 };
 
 // void ccs811::onSetup(StationClass station, int index) {}
+void ccs811::begin() {
+  this->ccs.begin() ? this->status = Sensor::StatusReady
+                    : (this->status = Sensor::StatusError) &&
+                          (this->error = Sensor::ErrorNotFound);
+  while (!ccs.available()) {
+    Serial.println("\t waiting for ccs811");
+  }
+}
 size_t ccs811::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* ccs811::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

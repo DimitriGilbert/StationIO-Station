@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
+#include <SPIFFS.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
 
@@ -26,7 +27,6 @@ void BaseStation::logt(const String& data) {
 
 void BaseStation::setup() {
   this->serial.begin(9600);
-  Wire.begin();
   this->log("\nWelcome to StationIO");
   this->logt("on " + this->stationTypeName);
   this->logt("station " + this->name);
@@ -38,6 +38,7 @@ void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
   this->sensorCount = sensorCount;
   this->log("Sensors : " + String(this->sensorCount));
   for (size_t i = 0; i < this->sensorCount; i++) {
+    this->sensors[i]->begin();
     this->logt(String(i) + " -> " + this->sensors[i]->name);
   }
 }

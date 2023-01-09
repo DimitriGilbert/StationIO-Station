@@ -5,8 +5,6 @@
 #include "./html.h"
 
 mq2::mq2(int pin) : Sensor("mq2"), mq(5, 10, pin) {
-  this->mq.init();
-
   this->mesuresSampleLast[0] = (unsigned long)1000;
 
   this->mesuresSampleLast[1] = (unsigned long)1000;
@@ -31,6 +29,7 @@ const u_int* mq2::mesuresSampleRates[6] = {
 };
 
 // void mq2::onSetup(StationClass station, int index) {}
+void mq2::begin() { this->mq.init(); }
 size_t mq2::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* mq2::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

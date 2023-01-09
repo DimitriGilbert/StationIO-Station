@@ -24,6 +24,7 @@ class ccs811 : public Sensor {
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[3];
 
   // void onSetup(StationClass station, int index);
+  void begin();
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

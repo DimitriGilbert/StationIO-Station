@@ -5,15 +5,8 @@
 #include "../html.h"
 
 bmp280::bmp280() : Sensor("bmp280") {
-  this->bmp.begin() || this->bmp.begin(BMP280_ADDRESS_ALT)
-      ? this->status = Sensor::StatusReady
-      : (this->status = Sensor::StatusError) &&
-            (this->error = Sensor::ErrorNotFound);
-
   this->mesuresSampleLast[0] = (unsigned long)0;
-
   this->mesuresSampleLast[1] = (unsigned long)0;
-
   this->mesuresSampleLast[2] = (unsigned long)5000;
 };
 bmp280::~bmp280(){};
@@ -30,6 +23,12 @@ const u_int* bmp280::mesuresSampleRates[3] = {
 };
 
 // void bmp280::onSetup(StationClass station, int index) {}
+void bmp280::begin(){
+  this->bmp.begin() || this->bmp.begin(BMP280_ADDRESS_ALT)
+      ? this->status = Sensor::StatusReady
+      : (this->status = Sensor::StatusError) &&
+            (this->error = Sensor::ErrorNotFound);
+}
 size_t bmp280::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* bmp280::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {

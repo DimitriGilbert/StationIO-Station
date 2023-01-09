@@ -5,14 +5,8 @@
 #include "./html.h"
 
 sht21::sht21() : Sensor("sht21") {
-  this->sht.begin() ? this->status = Sensor::StatusReady
-                    : (this->status = Sensor::StatusError) &&
-                          (this->error = Sensor::ErrorNotFound);
-
   this->mesuresSampleLast[0] = (unsigned long)1000;
-
   this->mesuresSampleLast[1] = (unsigned long)1000;
-
   this->mesuresSampleLast[2] = (unsigned long)1000;
 };
 sht21::~sht21(){};
@@ -29,6 +23,14 @@ const u_int* sht21::mesuresSampleRates[3] = {
 };
 
 // void sht21::onSetup(StationClass station, int index) {}
+void sht21::begin() {
+  Serial.println("sht21::begin()");
+  this->sht.begin() ? this->status = Sensor::StatusReady
+                    : (this->status = Sensor::StatusError) &&
+                          (this->error = Sensor::ErrorNotFound);
+
+  Serial.println("sht21::dobegin");
+}
 size_t sht21::getMesuresCount() {
   return this->mesuresCount;
 }

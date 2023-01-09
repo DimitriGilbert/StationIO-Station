@@ -4,17 +4,9 @@
 #include <html.h>
 
 bme280::bme280() : Sensor("bme280") {
-  this->bme.begin() || this->bme.begin(0x76)
-      ? this->status = Sensor::StatusReady
-      : (this->status = Sensor::StatusError) &&
-            (this->error = Sensor::ErrorNotFound);
-
   this->mesuresSampleLast[0] = (unsigned long)0;
-
   this->mesuresSampleLast[1] = (unsigned long)0;
-
   this->mesuresSampleLast[2] = (unsigned long)0;
-
   this->mesuresSampleLast[3] = (unsigned long)5000;
 };
 bme280::~bme280(){};
@@ -34,6 +26,11 @@ const u_int* bme280::mesuresSampleRates[4] = {
 
 // void bme280::onSetup(StationClass station, int index) {}
 size_t bme280::getMesuresCount() { return this->mesuresCount; }
+void bme280::begin() {
+  this->bme.begin() ? this->status = Sensor::StatusReady
+                    : (this->status = Sensor::StatusError) &&
+                          (this->error = Sensor::ErrorNotFound);
+}
 Sensor::SensorMesureData* bme280::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
     this->mesuresDatas[i] = this->read_(i);

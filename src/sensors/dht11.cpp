@@ -5,14 +5,8 @@
 #include "../html.h"
 
 dht11::dht11(int pin) : Sensor("dht11"), dht(pin, DHT11) {
-  Serial.println("dht11::dht11");
-  this->dht.begin();
-  this->status = Sensor::StatusReady;
-  Serial.println("dht11 ready");
   this->mesuresSampleLast[0] = (unsigned long)1000;
-
   this->mesuresSampleLast[1] = (unsigned long)1000;
-
   this->mesuresSampleLast[2] = (unsigned long)1000;
 };
 dht11::~dht11(){};
@@ -29,6 +23,10 @@ const u_int* dht11::mesuresSampleRates[3] = {
 };
 
 // void dht11::onSetup(StationClass station, int index) {}
+void dht11::begin() {
+  this->dht.begin();
+  this->status = Sensor::StatusReady;
+}
 size_t dht11::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* dht11::read_() {
   for (int i = 0; i < this->mesuresCount; i++) {

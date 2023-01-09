@@ -212,6 +212,7 @@
                       <option value="bmp085">bmp085</option>
                       <option value="sht21">sht21</option>
                       <option value="mq2">mq2</option>
+                      <option value="mq135">mq135</option>
                       <option value="ccs811">ccs811</option>
                       <option value="linky">linky</option>
                       <option value="custom">custom</option>
@@ -335,6 +336,7 @@
 
       // main tpl
       var mainCppTpl = `#include <Arduino.h>
+#include <Wire.h>
 #include "./Station.h"
 
 <% if(it.sensors!==undefined && it.sensors.length > 0){%>
@@ -407,6 +409,7 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
 <%}}%>
 
 void setup() {
+  Wire.begin();
   station.setup();
 
   <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors
@@ -745,6 +748,12 @@ String <%= it.sensorName %>::toHtml(int index) {
             <input type="text" class="form-control" id="mq2-pin" name="mq2-pin" value="A0"/>
           </div>`;
         },
+        mq135: () => {
+          return `<div class="row">
+            <label for="mq135-pin">pin</label>
+            <input type="text" class="form-control" id="mq135-pin" name="mq135-pin" value="A0"/>
+          </div>`;
+        },
         custom:(sensorIndex) => {
           return `<input type="hidden" name="custom-index-${sensorIndex}" id="custom-index-${sensorIndex}" value="${sensorIndex}"/><div class="row">
             <label for="custom-name-${sensorIndex}">Name</label>
@@ -818,6 +827,12 @@ String <%= it.sensorName %>::toHtml(int index) {
           return [
             "mq2",
             `${form.get("mq2-pin")}`,
+          ];
+        },
+        mq135: (form) => {
+          return [
+            "mq135",
+            `${form.get("mq135-pin")}`,
           ];
         },
         linky: (form) => {

@@ -22,6 +22,7 @@ class linky : public Sensor {
   CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
 
   // void onSetup(StationClass station, int index);
+  void begin();
   String getValue(String name);
   size_t getMesuresCount();
   SensorMesureData *read();
