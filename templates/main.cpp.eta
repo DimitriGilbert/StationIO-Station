@@ -1,9 +1,10 @@
-#include <Arduino.h>
+      var #include <Arduino.h>
+#include <Wire.h>
 #include "./Station.h"
 
+<% if(it.sensors!==undefined && it.sensors.length > 0){%>
 // including sensors
-<% if(it.sensors!==undefined){
-  it.sensors.forEach(function(sensor){
+<% it.sensors.forEach(function(sensor){
 sensorname = sensor;
 if(typeof sensor !== "string"){
   sensorname = sensor[0];
@@ -15,13 +16,18 @@ if(typeof sensor !== "string"){
 StationClass station(
   "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
   {
-    ssid : "<%= it.wifi.ssid %>",
-    password : "<%= it.wifi.password %>"
+    ssid : "NEVER PUT YOUR WIFI INFO",
+    password : "IN A RANDOM FORM ON THE WEB !! !"
   }
 <% } %>);
 
+<% if(it.sensors!==undefined && it.sensors.length > 0){%>
 // ___ sensors ___
-<% if(it.sensors!==undefined){%>
+<% it.sensors.forEach(function(sensor){
+if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 2){%> 
+<%~ sensor[2] %> 
+<%}})
+%>
 Sensor* sensors[<%= it.sensors.length %>] = {<% it.sensors.forEach(function(sensor){
 sensorArg = "";
 sensorname = sensor;
@@ -34,53 +40,57 @@ if(typeof sensor !== "string"){
 };
 
 <%}
-if(it.callbacks!==undefined){if(it.callbacks.length > 0){%>
+if(it.callbacks!==undefined && it.callbacks.length > 0){if(it.callbacks.length > 0){%>
 // ___ callbacks ___
 <% it.callbacks.forEach(function(cb){%>
 <%= cb %><%})%> 
 
 <%}}
-if(it.loops!==undefined){if(it.loops.length > 0){%>
+if(it.loops!==undefined && it.loops.length > 0){if(it.loops.length > 0){%>
 // ___ loops ___
 BaseStation::StationCallback_t* loopsCallbacks[<%= it.loops.length %>] = {<% it.loops.forEach(function(loop){%> 
   <%= loop %>,<%})%> 
 };
 
 <%}}
-if(it.timers!==undefined){if(it.timers.length > 0){%>
+if(it.timers!==undefined && it.timers.length > 0){if(it.timers.length > 0){%>
 // ___ timers ___
 BaseStation::StationCallbackTimer_t timers[<%= it.timers.length %>] = {<% it.timers.forEach(function(timer){%> 
-  // <%= timer.name!==undefined?timer.name:"" %>
-  {<%~ timer.callback %>, <%= timer.interval %>},<%})%> 
+  // <%= timer.name!==undefined?timer.name:"" %> 
+  {
+    <%~ timer.callback %>,
+    <%= timer.interval %>
+  },<%})%> 
 };
 
 <%}}
-if(it.webServerRoutes!==undefined){if(it.webServerRoutes.length > 0){%>
+if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webServerRoutes.length > 0){%>
 // ___ web Server ___
-EspStation::StationWebCallbackInfo_t**  webServerRoutes[<%= it.webServerRoutes.length %>] = {<% it.webServerRoutes.forEach(function(route){%> 
-  {<%~ route.callback %>, "<%= route.url %>", "<%= route.login %>", "<%= route.password %>"},<%})%> 
-};
+<% it.webServerRoutes.forEach(function(route, epi){%> 
+  EspStation::StationWebCallbackInfo_t endpoint_<%= epi %> = {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>};<%})%> 
 
 <%}}%>
 
 void setup() {
+  Wire.begin();
   station.setup();
 
-  <% if(it.sensors!==undefined){%>// setting up sensors
+  <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors
   station.setupSensors(sensors, <%= it.sensors.length %>);
 
   <%}
-  if(it.loops!==undefined){if(it.loops.length > 0){%>// setting up loops
+  if(it.loops!==undefined && it.loops.length > 0){%>// setting up loops
   station.setupLoopCallback(loops, <%= it.loops.length %>);
 
-  <%}}
-  if(it.timers!==undefined){if(it.timers.length > 0){%>// setting up timers
+  <%}
+  if(it.timers!==undefined && it.timers.length > 0){%>// setting up timers
   station.setupTimers(timers, <%= it.timers.length %>);
 
-  <%}}
-  if(it.webServerRoutes!==undefined){if(it.webServerRoutes.length > 0){%>// setting up web Server
-  station.setupWebServerCallback(webServerRoutes, <%= it.webServerRoutes.length %>);
-<%}}%>
+  <%}
+  if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){%>// setting up web Server
+  <% it.webServerRoutes.forEach((ret,epi) => {%>station.addEndpoint(endpoint_<%= epi %>);
+  <%}) %>
+<%}%>
   // setting up OTA
   station.setupOTA();
 
@@ -89,5 +99,14 @@ void setup() {
 
 void loop() {
   station.loop();
+  <% if(it.sensors!==undefined && it.sensors.length > 0){%>
+<% it.sensors.forEach(function(sensor){
+if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 3){%> 
+  // <%= sensor[0] %>
+
+<%~ sensor[3] %> 
+
+<%}})}%>
   // ___ custom code goes here ___
 }
+

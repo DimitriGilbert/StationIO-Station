@@ -1,6 +1,5 @@
+      var #include <Arduino.h>
 #include "./<%= it.sensorName %>.h"
-
-#include <Arduino.h>
 
 #include "./html.h"
 
@@ -24,6 +23,7 @@ const u_int *<%= it.sensorName %>::mesuresSampleRates[<%= it.mesuresCount %>] = 
   }) %>
 };
 
+void <%= it.sensorName %>::onSetup(StationClass station, int index) {<%= it.onSetup!=undefined?it.onSetup:"" %>}
 size_t <%= it.sensorName %>::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData *<%= it.sensorName %>::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -99,14 +99,14 @@ Sensor::SensorMesureData <%= it.sensorName %>::average(int last, int index) {
 }
 
 String <%= it.sensorName %>::toString() {
-  String out = this->name+"\n";
+  String out = this->name+"\\n";
   for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t"+this->toString(i));
+    out.concat("\\t"+this->toString(i));
   }
   return out;
 }
 String <%= it.sensorName %>::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index))+" "+this->mesures[index].unit+"\n";
+  return this->mesures[index].name + ": " + String(this->read(index))+" "+this->mesures[index].unit+"\\n";
 }
 String <%= it.sensorName %>::toCsv() {
   String out = "";
@@ -116,10 +116,10 @@ String <%= it.sensorName %>::toCsv() {
   return out;
 }
 String <%= it.sensorName %>::toCsv(int index) {
-  return "\""+this->name+"\", \""+this->mesures[index].name+"\", \""+this->read(index)+"\", \""+this->mesures[index].unit+"\"\n";
+  return "\\""+this->name+"\\", \\""+this->mesures[index].name+"\\", \\""+this->read(index)+"\\", \\""+this->mesures[index].unit+"\\"\\n";
 }
 String <%= it.sensorName %>::toJson() {
-  String out = "\""+this->name+"\": {";
+  String out = "\\""+this->name+"\\": {";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     if (i > 0)
     {
@@ -131,7 +131,7 @@ String <%= it.sensorName %>::toJson() {
   return out;
 }
 String <%= it.sensorName %>::toJson(int index) {
-  return "\""+this->mesures[index].name + "\":" + String(this->read(index));
+  return "\\""+this->mesures[index].name + "\\":" + String(this->read(index));
 }
 String <%= it.sensorName %>::toXml() {
   String out = "<"+this->name+">";
@@ -142,16 +142,16 @@ String <%= it.sensorName %>::toXml() {
   return out;
 }
 String <%= it.sensorName %>::toXml(int index) {
-  return "<"+this->mesures[index].name+" unit=\""+this->mesures[index].unit+"\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
+  return "<"+this->mesures[index].name+" unit=\\""+this->mesures[index].unit+"\\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
 }
 String <%= it.sensorName %>::jsUtils() {
   return "";
 }
 
 String <%= it.sensorName %>::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
+  String out = "<div class=\\"text-center sensor " + this->name +
+               "\\"><div class=\\"snName\\">" + this->name +
+               "</div><div class=\\"snMss\\">";
   for (size_t i = 0; i < this->mesuresCount; i++) {
     out.concat(this->toHtml(i));
   }
@@ -159,10 +159,11 @@ String <%= it.sensorName %>::toHtml() {
   return out;
 }
 String <%= it.sensorName %>::toHtml(int index) {
-  return "<div class=\"snMs " + this->mesures[index].name +
-         "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-         "</span> : <span class=\"snMs-value\">" +
+  return "<div class=\\"snMs " + this->mesures[index].name +
+         "\\"><span class=\\"snMs-name\\">" + this->mesures[index].name +
+         "</span> : <span class=\\"snMs-value\\">" +
          String(this->read(index)) +
-         "</span><span class=\"snMs-unit\">" +
+         "</span><span class=\\"snMs-unit\\">" +
          this->mesures[index].unit + "</span></div>";
 }
+

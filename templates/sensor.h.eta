@@ -1,7 +1,7 @@
-#include <Arduino.h>
+      var #include <Arduino.h>
 #include "../Sensor.h"
 <% it.includes!==undefined?it.includes.forEach(function(i){ %> 
-#include <%= i %> <%}):""; %> 
+#include <<%= i %>> <%}):""; %> 
 
 #ifndef StationIOSensor_<%= it.sensorName %>_h
 #define StationIOSensor_<%= it.sensorName %>_h
@@ -23,6 +23,7 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   SensorMesureData mesuresDatas[<%= it.mesuresCount %>];
   CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
   
+  void onSetup(StationClass station, int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
