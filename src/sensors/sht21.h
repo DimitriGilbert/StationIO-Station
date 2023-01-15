@@ -25,6 +25,9 @@ class sht21 : public Sensor {
 
   // void onSetup(StationClass station, int index);
   void begin();
+  String getName();
+  String getMesureName(u_int index);
+  SensorMesure getMesure(u_int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

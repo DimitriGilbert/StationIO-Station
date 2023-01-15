@@ -49,6 +49,11 @@ String linky::getValue(String name) {
 }
 
 // void linky::onSetup(StationClass station, int index) {}
+String linky::getName() { return this->name; }
+String linky::getMesureName(u_int index) { return this->mesures[index].name; }
+Sensor::SensorMesure linky::getMesure(u_int index) {
+  return this->mesures[index];
+}
 size_t linky::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData *linky::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -138,85 +143,43 @@ Sensor::SensorMesureData linky::average(int last, int index) {
 }
 
 String linky::toString() {
-  String out = this->name + "\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t" + this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String linky::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index)) + " " +
-         this->mesures[index].unit + "\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String linky::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String linky::toCsv(int index) {
-  return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
-         this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String linky::toJson() {
-  String out = "\"" + this->name + "\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0) {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String linky::toJson(int index) {
-  return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String linky::toXml() {
-  String out = "<" + this->name + ">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</" + this->name + ">");
-  return out;
+  return SensorToXml(this);
 }
 String linky::toXml(int index) {
-  return "<" + this->mesures[index].name + " unit=\"" +
-         this->mesures[index].unit + "\">" + String(this->read(index)) + "</" +
-         this->mesures[index].name + ">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
 }
 String linky::jsUtils() {
   return HtmlElt(
       "script",
-      "const linky_utils = {format_hp:val=>parseFloat(val)/1000+'K'"
-      ",format_hc:val=>parseFloat(val)/1000+'K'"
+      "const linky_utils = {format_hp:val=>parseFloat(val)/1000"
+      ",format_hc:val=>parseFloat(val)/1000"
+      ",format_hp_unit:val=>KW"
+      ",format_hc_unit:val=>KW"
       ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
       ",inChart:name=>name==='power'};"
   );
 }
 String linky ::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  out.concat("</div></div>" + this->jsUtils());
-  return out;
+  return SensorToHtml(this);
 }
 String linky ::toHtml(int index) {
-  // return "<div class=\"snMs " + this->mesures[index].name +
-  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-  //        "</span> : <span class=\"snMs-value\">" +
-  //        String(this->read(index)) +
-  //        "</span><span class=\"snMs-unit\">" +
-  //        this->mesures[index].unit + "</span></div>";
-  return HtmlDiv(
-      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
-          " : " +
-          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
-          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
-      HtmlClass("col snMs " + this->mesures[index].name)
-  );
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }

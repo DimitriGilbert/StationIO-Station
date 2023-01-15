@@ -27,6 +27,11 @@ void dht11::begin() {
   this->dht.begin();
   this->status = Sensor::StatusReady;
 }
+String dht11::getName() { return this->name; }
+String dht11::getMesureName(u_int index) { return this->mesures[index].name; }
+Sensor::SensorMesure dht11::getMesure(u_int index) {
+  return this->mesures[index];
+}
 size_t dht11::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* dht11::read_() {
   for (int i = 0; i < this->mesuresCount; i++) {
@@ -116,76 +121,35 @@ Sensor::SensorMesureData dht11::average(int last, int index) {
 }
 
 String dht11::toString() {
-  String out = this->name + "\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t" + this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String dht11::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index)) + " " +
-         this->mesures[index].unit + "\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String dht11::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String dht11::toCsv(int index) {
-  return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
-         this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String dht11::toJson() {
-  String out = "\"" + this->name + "\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0) {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String dht11::toJson(int index) {
-  return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String dht11::toXml() {
-  String out = "<" + this->name + ">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</" + this->name + ">");
-  return out;
+  return SensorToXml(this);
 }
 String dht11::toXml(int index) {
-  return "<" + this->mesures[index].name +
-         " unit=\""+this->mesures[index].unit+"\">" + String(this->read(index)) +
-         "</" + this->mesures[index].name + ">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
+}
+String dht11::jsUtils() {
+  return "";
 }
 String dht11::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  out.concat("</div></div>");
-  return out;
+  return SensorToHtml(this);
 }
 String dht11::toHtml(int index) {
-  // return "<div class=\"snMs " + this->mesures[index].name +
-  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-  //        "</span> : <span class=\"snMs-value\">" +
-  //        String(this->read(index)) +
-  //        "</span><span class=\"snMs-unit\">" +
-  //        this->mesures[index].unit + "</span></div>";
-  return HtmlDiv(
-      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
-          " : " +
-          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
-          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
-      HtmlClass("col snMs " + this->mesures[index].name)
-  );
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }

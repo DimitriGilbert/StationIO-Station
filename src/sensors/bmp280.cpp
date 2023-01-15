@@ -29,6 +29,11 @@ void bmp280::begin(){
       : (this->status = Sensor::StatusError) &&
             (this->error = Sensor::ErrorNotFound);
 }
+String bmp280::getName() { return this->name; }
+String bmp280::getMesureName(u_int index) { return this->mesures[index].name; }
+Sensor::SensorMesure bmp280::getMesure(u_int index) {
+  return this->mesures[index];
+}
 size_t bmp280::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* bmp280::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -116,76 +121,35 @@ Sensor::SensorMesureData bmp280::average(int last, int index) {
 }
 
 String bmp280::toString() {
-  String out = this->name + "\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t" + this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String bmp280::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index)) + " " +
-         this->mesures[index].unit + "\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String bmp280::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String bmp280::toCsv(int index) {
-  return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
-         this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String bmp280::toJson() {
-  String out = "\"" + this->name + "\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0) {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String bmp280::toJson(int index) {
-  return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String bmp280::toXml() {
-  String out = "<" + this->name + ">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</" + this->name + ">");
-  return out;
+  return SensorToXml(this);
 }
 String bmp280::toXml(int index) {
-  return "<" + this->mesures[index].name +
-         " unit=\""+this->mesures[index].unit+"\">" + String(this->read(index)) +
-         "</" + this->mesures[index].name + ">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
+}
+String bmp280::jsUtils() {
+  return "";
 }
 String bmp280::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  out.concat("</div></div>");
-  return out;
+  return SensorToHtml(this);
 }
 String bmp280::toHtml(int index) {
-  // return "<div class=\"snMs " + this->mesures[index].name +
-  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-  //        "</span> : <span class=\"snMs-value\">" +
-  //        String(this->read(index)) +
-  //        "</span><span class=\"snMs-unit\">" +
-  //        this->mesures[index].unit + "</span></div>";
-  return HtmlDiv(
-      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
-          " : " +
-          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
-          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
-      HtmlClass("col snMs " + this->mesures[index].name)
-  );
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }

@@ -25,6 +25,11 @@ const u_int* bme280::mesuresSampleRates[4] = {
 };
 
 // void bme280::onSetup(StationClass station, int index) {}
+String bme280::getName() { return this->name; }
+String bme280::getMesureName(u_int index) { return this->mesures[index].name; }
+Sensor::SensorMesure bme280::getMesure(u_int index) {
+  return this->mesures[index];
+}
 size_t bme280::getMesuresCount() { return this->mesuresCount; }
 void bme280::begin() {
   this->bme.begin() ? this->status = Sensor::StatusReady
@@ -120,84 +125,39 @@ Sensor::SensorMesureData bme280::average(int last, int index) {
 }
 
 String bme280::toString() {
-  String out = this->name + "\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t" + this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String bme280::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index)) + " " +
-         this->mesures[index].unit + "\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String bme280::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String bme280::toCsv(int index) {
-  return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
-         this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String bme280::toJson() {
-  String out = "\"" + this->name + "\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0) {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String bme280::toJson(int index) {
-  return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String bme280::toXml() {
-  String out = "<" + this->name + ">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</" + this->name + ">");
-  return out;
+  return SensorToXml(this);
 }
 String bme280::toXml(int index) {
-  return "<" + this->mesures[index].name + " unit=\"" +
-         this->mesures[index].unit + "\">" + String(this->read(index)) + "</" +
-         this->mesures[index].name + ">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
 }
 String bme280::jsUtils() {
   return HtmlElt(
       "script",
-      "const bme280_utils = {format_pressure:val=>(parseFloat(val)/100)+'h'"
-      ",inChart: (name) => name != 'altitude',};"
+      "const bme280_utils = {format_pressure:val=>parseFloat(val)/100"
+      ",inChart: (name) => name != 'altitude',format_pressure_unit:val=>hPa};"
   );
 }
 String bme280::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  out.concat("</div></div>" + this->jsUtils());
-  return out;
+  return SensorToHtml(this);
 }
 String bme280::toHtml(int index) {
-  // return "<div class=\"col snMs " + this->mesures[index].name +
-  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-  //        "</span> : <span class=\"snMs-value\">" + String(this->read(index)) +
-  //        "</span><span class=\"snMs-unit\">" + this->mesures[index].unit +
-  //        "</span></div>";
-  return HtmlDiv(
-      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
-          " : " +
-          HtmlElt("span", String(this->read(index)),
-                  HtmlClass("snMs-value")) +
-          HtmlElt("span", this->mesures[index].unit,
-                  HtmlClass("snMs-unit")),
-      HtmlClass("col snMs " + this->mesures[index].name)
-  );
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }

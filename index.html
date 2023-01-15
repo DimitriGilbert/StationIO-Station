@@ -532,6 +532,9 @@ public:<% it.properties!==undefined&&it.properties.public!==undefined?it.propert
   CircularBuffer<SensorMesureData,<%= it.mesuresBufferSize!==undefined?it.mesuresBufferSize:"20" %>> mesuresBuffers[<%= it.mesuresCount %>];
   
   void onSetup(StationClass station, int index);
+  String getName();
+  String getMesureName(u_int index);
+  SensorMesure getMesure(u_int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

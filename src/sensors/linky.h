@@ -24,6 +24,9 @@ class linky : public Sensor {
   // void onSetup(StationClass station, int index);
   void begin();
   String getValue(String name);
+  String getName();
+  String getMesureName(u_int index);
+  SensorMesure getMesure(u_int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);

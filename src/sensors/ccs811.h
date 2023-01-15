@@ -25,6 +25,9 @@ class ccs811 : public Sensor {
 
   // void onSetup(StationClass station, int index);
   void begin();
+  String getName();
+  String getMesureName(u_int index);
+  SensorMesure getMesure(u_int index);
   size_t getMesuresCount();
   SensorMesureData *read();
   SensorMesureData read(int index);
@@ -40,6 +43,7 @@ class ccs811 : public Sensor {
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String jsUtils();
   String toHtml();
   String toHtml(int index);
   SensorMesureData *read_();

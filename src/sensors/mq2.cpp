@@ -30,6 +30,11 @@ const u_int* mq2::mesuresSampleRates[6] = {
 
 // void mq2::onSetup(StationClass station, int index) {}
 void mq2::begin() { this->mq.init(); }
+String mq2::getName() { return this->name; }
+String mq2::getMesureName(u_int index) { return this->mesures[index].name; }
+Sensor::SensorMesure mq2::getMesure(u_int index) {
+  return this->mesures[index];
+}
 size_t mq2::getMesuresCount() { return this->mesuresCount; }
 Sensor::SensorMesureData* mq2::read_() {
   for (size_t i = 0; i < this->mesuresCount; i++) {
@@ -135,78 +140,35 @@ Sensor::SensorMesureData mq2::average(int last, int index) {
 }
 
 String mq2::toString() {
-  String out = this->name + "\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\t" + this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String mq2::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index)) + " " +
-         this->mesures[index].unit + "\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String mq2::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String mq2::toCsv(int index) {
-  return "\"" + this->name + "\", \"" + this->mesures[index].name + "\", \"" +
-         this->read(index) + "\", \"" + this->mesures[index].unit + "\"\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String mq2::toJson() {
-  String out = "\"" + this->name + "\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0) {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String mq2::toJson(int index) {
-  return "\"" + this->mesures[index].name + "\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String mq2::toXml() {
-  String out = "<" + this->name + ">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</" + this->name + ">");
-  return out;
+  return SensorToXml(this);
 }
 String mq2::toXml(int index) {
-  return "<" + this->mesures[index].name + " unit=\"" +
-         this->mesures[index].unit + "\">" + String(this->read(index)) + "</" +
-         this->mesures[index].name + ">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
 }
 String mq2::jsUtils() {
   return HtmlElt("script", "const mq2_utils={inChart:name=>name==='raw'};");
 }
 String mq2::toHtml() {
-  String out = "<div class=\"text-center sensor " + this->name +
-               "\"><div class=\"snName\">" + this->name +
-               "</div><div class=\"snMss row\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  return out + "</div></div>" + this->jsUtils();
+  return SensorToHtml(this);
 }
 String mq2::toHtml(int index) {
-  // return "<div class=\"snMs " + this->mesures[index].name +
-  //        "\"><span class=\"snMs-name\">" + this->mesures[index].name +
-  //        "</span> : <span class=\"snMs-value\">" +
-  //        String(this->read(index)) +
-  //        "</span><span class=\"snMs-unit\">" +
-  //        this->mesures[index].unit + "</span></div>";
-  return HtmlDiv(
-      HtmlElt("span", this->mesures[index].name, HtmlClass("snMs-name")) +
-          " : " +
-          HtmlElt("span", String(this->read(index)), HtmlClass("snMs-value")) +
-          HtmlElt("span", this->mesures[index].unit, HtmlClass("snMs-unit")),
-      HtmlClass("col snMs " + this->mesures[index].name)
-  );
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }
