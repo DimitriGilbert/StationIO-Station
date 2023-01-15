@@ -143,6 +143,7 @@ class EspStation : public BaseStation {
   void initWebServer();
   void setupWebServer(StationWebCallbackInfo_t** routes, int callbackCount);
   void addEndpoint(StationWebCallbackInfo_t endpoint);
+  void connect(String hostname);
   void connect();
   void connectWifi();
   void connectWifi(WifiInformation wifiInformation);

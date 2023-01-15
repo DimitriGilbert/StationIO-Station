@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <SPIFFS.h>
+// #include <SPIFFS.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
 
@@ -81,8 +81,8 @@ void BaseStation::setupOTA() {
     // U_SPIFFS
     else {
       this->logt("filesystem");
-      SPIFFS.end();
-      this->logt("\tfs unmounted");
+      // SPIFFS.end();
+      // this->logt("\tfs unmounted");
     }
   });
   ArduinoOTA.onEnd([this]() { this->log("OTA update ended"); });
@@ -285,6 +285,10 @@ void EspStation::setup(Sensor** sensors, int sensorCount) {
   this->serve();
 }
 
+void EspStation::connect(String hostname) { 
+  this->wifi.setHostname(hostname.c_str());
+  this->connect();
+}
 void EspStation::connect() { this->connectWifi(); }
 
 void EspStation::initWebServer() {
