@@ -141,7 +141,11 @@ String bmp085::toXml(int index) {
   return SensorMesureToXml(this->getMesure(index), this->read(index));
 }
 String bmp085::jsUtils() {
-  return "";
+  return HtmlElt(
+      "script",
+      "const bmp085_utils = {format_pressure:val=>parseFloat(val)/100"
+      ",inChart: (name) => name != 'altitude',format_pressure_unit:val=>hPa};"
+  );
 }
 String bmp085::toHtml() {
   return SensorToHtml(this);

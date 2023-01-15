@@ -171,8 +171,8 @@ String linky::jsUtils() {
       "script",
       "const linky_utils = {format_hp:val=>parseFloat(val)/1000"
       ",format_hc:val=>parseFloat(val)/1000"
-      ",format_hp_unit:val=>KW"
-      ",format_hc_unit:val=>KW"
+      ",format_unit_hp:val=>KW"
+      ",format_unit_hc:val=>KW"
       ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
       ",inChart:name=>name==='power'};"
   );

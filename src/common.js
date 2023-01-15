@@ -194,6 +194,18 @@ function updateChart(chart, timer) {
                   mesureName +
                   ">.snMs-value"
               )[0].innerHTML = mval;
+              
+              let utils = existsSensorUtils(sensorName);
+              if (utils && Object.hasOwnProperty.call(utils, "format_unit_" + mesureName)) {
+                let uelt = document.querySelectorAll(
+                  ".sensor." +
+                    sensorName +
+                    ">.snMss>.snMs." +
+                    mesureName +
+                    ">.snMs-unit"
+                )[0];
+                uelt.innerHTML = utils["format_unit_" + mesureName](uelt.innerHTML);
+              }
             }
           }
         }
