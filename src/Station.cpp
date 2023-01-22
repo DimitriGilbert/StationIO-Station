@@ -235,7 +235,7 @@ String BaseStation::toHtml() {
       "Welcome to Station " +
           HtmlElt("span", this->name, HtmlClass("station-name")),
       HtmlClass("welcome text-center")
-  ) + HtmlDiv(HtmlDiv(out, HtmlClass("row")), HtmlClass("container"));
+  ) + HtmlDiv(HtmlDiv(out, HtmlClass("row st")), HtmlClass("container"));
   return out;
 }
 String BaseStation::toHtml(int index) {

@@ -4,7 +4,8 @@
 
 #include "./html.h"
 
-mq2::mq2(int pin) : Sensor("mq2"), mq(5, 10, pin) {
+#ifdef ESP32
+mq2::mq2(int pin) : Sensor("mq2"), mq(3.3, 12, pin) {
   this->mesuresSampleLast[0] = (unsigned long)1000;
 
   this->mesuresSampleLast[1] = (unsigned long)1000;
@@ -17,6 +18,21 @@ mq2::mq2(int pin) : Sensor("mq2"), mq(5, 10, pin) {
 
   this->mesuresSampleLast[5] = (unsigned long)1000;
 };
+#else
+mq2::mq2(int pin) : Sensor("mq2"), mq(3.3, 10, pin) {
+  this->mesuresSampleLast[0] = (unsigned long)1000;
+
+  this->mesuresSampleLast[1] = (unsigned long)1000;
+
+  this->mesuresSampleLast[2] = (unsigned long)1000;
+
+  this->mesuresSampleLast[3] = (unsigned long)1000;
+
+  this->mesuresSampleLast[4] = (unsigned long)1000;
+
+  this->mesuresSampleLast[5] = (unsigned long)1000;
+};
+#endif
 mq2::~mq2(){};
 
 const mq2::SensorMesure mq2::mesures[6] = {

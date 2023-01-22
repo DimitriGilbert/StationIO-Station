@@ -4,7 +4,8 @@
 
 #include "./html.h"
 
-mq135::mq135(int pin) : Sensor("mq135"), mq(5, 10, pin) {
+#ifdef ESP32
+mq135::mq135(int pin) : Sensor("mq135"), mq(3.3, 12, pin) {
   this->mesuresSampleLast[0] = (unsigned long)1000;
 
   this->mesuresSampleLast[1] = (unsigned long)1000;
@@ -19,6 +20,24 @@ mq135::mq135(int pin) : Sensor("mq135"), mq(5, 10, pin) {
 
   this->mesuresSampleLast[6] = (unsigned long)1000;
 };
+#else
+mq135::mq135(int pin) : Sensor("mq135"), mq(3.3, 10, pin) {
+  this->mesuresSampleLast[0] = (unsigned long)1000;
+
+  this->mesuresSampleLast[1] = (unsigned long)1000;
+
+  this->mesuresSampleLast[2] = (unsigned long)1000;
+
+  this->mesuresSampleLast[3] = (unsigned long)1000;
+
+  this->mesuresSampleLast[4] = (unsigned long)1000;
+
+  this->mesuresSampleLast[5] = (unsigned long)1000;
+
+  this->mesuresSampleLast[6] = (unsigned long)1000;
+};
+#endif
+
 mq135::~mq135(){};
 const mq135::SensorMesure mq135::mesures[7] = {
     {"CO", "ppm"},  {"Alcohol", "ppm"}, {"CO2", "ppm"}, {"Toluen", "ppm"},
