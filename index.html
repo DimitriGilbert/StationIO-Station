@@ -68,24 +68,23 @@
       <div id="stationio-about" class="stio-tab">
         <h2>What is StationIO ?</h2>
         <p>
-          An Arduino framework-ish thingy that takes care of the (my?) basics !
+          An Arduino framework-ish thingy that takes care of the (my?) basics !<br/>
+          It runs on ESP8266 and ESP32 boards, connects to WiFi, provides a webserver (with basic endpoints), support a bunch of sensor out of the box and provides an easy way to execute function on a timer.
         </p>
         <h2>How does it work ?</h2>
         <p>
-          It uses a set of classes to simply handle sensors, callbacks on a
+          It uses a set of classes to simply handle the basic station, sensors, callbacks on a
           timer and web server endpoints, while still being arduino code.<br />
           That way you can hookup your custom code in a breeze.
         </p>
         <h2>But.... WHY ?</h2>
         <p>
           I know there are plenty of great iot stack out there but I do not like
-          their architecture, it is too centralized to my taste. <br />
-          I'd rather have independent microservices that can be queried by
+          their architecture, it is too centralized to my taste. I'd rather have independent microservices that can be queried by
           whatever wants to. <br />
           So instead of stations reporting to a central hub, I can have my hub
-          query the stations, stations querying eachothers, computers querying
-          stations and even stations reporting to a hub (....yep, I know).
-          <br />
+          query the stations, stations querying each others, computers querying
+          stations and even stations reporting to a hub (....yep, I know).<br />
           Freedooooooom.... <br />
           Also, I find it a bit annoying to waste "so much" computing power (I
           know it sounds weird to read) on an interpreter (for micropython) or
@@ -97,20 +96,21 @@
         <h2>Huuum.... how do you do that then ?</h2>
         <p>
           <ul>
-            <li>Grab an esp8266 board (for now, esp32 soon...tm)</li>
+            <li>Grab an esp8266 or esp32 boards</li>
             <li>Plug it to your conputer</li>
             <li>Use the <a href="#" onclick="navTo('config')">Configuration</a> tool</li>
             <li>Follow the <a href="#" onclick="navTo('install')">Install</a> script</li>
+            <li>Build your circuit (don't look at me I have fat fingers !)</li>
             <li>Go to your device ip (you can use the "/fancy" endpoint for more eyecandy-ish, me no designer ok ! oh, and I don't care how it looks :P)</li>
             <li>Voila !!(maybe...tm)</li>
           </ul>
         </p>
-        <h2>Can you integrate with other iot stacks ?</h2>
+        <h2>Can you integrate with other IoT stacks ?</h2>
         <p>
           Huuuum, ...., I did not even try ^^'. <br />
           It should be easy though, if your stack can fetch info with http
           queries, no problemo ! <br />
-          You can set the "Accept" header to "application/json",
+          Onthe "/" endpoint, you can set the "Accept" header to "application/json",
           "application/xml","text/csv", "text/plain" and you'll get a
           corresponding response. Default is html<br />
           If you need MQTT, or other protocols, you should be able to integrate
@@ -174,6 +174,16 @@
                     id="wifi-pass"
                     name="wifi-pass"
                   />
+                </div>
+              </div>
+              <div class="row" id="i2c-config">
+                <div class="col">
+                  <label for="i2c-data">I2C SDA pin</label>
+                  <input type="number" class="form-control" name="i2c-data" id="i2c-data">
+                </div>
+                <div class="col">
+                  <label for="i2c-clock">I2C SCL pin</label>
+                  <input type="number" class="form-control" name="i2c-clock" id="i2c-clock">
                 </div>
               </div>
               <div id="timers-config" class="row">
@@ -409,7 +419,7 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
 <%}}%>
 
 void setup() {
-  Wire.begin();
+  Wire.begin(<%= it.i2c!==undefined?(it.i2c[0]+", "+it.i2c[1]):""%>);
   station.setup();
 
   <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors
@@ -660,72 +670,41 @@ Sensor::SensorMesureData <%= it.sensorName %>::average(int last, int index) {
 }
 
 String <%= it.sensorName %>::toString() {
-  String out = this->name+"\\n";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat("\\t"+this->toString(i));
-  }
-  return out;
+  return SensorToString(this);
 }
 String <%= it.sensorName %>::toString(int index) {
-  return this->mesures[index].name + ": " + String(this->read(index))+" "+this->mesures[index].unit+"\\n";
+  return SensorMesureToString(this->getMesure(index), this->read(index));
 }
 String <%= it.sensorName %>::toCsv() {
-  String out = "";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toCsv(i));
-  }
-  return out;
+  return SensorToCsv(this);
 }
 String <%= it.sensorName %>::toCsv(int index) {
-  return "\\""+this->name+"\\", \\""+this->mesures[index].name+"\\", \\""+this->read(index)+"\\", \\""+this->mesures[index].unit+"\\"\\n";
+  return SensorMesureToCsv(this->getMesure(index), this->read(index));
 }
 String <%= it.sensorName %>::toJson() {
-  String out = "\\""+this->name+"\\": {";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (i > 0)
-    {
-      out.concat(", ");
-    }
-    out.concat(this->toJson(i));
-  }
-  out.concat("}");
-  return out;
+  return SensorToJson(this);
 }
 String <%= it.sensorName %>::toJson(int index) {
-  return "\\""+this->mesures[index].name + "\\":" + String(this->read(index));
+  return SensorMesureToJson(this->getMesure(index), this->read(index));
 }
 String <%= it.sensorName %>::toXml() {
-  String out = "<"+this->name+">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toXml(i));
-  }
-  out.concat("</"+this->name+">");
-  return out;
+  return SensorToXml(this);
 }
 String <%= it.sensorName %>::toXml(int index) {
-  return "<"+this->mesures[index].name+" unit=\\""+this->mesures[index].unit+"\\">"+String(this->read(index))+"</"+this->mesures[index].name+">";
+  return SensorMesureToXml(this->getMesure(index), this->read(index));
 }
 String <%= it.sensorName %>::jsUtils() {
-  return "";
+  return HtmlElt(
+      "script",
+      "const <%= it.sensorName %>_utils={};"
+  );
 }
 
 String <%= it.sensorName %>::toHtml() {
-  String out = "<div class=\\"text-center sensor " + this->name +
-               "\\"><div class=\\"snName\\">" + this->name +
-               "</div><div class=\\"snMss\\">";
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    out.concat(this->toHtml(i));
-  }
-  out.concat("</div></div>"+this->jsUtils());
-  return out;
+  return SensorToHtml(this);
 }
 String <%= it.sensorName %>::toHtml(int index) {
-  return "<div class=\\"snMs " + this->mesures[index].name +
-         "\\"><span class=\\"snMs-name\\">" + this->mesures[index].name +
-         "</span> : <span class=\\"snMs-value\\">" +
-         String(this->read(index)) +
-         "</span><span class=\\"snMs-unit\\">" +
-         this->mesures[index].unit + "</span></div>";
+  return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }
 `;
     
@@ -950,8 +929,8 @@ TInfo tinfo;
                 </div>
               </div>`)
             );
-            soutEl.lastElementChild.firstElementChild.lastElementChild.value = Eta.render(sensorHTpl, tplData);
-            soutEl.lastElementChild.lastElementChild.lastElementChild.value = Eta.render(sensorCppTpl, tplData);
+            soutEl.lastElementChild.firstElementChild.lastElementChild.value = eta.render(sensorHTpl, tplData);
+            soutEl.lastElementChild.lastElementChild.lastElementChild.value = eta.render(sensorCppTpl, tplData);
 
             if (form.get(`custom-mesure-${index}-gen-adv`) == "on") {
               if (typeof ret == "string") {
@@ -1107,6 +1086,13 @@ TInfo tinfo;
             timers: [],
             webServerRoutes: [],
           };
+
+          let i2ccl = frmData.get("i2c-clock");
+          let i2cda = frmData.get("i2c-data");
+          if (i2ccl !== "" && i2cda !== "") {
+            data.i2c = [i2cda, i2ccl];
+          }
+          
           frmData.getAll("sensors[]").forEach((sensor, sensI) => {
             let snA = sensor.split("::");
             if (Object.keys(sensorParseForms).includes(snA[0])) {
@@ -1131,7 +1117,7 @@ TInfo tinfo;
             });
           });
 
-          document.getElementById("main-cpp-output").value = Eta.render(
+          document.getElementById("main-cpp-output").value = eta.render(
             mainCppTpl,
             data
           );
@@ -1153,16 +1139,16 @@ TInfo tinfo;
             case "none":
               break;
             case "tgz":
-              data.stationInstall = Eta.render(installStioTgzTpl, data)+"\n";
+              data.stationInstall = eta.render(installStioTgzTpl, data)+"\n";
               break;
             case "git":
             default:
-              data.stationInstall = Eta.render(installStioGitTpl, data)+"\n";
+              data.stationInstall = eta.render(installStioGitTpl, data)+"\n";
               break;
           }
           installTpl += "\n"+installStioTpl;
           
-          document.getElementById("install-output").value = Eta.render(
+          document.getElementById("install-output").value = eta.render(
             installTpl,
             data
           );

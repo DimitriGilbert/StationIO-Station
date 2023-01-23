@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include "./html.h"
+#include "../html.h"
 
 sht21::sht21() : Sensor("sht21") {
   this->mesuresSampleLast[0] = (unsigned long)1000;

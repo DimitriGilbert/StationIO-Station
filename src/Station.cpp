@@ -39,7 +39,7 @@ void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
   this->log("Sensors : " + String(this->sensorCount));
   for (size_t i = 0; i < this->sensorCount; i++) {
     this->sensors[i]->begin();
-    this->logt(String(i) + " -> " + this->sensors[i]->name);
+    this->logt(String(i) + " -> " + this->sensors[i]->name + " " + String(this->sensors[i]->status));
   }
 }
 
@@ -218,11 +218,11 @@ String BaseStation::toJson(int index) {
   return this->getSensor(index)->toJson();
 }
 String BaseStation::toXml() {
-  String out = "";
+  String out = "<"+this->name+">";
   for (size_t i = 0; i < this->sensorCount; i++) {
     out.concat(this->toXml(i));
   }
-  return out;
+  return out+"</"+this->name+">";
 }
 String BaseStation::toXml(int index) { return this->getSensor(index)->toXml(); }
 String BaseStation::toHtml() {
@@ -233,7 +233,7 @@ String BaseStation::toHtml() {
   out = HtmlElt(
       "h1",
       "Welcome to Station " +
-          HtmlElt("span", this->name, HtmlClass("station-name")),
+          HtmlElt("span", this->name, HtmlClass("st-n")),
       HtmlClass("welcome text-center")
   ) + HtmlDiv(HtmlDiv(out, HtmlClass("row st")), HtmlClass("container"));
   return out;
@@ -437,7 +437,7 @@ void EspStation::initWebServer() {
     }
   });
   this->webServer.on("/fancy", [this](AsyncWebServerRequest* request) {
-    String data = commonHtmlHeader(this->name + " : recap</title>") +
+    String data = commonHtmlHeader(this->name + " : recap") +
                   commonBody(this->toHtml()) + "</html>";
     request->send(200, "text/html", data);
   });

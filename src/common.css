@@ -10,7 +10,7 @@ body {
   font-size: 2rem;
   text-align: center;
 }
-.welcome > .station-name {
+.welcome > .st-n {
   font-weight: bold;
   font-style: italic;
 }

@@ -7,10 +7,10 @@
 #ifndef StationIOSensor_linky_h
 #define StationIOSensor_linky_h
 
-class linky : public Sensor {
+class Linky : public Sensor {
  public:
-  linky(TInfo &lnk);
-  ~linky();
+  Linky(TInfo &lnk);
+  ~Linky();
 
   TInfo lnk;
   static const size_t mesuresCount = 4;

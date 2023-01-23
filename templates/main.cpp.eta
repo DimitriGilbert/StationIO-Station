@@ -72,7 +72,7 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
 <%}}%>
 
 void setup() {
-  Wire.begin();
+  Wire.begin(<%= it.i2c!==undefined?(it.i2c[0]+", "+it.i2c[1]):""%>);
   station.setup();
 
   <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors

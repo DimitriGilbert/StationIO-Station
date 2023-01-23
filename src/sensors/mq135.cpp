@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include "./html.h"
+#include "../html.h"
 
 #ifdef ESP32
 mq135::mq135(int pin) : Sensor("mq135"), mq(3.3, 12, pin) {
