@@ -49,8 +49,7 @@ String commonJs() {
 
 String commonBody(String body) {
   return "<body>" + body +
-         "</body><script>window.addEventListener('load',()=>{setTimeout(()=>{"
-         "let scr=document.createElement('script');scr.setAttribute('src','/js');document.body.appendChild(scr)}, 150)})</script>";
+         "</body><script>window.addEventListener('load',()=>{setTimeout(()=>{let scr=document.createElement('script');scr.setAttribute('src','/js');document.body.appendChild(scr)}, 150)})</script>";
 }
 
 String commonHtmlHeader(String title) {
@@ -72,12 +71,12 @@ String commonHtmlHeader(String title) {
                              "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/"
                              "dist/css/bootstrap.min.css"
                          ) +
-                         HtmlAttribute("crossorigin", "anonymous")
+                         HtmlAttribute("crossorigin", "anonymous"), true
                  ) +
                  HtmlElt(
                      "link", "",
                      HtmlAttribute("rel", "stylesheet") +
-                         HtmlAttribute("href", "/css")
+                         HtmlAttribute("href", "/css"), true
                  )
          );
 }

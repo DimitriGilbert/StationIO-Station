@@ -437,7 +437,7 @@ void EspStation::initWebServer() {
     }
   });
   this->webServer.on("/fancy", [this](AsyncWebServerRequest* request) {
-    String data = commonHtmlHeader(this->name + " : recap") +
+    String data = commonHtmlHeader(this->name) +
                   commonBody(this->toHtml()) + "</html>";
     request->send(200, "text/html", data);
   });
