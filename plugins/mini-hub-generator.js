@@ -17,6 +17,7 @@ const miniHubIncludeTpl = `
 #include <HTTPClient.h>
 #endif
 #include <WiFiClient.h>
+
 `;
 
 const miniHubDeclarationTpl = `
@@ -100,16 +101,17 @@ EspStation::StationWebCallbackInfo_t <%= it.endpointBase %>HubCssEndpoint = {"/<
   }};
 `;
 
-const miniHubSetupTpl = `// mini hub
-station.addEndpoint(<%= it.endpointBase %>StationsListEndpoint);
-station.addEndpoint(<%= it.endpointBase %>ProxyEndpoint);
-station.addEndpoint(<%= it.endpointBase %>HubEndpoint);
-station.addEndpoint(<%= it.endpointBase %>HubJsEndpoint);
-station.addEndpoint(<%= it.endpointBase %>HubCssEndpoint);
+const miniHubSetupTpl = ` // mini hub
+  station.addEndpoint(<%= it.endpointBase %>StationsListEndpoint);
+  station.addEndpoint(<%= it.endpointBase %>ProxyEndpoint);
+  station.addEndpoint(<%= it.endpointBase %>HubEndpoint);
+  station.addEndpoint(<%= it.endpointBase %>HubJsEndpoint);
+  station.addEndpoint(<%= it.endpointBase %>HubCssEndpoint);
+  
 `;
 
 const miniHubFormTpl = `<div id="mini-hub-config" class="row">
-  <h2>Mini Hub</h2>
+  <h2 class="text-center">Mini Hub</h2>
   <div>
     <label for="mini-hub-endpoint-base">Endpoint Base</label>
     <input type="text" class="form-control" name="mini-hub-endpoint-base" id="mini-hub-endpoint-base">
@@ -137,8 +139,7 @@ const miniHubStationFrmTpl = `<div class="row">
     <label for="mini-hub-station-ip-<%= it.id %>">station ip <%= it.id %></label>
     <input type="text" class="form-control" name="mini-hub-station-ip-<%= it.id %>" id="mini-hub-station-ip-<%= it.id %>">
   </div>
-</div>
-`;
+</div>`;
 
 function miniHubAddStation() {
   document.getElementById("mini-hub-stations-count").value++;

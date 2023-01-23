@@ -4,6 +4,9 @@ An Arduino framework-ish thingy that takes care of the basics !
 
 ## TLDR
 
+You can use the built in web generator. Just go [there](https://dimitrigilbert.github.io/StationIO-Station/) with your favorite browser, fill out the form and follow the install instructions ;)
+A copy of this generator is in the repository index.html.
+
 ### Basic Station
 
 Include the station and sensors header files, initialize and voila a connected arduino station !
@@ -32,20 +35,6 @@ void loop() {
 
 ```
 
-### main.cpp generator
-
-You can use the built in web generator. Just open generator/index.html in your favorite browser, fill out the form and follow the install instructions ;)
-
-### sensor generator generator
-
-A tool to generate main.cpp file from json configs exists, configs are located in ./generator/*.json and examples are available, to run it :
-
-```bash
-npx ts-node generator/sensor.ts
-```
-
-to run on a different config edit line 4 of generator/sensor.ts.
-
 ## Background and Philosophy
 
 Even for seasoned developers, the arduino world can seem daunting :
@@ -58,7 +47,8 @@ What I wanted was something that would :
 
 * generic arduino firmware for cross compatibility
   * developed on a D1 mini and a nodemcu board
-  * compiles-ish for uno and esp32
+  * run awesome on esp32
+  * compiles-ish for uno
 * handle the basics :
   * sensor management and mesurements
   * custom arduino code integration with or without a timer
@@ -74,10 +64,10 @@ I could not find that, so instead of whinning, I tried to build a thing : Statio
 full :
 
 * esp8266
+* esp32
 
 kinda :
 
-* esp32
 * Arduino Uno
 
 wish :
@@ -93,9 +83,12 @@ support :
 
 * BME280
 * BMP280
+* BMP085
 * DHT11
 * MQ2
+* MQ135
 * SHT21
+* Linky electric meter (It's a french thing...)
 
 I miss the sensor to test and enable support :
 
@@ -114,10 +107,10 @@ Support :
 
 * WiFi client (ESPx boards)
 * web server (ESPx boards)
+* OTA
 
 wish :
 
-* OTA
 * RF
 * bluetooth
 * MQTT
@@ -134,12 +127,13 @@ As a developer, I wanted to be able to easily add custom code to add functionnal
 
 wish :
 
-* hardware interrupts
 * timer interrupts (cleaner than current method maybe)
 
 ## Getting started
 
 ### Install
+
+___You can generate intallation instructions using the index.html file___
 
 For now you have to clone (or download) the repo, it is not yet packaged as a project or library.
 
@@ -211,20 +205,6 @@ BaseStation::StationCallbackTimer_t timerCallbacks[2] = {
   {[](BaseStation * station){station->log(station->toString());}, 12000}
 };
 
-# ___ web server callback ___
-
-void wcb(BaseStation* station, AsyncWebServerRequest* request) {
-  cb1(station);
-}
-
-EspStation::StationWebCallbackInfo_t webRoutes[3] = {
-  # using the declared function as a callback
-  {wcb, "/route1", "", ""},
-  # using a password
-  {wcb, "/route2", "my_login", "my_password"},
-  # using a lambda function AND a password #GoCrazy #YOLO
-  {[](BaseStation * station, AsyncWebServerRequest* request){station->log("#YOLO\n"+station->toString());}, "/go_crazy", "my_login", "my_password"}
-};
 
 ```
 
@@ -243,9 +223,6 @@ void setup() {
 
   # setup timers
   station.setupTimers(timerCallbacks, 2);
-
-  # setup web server
-  station.setupWebServer(webRoutes, 3);
 
 
   # ___ custom setup code goes here ___

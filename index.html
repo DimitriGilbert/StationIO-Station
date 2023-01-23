@@ -10,16 +10,21 @@
       rel="stylesheet"
       integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
       crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     />
     <!-- Code input -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/WebCoder49/code-input@1.1/code-input.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     />
     <link
       id="import-theme"
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism-okaidia.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     />
     <!-- bootswatch theme -->
     <link
@@ -123,16 +128,15 @@
         <p>
           At home I have several stations (more or less in every room) that run
           StationIO with a panache of sensors (the ones implemented as a matter
-          of suprising fact). <br />
+          of suprising fact) to report temperature, humidity, and so on... <br />
           I have a Rpi running a docker-compose stack with a mysql database, a
           grafana instance and a nodejs instance. <br />
           A cronjob on the Rpi fetches the data from the stations and inserts it
-          into the database. <br />
-          Also, my computer displays several widgets that fetch data from the
-          stations in real time. <br />
-          And, to finish off, some stations talk to eachother in order to decide
-          what actions to execute (my hot air system fan control, which runs
-          StationIO for example). <br />
+          into the database and my computer displays several widgets that fetch data from the
+          stations in real time for a quick look. <br />
+          Also, some stations talk to each other in order to decide
+          what actions to execute. For example, I heat my upper floors using hot air taken from above my wood stove. <br/>
+          All fans are controlled by a station that uses intake air temperature, my main room temperature and the heated room temperature to decide what speed to run them at.
         </p>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
@@ -1211,6 +1215,12 @@ TInfo tinfo;
       window.addEventListener("resize", () => {
         document.getElementById("main-cpp-output").style.height =
           window.innerHeight - 100 + "px";
+      }); 
+      document.getElementsByTagName("h1")[0].addEventListener('dblclick', (event) => {
+        let src = prompt("plugin script src");
+        if (src && src !== "") {
+          addScript(src);
+        }
       });
     </script>
     
