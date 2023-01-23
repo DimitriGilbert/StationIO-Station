@@ -321,6 +321,14 @@
       </div>
     </div>
     <script id="common.js">
+      function addScript(src, delay) {
+        setTimeout(() => {
+          var script = document.createElement("script");
+          script.setAttribute("src", src);
+          script.setAttribute("crossorigin", "anonymous");
+          document.body.appendChild(script);
+        }, delay||50)
+      }
       function navTo(where) {
         document.querySelectorAll(".nav-link").forEach((el) => {
           el.classList.remove("active");
@@ -358,7 +366,10 @@ if(typeof sensor !== "string"){
 }%>
 #include "./sensors/<%=sensorname %>.h"
 <%})}%>
-
+<% if(it.plugins !== undefined && it.plugins.include !== undefined && it.plugins.include !== ""){%>
+// including plugins
+<%~ it.plugins.include %>
+<%}%>
 // initializing station
 StationClass station(
   "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
@@ -417,6 +428,10 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
   EspStation::StationWebCallbackInfo_t endpoint_<%= epi %> = {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>};<%})%> 
 
 <%}}%>
+<% if(it.plugins !== undefined && it.plugins.declaration !== undefined && it.plugins.declaration !== ""){%>
+// declaring plugins
+<%~ it.plugins.declaration %>
+<%}%>
 
 void setup() {
   Wire.begin(<%= it.i2c!==undefined?(it.i2c[0]+", "+it.i2c[1]):""%>);
@@ -442,6 +457,11 @@ void setup() {
   station.setupOTA();
 
   // ___ custom code goes here ___
+<% if(it.plugins !== undefined && it.plugins.setup !== undefined && it.plugins.setup !== ""){%>
+  
+  // setting up plugins
+  <%~ it.plugins.setup %>
+<%}%>
 }
 
 void loop() {
@@ -455,6 +475,11 @@ if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 
 
 <%}})}%>
   // ___ custom code goes here ___
+<% if(it.plugins !== undefined && it.plugins.loop !== undefined && it.plugins.loop !== ""){%>
+  
+  // loop plugins
+  <%~ it.plugins.loop %>
+<%}%>
 }
 `;
       
@@ -708,7 +733,20 @@ String <%= it.sensorName %>::toHtml(int index) {
 }
 `;
     
-    
+      const StationIOPlugins = {
+        include: [],
+        declaration: [],
+        setup: [],
+        loop: [],
+      };
+
+      function getPluginsStr(where, configForm) {
+        let out ="";
+        StationIOPlugins[where].forEach((plugin) => {
+          out += plugin(configForm);
+        });
+        return out;
+      }
     </script>
     <script id="sensor.js">
       const sensorSelect = document.getElementById("sensor-select");
@@ -1116,6 +1154,13 @@ TInfo tinfo;
               callback: frmData.get(`endpoint-${endpts}-callback`),
             });
           });
+
+          data.plugins = {
+            include:getPluginsStr("include",frmData),
+            declaration: getPluginsStr("declaration",frmData),
+            setup: getPluginsStr("setup",frmData),
+            loop: getPluginsStr("loop",frmData),
+          };
 
           document.getElementById("main-cpp-output").value = eta.render(
             mainCppTpl,
