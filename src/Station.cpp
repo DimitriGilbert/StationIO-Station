@@ -365,6 +365,23 @@ void EspStation::initWebServer() {
 
     request->send(200, accv, data);
   });
+  this->webServer.on("/sensors", [this](AsyncWebServerRequest* request) {
+    String out = "[";
+    for (int i = 0; i < this->sensorCount; i++) {
+      out += "\"" + this->getSensorName(i) + "\",";
+    }
+    request->send(200, "application/json", out+ "]");
+  });
+  this->webServer.on("/sensorMesures", [this](AsyncWebServerRequest* request) {
+    String out = "[";
+    uint8_t sid = request->getParam("sensor")->value().toInt();
+    Sensor* sensor = this->getSensor(sid);
+
+    for (int i = 0; i < sensor->getMesuresCount(); i++) {
+      out += "\"" + sensor->getMesureName(i) + "\",";
+    }
+    request->send(200, "application/json", out + "]");
+  });
   this->webServer.on("/average", [this](AsyncWebServerRequest* request) {
     String data;
     if (!request->hasParam("sensor")) {
@@ -447,6 +464,103 @@ void EspStation::initWebServer() {
   this->webServer.on("/css", [this](AsyncWebServerRequest* request) {
     request->send(200, "text/css", commonCss());
   });
+  this->webServer.on("/openapi", [this](AsyncWebServerRequest* request) {
+    String out = "openapi: 3.0.3\n";
+    out += "info:\n";
+    out += "  title: Station  "+this->name+" Api\n";
+    out += "  version: '1.0'\n";
+    out += "servers:\n";
+    out += "  - url: http://"+this->wifi.localIP().toString()+"/\n";
+    out += "components:\n";
+    out += "  parameters:\n";
+    out += "    sensor:\n";
+    out += "      name: sensor\n";
+    out += "      in: query\n";
+    out += "      description: sensor id, starts at 0\n";
+    out += "      schema:\n";
+    out += "        type: integer\n";
+    out += "    mesure:\n";
+    out += "      name: mesure\n";
+    out += "      in: query\n";
+    out += "      schema:\n";
+    out += "        type: integer\n";
+    out += "      description: mesure id, starts at 0\n";
+    out += "    format:\n";
+    out += "      name: format\n";
+    out += "      in: query\n";
+    out += "      description: response format\n";
+    out += "      schema:\n";
+    out += "        type: string\n";
+    out += "paths: \n";
+    out += "  /:\n";
+    out += "    get:\n";
+    out += "      summary: Get station data\n";
+    out += "      parameters:\n";
+    out += "        - $ref: '#/components/parameters/sensor'\n";
+    out += "        - $ref: '#/components/parameters/mesure'\n";
+    out += "        - $ref: '#/components/parameters/format'\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: Station data\n";
+    out += "          content:\n";
+    out += "            application/json:{}\n";
+    out += "            application/xml:{}\n";
+    out += "            text/csv:{}\n";
+    out += "            text/plain:{}\n";
+    out += "            text/html:{}\n";
+    out += "  /sensors:\n";
+    out += "    get:\n";
+    out += "      summary: Get sensor list\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: average value\n";
+    out += "          content:\n";
+    out += "            application/json:{}\n";
+    out += "  /sensorMesures:\n";
+    out += "    get:\n";
+    out += "      summary: Get sensor mesure list\n";
+    out += "      parameters:\n";
+    out += "        - $ref: '#/components/parameters/sensor'\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: average value\n";
+    out += "          content:\n";
+    out += "            application/json:{}\n";
+    out += "  /average:\n";
+    out += "    get:\n";
+    out += "      summary: Get average value\n";
+    out += "      parameters:\n";
+    out += "        - $ref: '#/components/parameters/sensor'\n";
+    out += "        - $ref: '#/components/parameters/mesure'\n";
+    out += "        - $ref: '#/components/parameters/format'\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: average value\n";
+    out += "          content:\n";
+    out += "            text/plain:{}\n";
+    out += "  /buffer:\n";
+    out += "    get:\n";
+    out += "      summary: Get buffer value\n";
+    out += "      parameters:\n";
+    out += "        - $ref: '#/components/parameters/sensor'\n";
+    out += "        - $ref: '#/components/parameters/mesure'\n";
+    out += "        - $ref: '#/components/parameters/format'\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: buffer value\n";
+    out += "          content:\n";
+    out += "            text/plain:{}\n";
+    out += "  /fancy:\n";
+    out += "    get:\n";
+    out += "      summary: A fancy station GUI\n";
+    out += "      responses:\n";
+    out += "        '200':\n";
+    out += "          description: A fancy station GUI\n";
+    out += "          content:\n";
+    out += "            text/html:{}\n";
+
+    request->send(200, "text/plain", out + this->openApiStr);
+  });
 }
 
 void EspStation::setupWebServer(
@@ -492,6 +606,8 @@ void EspStation::addEndpoint(StationWebCallbackInfo_t endpoint) {
         endpoint.callback(this, request);
       }
   );
+  this->openApiStr += "  " + String(endpoint.route) + ":\n";
+  this->openApiStr += "    x-stio: true\n";
 }
 
 void EspStation::connectWifi(WifiInformation wifiInformation) {

@@ -130,7 +130,7 @@ class EspStation : public BaseStation {
   static const int StatusReady = 4;
 
   static const int ErrorWifiConnection = 2;
-
+  String openApiStr;
 
 
   EspStation(String name);
