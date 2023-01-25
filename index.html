@@ -539,7 +539,12 @@ cd StationIO
 ./utils/createStation "<%~ it.stationName %>" -b nodemcuv2
 
 # if you have custom sensors copy the code from the "sensors" tab to the relevant files in src/sensors/
+<% if(it.plugins!==undefined && it.plugins.install !== undefined && it.plugins.install !== "") {%>
 
+# plugin install
+<%~ it.plugins.install %>
+
+<%} %>
 # upload code to project board
 ./utils/uploadStation "<%~ it.stationName %>" --no-ota
 
@@ -745,6 +750,7 @@ String <%= it.sensorName %>::toHtml(int index) {
 `;
     
       const StationIOPlugins = {
+        install: [],
         include: [],
         declaration: [],
         setup: [],
@@ -1203,6 +1209,10 @@ TInfo tinfo;
               break;
           }
           installTpl += "\n"+installStioTpl;
+
+          data.plugins = {
+            install: getPluginsStr("install", frmData),
+          };
           
           document.getElementById("install-output").value = eta.render(
             installTpl,
