@@ -6,11 +6,14 @@ var updateTimer = 22;
 
 const chartLabels = [];
 const chartDatas = [];
-var chartDisplayFrom = 0;
-var chartDisplayTo = 0;
-
+var chtDFrom = 0;
+var chtDTo = 0;
+var dqsa = (i) => document.querySelectorAll(i);
+var dcrel = (i) => document.createElement(i);
+var dgeli = (i) => document.getElementById(i);
+var ohop = (i,e) => Object.prototype.hasOwnProperty.call(i,e);
 function setUpdatable() {
-  document.querySelectorAll(".stSn").forEach((el) => {
+  dqsa(".stSn").forEach((el) => {
     let titel = el.firstElementChild.firstElementChild;
     titel.onclick = (ev) => {
       let pn = ev.target.parentNode.parentNode;
@@ -47,7 +50,7 @@ function setUpdatable() {
 }
 setTimeout(setUpdatable, 250);
 
-function mkDateLabel() {
+function mkDLabel() {
   let d = new Date(Date.now());
   return (
     (d.getHours() < 10 ? "0" : "") +
@@ -73,72 +76,64 @@ function getStationData() {
   });
 }
 
-function existsSensorUtils(sensorName) {
-  let utils = false;
+function exstSenUtils(snNm) {
+  let u = false;
   eval(
     "if(typeof " +
-      sensorName +
-      '_utils !== "undefined"){utils=' +
-      sensorName +
+      snNm +
+      '_utils !== "undefined"){u=' +
+      snNm +
       "_utils}"
   );
-  return utils;
+  return u;
 }
 
-function formatSensorMesure(sensorName, mesureName, value) {
-  let utils = existsSensorUtils(sensorName);
-  if (utils && Object.hasOwnProperty.call(utils, "format_" + mesureName)) {
-    return utils["format_" + mesureName](value);
+function frmtSnMes(snNm, msNm, value) {
+  let u = exstSenUtils(snNm);
+  if (u && ohop(u, "format_" + msNm)) {
+    return u["format_" + msNm](value);
   }
   return value;
 }
 
-function sensorMesureInChart(sensorName, mesureName) {
-  let utils = existsSensorUtils(sensorName);
+function mesInCht(snNm, msNm) {
+  let u = exstSenUtils(snNm);
   return !(
-    utils &&
-    Object.hasOwnProperty.call(utils, "inChart") &&
-    !utils.inChart(mesureName)
+    u &&
+    ohop(u, "inChart") &&
+    !u.inChart(msNm)
   );
 }
 
 function initChart() {
   let bdy = document.getElementsByTagName("body")[0];
 
-  let chscript = document.createElement("script");
+  let chscript = dcrel("script");
   chscript.setAttribute("src", "https://cdn.jsdelivr.net/npm/chart.js");
   bdy.appendChild(chscript);
 
-  let chelt = document.createElement("canvas");
+  let chelt = dcrel("canvas");
   chelt.setAttribute("id", "station-chart");
   chelt = bdy.appendChild(chelt);
 
-  let ctrFrm = document.createElement("form");
+  let ctrFrm = dcrel("form");
   ctrFrm.setAttribute("id", "chart-control");
   // string litterals do not compile in c++ -_-
   ctrFrm.innerHTML =
-    '<div class="row"><div class="col-6"><div class="row"><div class="form-group col-6"><label for="chart-display-from">From</label><input type="range" class="form-range" id="chart-display-from" value="0" min="0"></div><div class="form-group col-6"><label for="chart-display-to">To (same as from for last) </label><input type="range" class="form-range" id="chart-display-to" value="0" min="0"></div></div></div><div class="col-6"><div class="form-group"><label for="data-update-timer">Update Every</label><input type="number" class="form-control" id="data-update-timer" value="' +
+    '<div class="row"><div class="col-6"><div class="row"><div class="form-group col-6"><label for="chtDfrom">From</label><input type="range" class="form-range" name="chtDfrom"  id="chtDfrom" value="0" min="0"></div><div class="form-group col-6"><label for="chtDto">To</label><input type="range" class="form-range" id="chtDto" name="chtDto" value="0" min="0"></div></div></div><div class="col-6"><div class="form-group"><label for="updTimer">Update Every</label><input type="number" class="form-control" id="updTimer" value="' +
     updateTimer +
     '" min="5" max="600"></div></div><div class="col-12"><button type="button" class="btn btn-primary" id="upd-cht-btn">Update</button></div></div>';
-  ctrFrm = bdy.appendChild(document.createElement("div")).appendChild(ctrFrm);
+  ctrFrm = bdy.appendChild(dcrel("div")).appendChild(ctrFrm);
   ctrFrm.parentElement.classList.add("container");
-  document.getElementById("chart-display-from").addEventListener("change", (ev) => {
-    let to = document
-      .getElementById("chart-display-to");
-    to.setAttribute("min", ev.target.value);
-    if (to.value < ev.target.value) {
-      to.value = ev.target.value;
-    }
-  });
-  document.getElementById("upd-cht-btn").addEventListener("click", (ev) => {
-    updateTimer = parseInt(document.getElementById("data-update-timer").value);
-    chartDisplayFrom = document.getElementById("chart-display-from").valueAsNumber;
-    chartDisplayTo = document.getElementById("chart-display-to").valueAsNumber;
+  dgeli("upd-cht-btn").addEventListener("click", (ev) => {
+    updateTimer = parseInt(dgeli("updTimer").value);
+    chtDFrom = dgeli("chtDfrom").valueAsNumber;
+    chtDTo = dgeli("chtDto").valueAsNumber;
     
     buildChart(Chart.getChart("station-chart"));
   });
 
-  const chartCfg = {
+  const chtCfg = {
     labels: [],
     type: "line",
     data: {},
@@ -151,33 +146,33 @@ function initChart() {
       let axeNames = [];
       let axes = {};
       let axisSide = "left";
-      for (const sensorName in data.sensors) {
-        if (Object.hasOwnProperty.call(data.sensors, sensorName)) {
-          const sensorMesures = data.sensors[sensorName];
-          for (const mesureName in sensorMesures) {
-            if (Object.hasOwnProperty.call(sensorMesures, mesureName)) {
-              if (sensorMesureInChart(sensorName, mesureName)) {
-                let mesVal = formatSensorMesure(
-                  sensorName,
-                  mesureName,
-                  sensorMesures[mesureName]
+      for (const snNm in data.sensors) {
+        if (ohop(data.sensors, snNm)) {
+          const snMess = data.sensors[snNm];
+          for (const msNm in snMess) {
+            if (ohop(snMess, msNm)) {
+              if (mesInCht(snNm, msNm)) {
+                let mesVal = frmtSnMes(
+                  snNm,
+                  msNm,
+                  snMess[msNm]
                 );
                 datasets.push({
-                  label: sensorName + "::" + mesureName,
+                  label: snNm + "::" + msNm,
                   data: [
                     mesVal,
                   ],
-                  yAxisID: mesureName,
+                  yAxisID: msNm,
                   pointRadius: 1,
                   pointHoverRadius: 3,
                 });
 
                 chartDatas.push([mesVal]);
                 
-                if (!axeNames.includes(mesureName)) {
-                  axeNames.push(mesureName);
-                  axes[mesureName] = {
-                    id: mesureName,
+                if (!axeNames.includes(msNm)) {
+                  axeNames.push(msNm);
+                  axes[msNm] = {
+                    id: msNm,
                     type: "linear",
                     position: axisSide,
                   };
@@ -188,28 +183,28 @@ function initChart() {
           }
         }
       }
-      chartCfg.data.datasets = datasets;
-      chartCfg.options = {
+      chtCfg.data.datasets = datasets;
+      chtCfg.options = {
         responsive: true,
         scales: axes,
       };
-      const chart = new Chart(chelt, chartCfg);
+      const chart = new Chart(chelt, chtCfg);
       
-      chart.data.labels.push(mkDateLabel());
-      chartLabels.push(mkDateLabel());
+      chart.data.labels.push(mkDLabel());
+      chartLabels.push(mkDLabel());
       
       chart.update();
       setTimeout(() => {
         updateDatas(chart, updateTimer);
       }, 10000);
     })
-    .catch((err1) => {
-      console.error(err1);
-    });
+    // .catch((err1) => {
+    //   console.error(err1);
+    // });
   })
-  .catch((err) => {
-    console.error(err);
-  });
+  // .catch((err) => {
+  //   console.error(err);
+  // });
 }
 
 // function shrinkChartData(chart, multiplier = 1) {
@@ -263,60 +258,58 @@ function updateDatas(chart) {
   getStationData().then((res) => {
     res.json().then((data) => {
       let iSen = 0;
-      for (const sensorName in data.sensors) {
-        if (Object.hasOwnProperty.call(data.sensors, sensorName)) {
-          const sensorMesures = data.sensors[sensorName];
-          for (const mesureName in sensorMesures) {
-            if (Object.hasOwnProperty.call(sensorMesures, mesureName)) {
-              const mval = formatSensorMesure(
-                sensorName,
-                mesureName,
-                sensorMesures[mesureName]
-              );
-              if (sensorMesureInChart(sensorName, mesureName)) {
-                // chart.data.datasets[iSen].data.push(mval);
-                chartDatas[iSen].push(mval);
-                iSen++;
-              }
-              document.querySelectorAll(
-                ".sensor." +
-                  sensorName +
-                  ">.snMss>.snMs." +
-                  mesureName +
-                  ">.snMs-value"
-              )[0].innerHTML = mval;
-
-              let utils = existsSensorUtils(sensorName);
-              if (
-                utils &&
-                Object.hasOwnProperty.call(utils, "format_unit_" + mesureName)
-              ) {
-                let uelt = document.querySelectorAll(
-                  ".sensor." +
-                    sensorName +
-                    ">.snMss>.snMs." +
-                    mesureName +
-                    ">.snMs-unit"
-                )[0];
-                uelt.innerHTML = utils["format_unit_" + mesureName](
-                  uelt.innerHTML
-                );
-              }
+      for (const snNm in data.sensors) {
+        const snMess = data.sensors[snNm];
+        for (const msNm in snMess) {
+          if (ohop(snMess, msNm)) {
+            const mval = frmtSnMes(
+              snNm,
+              msNm,
+              snMess[msNm]
+            );
+            if (mesInCht(snNm, msNm)) {
+              // chart.data.datasets[iSen].data.push(mval);
+              chartDatas[iSen].push(mval);
+              iSen++;
             }
+            let snval = dqsa(
+              ".sensor." +
+                snNm +
+                ">.snMss>.snMs." +
+                msNm +
+                ">.snMs-value"
+            )[0];
+            snval.innerHTML = mval;
+
+            let utils = exstSenUtils(snNm);
+            if (
+              utils &&
+              ohop(utils, "format_unit_" + msNm)
+            ) {
+              let uelt = dqsa(
+                ".sensor." +
+                  snNm +
+                  ">.snMss>.snMs." +
+                  msNm +
+                  ">.snMs-unit"
+              )[0];
+              uelt.innerHTML = utils["format_unit_" + msNm](
+                uelt.innerHTML
+              );
+            }
+            snval.dispatchEvent(new Event("updated"));
           }
         }
       }
-      chartLabels.push(mkDateLabel());
-      document
-        .getElementById("chart-display-from")
+      chartLabels.push(mkDLabel());
+      dgeli("chtDfrom")
         .setAttribute("max", chartLabels.length);
-      let to =document
-        .getElementById("chart-display-to");
+      let to = dgeli("chtDto");
       if (to.value == to.getAttribute("max")) {
         to.value = chartLabels.length;
       }
       to.setAttribute("max", chartLabels.length);
-      if (chartDisplayTo === 0) {
+      if (chtDTo === 0) {
         chart = buildChart(chart);
       }
       if (updateTimer > 0) {
@@ -325,23 +318,23 @@ function updateDatas(chart) {
         }, updateTimer * 1000);
       }
     })
-    .catch((err1) => {
-      console.error(err1);
-    });
+    // .catch((err1) => {
+    //   console.error(err1);
+    // });
   })
-  .catch((err) => {
-    console.error(err);
-  });
+  // .catch((err) => {
+  //   console.error(err);
+  // });
 }
 
 function buildChart(chart) {
   let displayTo =
-    chartDisplayTo < chartDisplayFrom ? chartDisplayTo : chartLabels.length;
+    chtDTo < chtDFrom ? chtDTo : chartLabels.length;
   
-  chart.data.labels = chartLabels.slice(chartDisplayFrom, displayTo);
+  chart.data.labels = chartLabels.slice(chtDFrom, displayTo);
   for (let i = 0; i < chart.data.datasets.length; i++) {
     chart.data.datasets[i].data = chartDatas[i].slice(
-      chartDisplayFrom,
+      chtDFrom,
       displayTo
     );
   }

@@ -252,6 +252,15 @@ Sensor* BaseStation::getSensor(int index) {
 
   return this->sensors[index];
 }
+Sensor* BaseStation::getSensor(String name) {
+  for (size_t i = 0; i < this->sensorCount; i++) {
+    if (this->getSensorName(i) == name) {
+      return this->getSensor(i);
+    }
+  }
+  // TODO: not ideal at all, find out how to handle exceptions and stuff
+  return this->getSensor(0);
+}
 String BaseStation::getSensorName(int index) {
   return this->getSensor(index)->name;
 }

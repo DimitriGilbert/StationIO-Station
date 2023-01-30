@@ -107,6 +107,7 @@ class BaseStation {
   String toHtml(int index);
   I2CScan scanI2C();
   Sensor* getSensor(int index);
+  Sensor* getSensor(String name);
   String getSensorName(int index);
 };
 
