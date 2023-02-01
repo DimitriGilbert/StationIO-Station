@@ -12,3 +12,4 @@ package-lock.json
 stations/
 StationIO-station.code-workspace
 data/
+utils/node

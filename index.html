@@ -37,8 +37,40 @@
     <title>StationIO</title>
   </head>
   <body>
+    <div class="modal fade" id="pluginModal" tabindex="-1" aria-labelledby="pluginModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="pluginModalLabel">StationIO Plugin</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="text-center">Click on the plugin you want to add :</div>
+              <div class="col">
+                <ul id="plugins-list">
+                  <li><a href="plugins/custom-i2c-pins.js" onclick="addScript(this.getAttribute('href')); return false;" data-bs-dismiss="modal">Custom I2C pins</a></li>
+                  <li><a href="plugins/mini-hub-generator.js" onclick="addScript(this.getAttribute('href')); return false;" data-bs-dismiss="modal">Minihub</a> WiP(tm)</li>
+                </ul>
+              </div>
+            </div>
+            <div class="row">
+              <div class="text-center">Or add your own plugin :</div>
+              <div class="form-group" id="external-plugin-input">
+                <label for="external-plugin-url">Plugin URL</label>
+                <input type="text" class="form-control" id="external-plugin-url" placeholder="https://example.com/plugin.js" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="addScript(document.getElementById('external-plugin-url').value)"
+              data-bs-dismiss="modal">Add Plugin</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="container">
-      <h1>StationIO</h1>
+      <h1 ondblclick="new bootstrap.Modal('#pluginModal', {}).show()">StationIO</h1>
       <div class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <nav class="nav nav-tabs">
           <a
@@ -200,16 +232,6 @@
                     id="wifi-pass"
                     name="wifi-pass"
                   />
-                </div>
-              </div>
-              <div class="row" id="i2c-config">
-                <div class="col">
-                  <label for="i2c-data">I2C SDA pin</label>
-                  <input type="number" class="form-control" name="i2c-data" id="i2c-data">
-                </div>
-                <div class="col">
-                  <label for="i2c-clock">I2C SCL pin</label>
-                  <input type="number" class="form-control" name="i2c-clock" id="i2c-clock">
                 </div>
               </div>
               <div id="timers-config" class="row">
@@ -1248,17 +1270,15 @@ TInfo tinfo;
         );
         document.getElementById("main-cpp-output").style.height =
           window.innerHeight - 100 + "px";
+        
+        // document.getElementsByTagName("h1")[0].addEventListener('dblclick', (event) => {
+        //   new bootstrap.Modal('#pluginModal', {}).show()
+        // });
       });
       window.addEventListener("resize", () => {
         document.getElementById("main-cpp-output").style.height =
           window.innerHeight - 100 + "px";
       }); 
-      document.getElementsByTagName("h1")[0].addEventListener('dblclick', (event) => {
-        let src = prompt("plugin script src");
-        if (src && src !== "") {
-          addScript(src);
-        }
-      });
     </script>
     
     <!-- bootstrap -->
