@@ -11,4 +11,4 @@ var customI2CPinsTpl = `<div class="row" id="i2c-config">
 
 document
   .getElementById("wifi-config")
-  .parentElement.insertBefore(htmlToElements(customI2CPinsTpl));
+  .parentElement.appendChild(htmlToElements(customI2CPinsTpl));

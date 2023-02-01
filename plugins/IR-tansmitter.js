@@ -163,7 +163,7 @@ const IRTSetupTpl = ` // IR Remote
   station.addEndpoint(IR44RemoteEndpoint);
 <% } %>
 `;
-const IRTFrmTpl = `<div>
+const IRTFrmTpl = `<div id="ir-remote">
   <div class="row">
     <div class="col">
       <label for="ir-remote-pin">IR pin</label>
@@ -172,20 +172,6 @@ const IRTFrmTpl = `<div>
     <div class="col">
       <label for="ir-remote-endpoint">IR endpoint</label>
       <input type="text" class="form-control" name="ir-remote-endpoint" id="ir-remote-endpoint" value="ir-remote">
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <input type="checkbox" class="form-check-input" name="ir-21-button" id="ir-21-button" />
-      <label for="ir-21-button" class="form-check-label">21 buttons remote support</label>
-    </div>
-    <div class="col">
-      <input type="checkbox" class="form-check-input" name="ir-24-button" id="ir-24-button" />
-      <label for="ir-24-button" class="form-check-label">24 buttons remote support</label>
-    </div>
-    <div class="col">
-      <input type="checkbox" class="form-check-input" name="ir-44-button" id="ir-44-button" />
-      <label for="ir-44-button" class="form-check-label">44 buttons remote support</label>
     </div>
   </div>
   <div class="row">
@@ -210,6 +196,20 @@ const IRTFrmTpl = `<div>
           IrSender.sendNEC(code, 32);
         }
         request->send(200, "text/plain", String(code));"></code-input>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <input type="checkbox" class="form-check-input" name="ir-21-button" id="ir-21-button" />
+      <label for="ir-21-button" class="form-check-label">21 buttons remote support</label>
+    </div>
+    <div class="col">
+      <input type="checkbox" class="form-check-input" name="ir-24-button" id="ir-24-button" />
+      <label for="ir-24-button" class="form-check-label">24 buttons remote support</label>
+    </div>
+    <div class="col">
+      <input type="checkbox" class="form-check-input" name="ir-44-button" id="ir-44-button" />
+      <label for="ir-44-button" class="form-check-label">44 buttons remote support</label>
     </div>
   </div>
 </div>`;
