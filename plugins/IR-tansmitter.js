@@ -239,9 +239,7 @@ if (StationIOPlugins !== undefined) {
   StationIOPlugins.setup.push((frmData) => {
     return eta.render(IRTSetupTpl, IRTBuildData(frmData));
   });
-  let irInsertBefElt = document.getElementById("timers-config");
-  irInsertBefElt.parentElement.insertAfter(
-    htmlToElements(IRTFrmTpl),
-    irInsertBefElt
-  );
+  document
+    .getElementById("timers-config")
+    .parentElement.appendChild(htmlToElements(IRTFrmTpl));
 }

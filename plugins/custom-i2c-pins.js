@@ -9,5 +9,6 @@ var customI2CPinsTpl = `<div class="row" id="i2c-config">
   </div>
 </div>`;
 
-let wifcfgElt = document.getElementById("wifi-config");
-wifcfgElt.parentElement.insertBefore(htmlToElements(customI2CPinsTpl), wifcfgElt);
+document
+  .getElementById("wifi-config")
+  .parentElement.insertBefore(htmlToElements(customI2CPinsTpl));

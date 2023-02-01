@@ -1,12 +1,12 @@
 const minihubStationDefault = {
-  name: 'station name',
+  name: "station name",
   ip: "station's ip",
 };
 const miniHubConfig = {
-  stations:[],
+  stations: [],
   endpointBase: "hub",
-  login:"",
-  password:"",
+  login: "",
+  password: "",
 };
 
 const miniHubIncludeTpl = `
@@ -144,14 +144,16 @@ const miniHubStationFrmTpl = `<div class="row">
 function miniHubAddStation() {
   document.getElementById("mini-hub-stations-count").value++;
   let id = document.getElementById("mini-hub-stations-count").value;
-  let stationFrm = eta.render(miniHubStationFrmTpl, {id: id});
-  document.getElementById("mini-hub-stations").appendChild(htmlToElements(stationFrm));
+  let stationFrm = eta.render(miniHubStationFrmTpl, { id: id });
+  document
+    .getElementById("mini-hub-stations")
+    .appendChild(htmlToElements(stationFrm));
 }
 
 function miniHubBuildData(frmData) {
   // TODO : get stations names and ips from form and buid stations object
   let stations = [];
-  
+
   let cfg = {
     ...miniHubConfig,
     ...{
@@ -165,16 +167,16 @@ function miniHubBuildData(frmData) {
 }
 
 if (StationIOPlugins !== undefined) {
-  StationIOPlugins.include.push((frmData)=> {
+  StationIOPlugins.include.push((frmData) => {
     return miniHubIncludeTpl;
   });
   StationIOPlugins.declaration.push((frmData) => {
     return eta.render(miniHubDeclarationTpl, miniHubBuildData(frmData));
   });
-  StationIOPlugins.setup.push((frmData)=> {
+  StationIOPlugins.setup.push((frmData) => {
     return eta.render(miniHubSetupTpl, miniHubBuildData(frmData));
   });
-  let tc = document
-    .getElementById("endpoints-config");
-    tc.parentElement.insertAfter(htmlToElements(miniHubFormTpl), tc);
+  document
+    .getElementById("endpoints-config")
+    .parentElement.appendChild(htmlToElements(miniHubFormTpl));
 }
