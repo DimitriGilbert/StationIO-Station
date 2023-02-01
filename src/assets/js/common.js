@@ -151,7 +151,7 @@ var chtFrmTpl = (uTimer) => {
   ctrFrm.setAttribute("id", "chart-control");
   // string litterals do not compile in c++ -_-
   ctrFrm.innerHTML =
-    '<div class="row"><div class="col-6"><div class="row"><div class="form-group col-6"><label for="chtDfrom">From</label><input type="range" class="form-range" name="chtDfrom"  id="chtDfrom" value="0" min="0"></div><div class="form-group col-6"><label for="chtDto">To</label><input type="range" class="form-range" id="chtDto" name="chtDto" value="0" min="0"></div></div></div><div class="col-6"><div class="form-group"><label for="updTimer">Update Every</label><input type="number" class="form-control" id="updTimer" value="' +
+    '<div class="row"><div class="col-6"><div class="row"><div class="form-group col-6"><label for="chtDfrom">From</label><input type="range" class="form-range" name="chtDfrom"  id="chtDfrom" value="0" min="0"></div><div class="form-group col-6"><label for="chtDto">To</label><input type="range" class="form-range" id="chtDto" name="chtDto" value="0" min="0"></div></div></div><div class="col-6"><div class="form-group"><label for="updTimer">Update Every</label><input type="number" class="form-control" id="updTimer" name="updTimer" value="' +
     uTimer +
     '" min="5" max="600"></div></div><div class="col-12"><button type="button" class="btn btn-primary" id="upd-cht-btn">Update</button></div></div>';
   ctrFrm.lastElementChild.lastElementChild.addEventListener("click", (e) => {
@@ -162,6 +162,7 @@ var chtFrmTpl = (uTimer) => {
     _Station.conf.updTimer = parseFloat(fd.get("updTimer"));
     _Station.conf.chart.displayFrom = parseInt(fd.get("chtDfrom"));
     _Station.conf.chart.displayTo = parseInt(fd.get("chtDto"));
+    chtBuild();
   });
   return ctrFrm;
 };
@@ -189,7 +190,7 @@ function chtInit() {
   _Station.conf.chart = {
     elt: document.body.appendChild(chE),
     form: document.body.appendChild(frmC),
-    labels: [],
+    labels: [chtMkLabel(new Date())],
     datasets: [],
     datas: [],
     axes: {},
@@ -209,7 +210,7 @@ function chtInit() {
           pointRadius: 1,
           pointHoverRadius: 3,
         });
-        _Station.conf.chart.datas.push([]);
+        _Station.conf.chart.datas.push([sn[msn][0]]);
         if (
           !Object.keys(_Station.conf.chart.axes).includes(
             useSenUtil(snn, "axe_" + msn, msn)
@@ -235,46 +236,78 @@ function chtInit() {
       },
       options: {
         responsive: true,
-        sclales: _Station.conf.chart.axes,
+        scales: _Station.conf.chart.axes,
       },
     });
+    chtBuild();
   }, 250);
 }
 
 function chtOnDataUpd() {
   _Station.conf.chart.labels.push(chtMkLabel(new Date()));
+
   let di = 0;
+  for (const snn in _Station.sensors) {
+    for (const msn in _Station.sensors[snn]) {
+      if (useSenUtil(snn, "inChart", msn)) {
+        _Station.conf.chart.datas[di].push(
+          _Station.sensors[snn][msn][_Station.sensors[snn][msn].length - 1]
+          );
+          di++;
+        }
+    }
+  }
+  
   let lln = _Station.conf.chart.labels.length - 1;
+  dgeli("chtDfrom").setAttribute("max", lln);
+  dgeli("chtDto").setAttribute("max", lln);
+  chtBuild();
+}
+
+function chtBuild() {
+  let di = 0;
+  let lln = _Station.conf.chart.labels.length;
   let dfrom = _Station.conf.chart.displayFrom;
   let dto = _Station.conf.chart.displayTo;
   if (dto <= dfrom) {
     dto = lln;
   }
-
   for (const snn in _Station.sensors) {
     for (const msn in _Station.sensors[snn]) {
       if (useSenUtil(snn, "inChart", msn)) {
-        let l = _Station.sensors[snn][msn].length - 1;
-        let v = _Station.sensors[snn][msn][l];
-        console.log(l, v, dfrom, dto);
-        _Station.conf.chart.datas[di].push(v);
-        _Station.chart.data.datasets[di].data = _Station.conf.chart.datas[
-          di
-        ].slice(dfrom, dto);
+        if (dto >= _Station.conf.chart.datas[di].length) {
+          if (dfrom === 0) {
+            _Station.chart.data.datasets[di].data =
+              _Station.conf.chart.datas[di];
+          } else {
+            _Station.chart.data.datasets[di].data =
+              _Station.conf.chart.datas[di].slice(dfrom);
+          }
+        } else {
+          _Station.chart.data.datasets[di].data = _Station.conf.chart.datas[
+            di
+          ].slice(dfrom, dto);
+        }
         di++;
       }
     }
   }
-  _Station.chart.data.labels = _Station.conf.chart.labels.slice(dfrom, dto);
-  dgeli("chtDfrom").setAttribute("max", lln);
-  dgeli("chtDto").setAttribute("max", lln);
+  if (dto >= lln) {
+    if (dfrom === 0) {
+      _Station.chart.data.labels = _Station.conf.chart.labels;
+    } else {
+      _Station.chart.data.labels = _Station.conf.chart.labels.slice(dfrom);
+    }
+  } else {
+    _Station.chart.data.labels = _Station.conf.chart.labels.slice(dfrom, dto);
+  }
+
   _Station.chart.update();
 }
 
 // misc
 setTimeout(() => {
   updDatas().then(() => {
-    console.log("Station Loaded");
     chtInit();
     document.addEventListener("data-updated", chtOnDataUpd);
     document.addEventListener("data-updated", updDataDisplay);

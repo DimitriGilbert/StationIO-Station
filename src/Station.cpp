@@ -109,25 +109,6 @@ void BaseStation::setupOTA() {
   ArduinoOTA.begin();
 }
 
-void BaseStation::setup(Sensor** sensors, int sensorCount) {
-  this->setup();
-  this->setupSensors(sensors, sensorCount);
-}
-
-void BaseStation::setup(
-    StationCallback_t* loopCallbacks, int loopCallbackCount
-) {
-  this->setup();
-  this->setupLoopCallback(loopCallbacks, loopCallbackCount);
-}
-
-void BaseStation::setup(
-    StationCallbackTimer_t* timerCallbacks, int timerCallbackCount
-) {
-  this->setup();
-  this->setupTimers(timerCallbacks, timerCallbackCount);
-}
-
 bool BaseStation::ready() { return this->ready(BaseStation::StatusReady); }
 
 bool BaseStation::ready(int minStatus) { return this->status >= minStatus; }
@@ -280,18 +261,6 @@ EspStation::~EspStation() {}
 void EspStation::setWifiInformation(WifiInformation wifiInformation) {
   this->wifiInformation = wifiInformation;
   this->log("set Wifi credentials");
-}
-
-void EspStation::setup() {
-  BaseStation::setup();
-  this->connect();
-  this->serve();
-}
-
-void EspStation::setup(Sensor** sensors, int sensorCount) {
-  BaseStation::setup(sensors, sensorCount);
-  this->connect();
-  this->serve();
 }
 
 void EspStation::connect(String hostname) { 
@@ -467,26 +436,13 @@ void EspStation::initWebServer() {
                   commonBody(this->toHtml()) + "</html>";
     request->send(200, "text/html", data);
   });
-  if (LittleFS.check()) {
-    this->webServer.serveStatic("/assets", LittleFS, "/assets");
-  } else {
-    // this->webServer.on("/assets/js/common.js", [this](AsyncWebServerRequest* request) {
-    //   request->send(200, "application/javascript", commonJs());
-    // });
-    // this->webServer.on(
-    //     "/assets/css/common.css",
-    //     [this](AsyncWebServerRequest* request) {
-    //       request->send(200, "text/css", commonCss());
-    //     }
-    // );
-  }
   this->webServer.on("/openapi", [this](AsyncWebServerRequest* request) {
     String out = "openapi: 3.0.3\n";
     out += "info:\n";
-    out += "  title: Station  "+this->name+" Api\n";
+    out += "  title: Station  " + this->name + " Api\n";
     out += "  version: '1.0'\n";
     out += "servers:\n";
-    out += "  - url: http://"+this->wifi.localIP().toString()+"/\n";
+    out += "  - url: http://" + this->wifi.localIP().toString() + "/\n";
     out += "components:\n";
     out += "  parameters:\n";
     out += "    sensor:\n";
@@ -577,6 +533,9 @@ void EspStation::initWebServer() {
 
     request->send(200, "text/plain", out + this->openApiStr);
   });
+  // if (LittleFS.) {
+    this->webServer.serveStatic("/assets", LittleFS, "/assets");
+  // }
 }
 
 void EspStation::setupWebServer(
@@ -691,6 +650,20 @@ Esp32Station::Esp32Station(String name) : EspStation(name) {
 Esp32Station::Esp32Station(String name, WifiInformation wifiInformation)
     : EspStation(name, wifiInformation) {}
 Esp32Station::~Esp32Station() {}
+
+void Esp32Station::setup() {
+  BaseStation::setup();
+  if (!LittleFS.begin(false /* false: Do not format if mount failed */)) {
+    this->log("Failed to mount LittleFS");
+    if (!LittleFS.begin(true /* true: format */)) {
+      this->log("Failed to format LittleFS");
+    } else {
+      this->log("LittleFS formatted successfully");
+    }
+  }
+  this->connect();
+  this->serve();
+}
 #elif defined(ESP8266)
 // ESP8266
 Esp8266Station::Esp8266Station(String name) : EspStation(name) {
@@ -699,4 +672,13 @@ Esp8266Station::Esp8266Station(String name) : EspStation(name) {
 Esp8266Station::Esp8266Station(String name, WifiInformation wifiInformation)
     : EspStation(name, wifiInformation) {}
 Esp8266Station::~Esp8266Station() {}
+
+void Esp8266Station::setup() {
+  BaseStation::setup();
+  if (!LittleFS.begin()) {
+    this->log("Failed to mount LittleFS");
+  }
+  this->connect();
+  this->serve();
+}
 #endif

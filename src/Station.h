@@ -75,15 +75,6 @@ class BaseStation {
   void log(const String& data);
   void logt(const String& data);
   void setup();
-  void setup(Sensor** sensors, int sensorCount);
-  void setup(StationCallback_t* loopCallbacks, int loopCallbackCount);
-  void setup(StationCallbackTimer_t* timerCallbacks, int timerCallbackCount);
-  void setup(Sensor** sensors,
-             int sensorCount,
-             StationCallback_t* loopCallbacks,
-             int loopCallbackCount,
-             StationCallbackTimer_t* timerCallbacks,
-             int timerCallbackCount);
   void setupSensors(Sensor** sensors, size_t sensorCount);
   void setupLoopCallback(StationCallback_t* loopCallbacks,
                          int loopCallbackCount);
@@ -139,9 +130,6 @@ class EspStation : public BaseStation {
   EspStation(String name, WifiInformation wifiInformation);
   ~EspStation();
 
-  void setup();
-  void setup(Sensor** sensors, int sensorCount);
-  void setup(StationWebCallbackInfo_t** routes, int callbackCount);
   void initWebServer();
   void setupWebServer(StationWebCallbackInfo_t** routes, int callbackCount);
   void addEndpoint(StationWebCallbackInfo_t endpoint);
@@ -164,6 +152,7 @@ class Esp32Station : public EspStation {
   Esp32Station(String name);
   Esp32Station(String name, WifiInformation wifiInformation);
   ~Esp32Station();
+  void setup();
 };
 typedef Esp32Station StationClass;
 #elif defined(ESP8266)
@@ -173,6 +162,7 @@ class Esp8266Station : public EspStation {
   Esp8266Station(String name);
   Esp8266Station(String name, WifiInformation wifiInformation);
   ~Esp8266Station();
+  void setup();
 };
 typedef Esp8266Station StationClass;
 #else
