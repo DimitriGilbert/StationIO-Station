@@ -175,6 +175,6 @@ if (StationIOPlugins !== undefined) {
     return eta.render(miniHubSetupTpl, miniHubBuildData(frmData));
   });
   let tc = document
-    .getElementById("timers-config");
-    tc.parentElement.insertBefore(htmlToElements(miniHubFormTpl), tc);
+    .getElementById("endpoints-config");
+    tc.parentElement.insertAfter(htmlToElements(miniHubFormTpl), tc);
 }

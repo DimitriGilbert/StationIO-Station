@@ -5,19 +5,19 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "minify-js" : "plop=$(minify src/common.js | sed 's/\"/\\\\\\\\\"/g');sed \"/\\/\\/ commonjs-start/,/\\/\\/ commonjs-end/{/^  \\/\\/ common/!d;};\" src/html.cpp -i && sed \"/\\/\\/ commonjs-start/,/\\/\\/ commonjs-end/c\\  \\/\\/ commonjs-start\\n  return \\\"$plop\\\";\\n  \\/\\/ commonjs-end\" src/html.cpp -i ",
+    "minify-js": "plop=$(minify src/common.js | sed 's/\"/\\\\\\\\\"/g');sed \"/\\/\\/ commonjs-start/,/\\/\\/ commonjs-end/{/^  \\/\\/ common/!d;};\" src/html.cpp -i && sed \"/\\/\\/ commonjs-start/,/\\/\\/ commonjs-end/c\\  \\/\\/ commonjs-start\\n  return \\\"$plop\\\";\\n  \\/\\/ commonjs-end\" src/html.cpp -i ",
     "minify-css": "plop=$(minify src/common.css | sed 's/\"/\\\\\\\\\"/g');sed \"/\\/\\/ commoncss-start/,/\\/\\/ commoncss-end/{/^  \\/\\/ common/!d;};\" src/html.cpp -i && sed \"/\\/\\/ commoncss-start/,/\\/\\/ commoncss-end/c\\  \\/\\/ commoncss-start\\n  return \\\"$plop\\\";\\n  \\/\\/ commoncss-end\" src/html.cpp -i ",
-    "extract-tpl-main.cpp" : "sed -n '/mainCppTpl = `/,/`;/ p' index.html | sed 's/mainCppTpl = `//' | sed 's/`;//' > templates/main.cpp.eta",
-    "extract-tpl-sensor.cpp" : "sed -n '/sensorCppTpl = `/,/`;/ p' index.html | sed 's/sensorCppTpl = `//' | sed 's/`;//' > templates/sensor.cpp.eta",
-    "extract-tpl-sensor.h" : "sed -n '/sensorHTpl = `/,/`;/ p' index.html | sed 's/sensorHTpl = `//' | sed 's/`;//' > templates/sensor.h.eta",
-    "extract-tpl" : "npm run extract-tpl-main.cpp && npm run extract-tpl-sensor.cpp && npm run extract-tpl-sensor.h"
+    "extract-tpl-main.cpp": "sed -n '/mainCppTpl = `/,/`;/ p' index.html | sed 's/mainCppTpl = `//' | sed 's/`;//' > templates/main.cpp.eta",
+    "extract-tpl-sensor.cpp": "sed -n '/sensorCppTpl = `/,/`;/ p' index.html | sed 's/sensorCppTpl = `//' | sed 's/`;//' > templates/sensor.cpp.eta",
+    "extract-tpl-sensor.h": "sed -n '/sensorHTpl = `/,/`;/ p' index.html | sed 's/sensorHTpl = `//' | sed 's/`;//' > templates/sensor.h.eta",
+    "extract-tpl": "npm run extract-tpl-main.cpp && npm run extract-tpl-sensor.cpp && npm run extract-tpl-sensor.h"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^16.11.7",
-    "eta": "^1.12.3",
+    "eta": "^2.0.0",
     "minify": "^9.1.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.4.4"

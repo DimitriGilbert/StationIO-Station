@@ -260,7 +260,6 @@ EspStation::~EspStation() {}
 
 void EspStation::setWifiInformation(WifiInformation wifiInformation) {
   this->wifiInformation = wifiInformation;
-  this->log("set Wifi credentials");
 }
 
 void EspStation::connect(String hostname) { 
@@ -533,9 +532,7 @@ void EspStation::initWebServer() {
 
     request->send(200, "text/plain", out + this->openApiStr);
   });
-  // if (LittleFS.) {
-    this->webServer.serveStatic("/assets", LittleFS, "/assets");
-  // }
+  this->webServer.serveStatic("/assets", LittleFS, "/assets");
 }
 
 void EspStation::setupWebServer(
@@ -612,6 +609,11 @@ void EspStation::connectWifi() {
       }
     }
   } else {
+    // setup AP mode
+    this->log("Wifi :");
+    this->logt("no wifi information, starting AP mode");
+    // I know, for testing purpose, only... #ItllBeFine
+    this->wifi.softAP(this->name+"_net", this->name+"_password");
     this->status = EspStation::StatusReady;
   }
 }
