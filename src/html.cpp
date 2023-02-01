@@ -49,7 +49,7 @@ String commonJs() {
 
 String commonBody(String body) {
   return "<body>" + body +
-         "</body><script>window.addEventListener('load',()=>{setTimeout(()=>{let scr=document.createElement('script');scr.setAttribute('src','/js');document.body.appendChild(scr)}, 150)})</script>";
+         "</body><script>window.addEventListener('load',()=>{setTimeout(()=>{let scr=document.createElement('script');scr.setAttribute('src','/assets/js/common.js');document.body.appendChild(scr)}, 75)})</script>";
 }
 
 String commonHtmlHeader(String title) {
@@ -76,7 +76,7 @@ String commonHtmlHeader(String title) {
                  HtmlElt(
                      "link", "",
                      HtmlAttribute("rel", "stylesheet") +
-                         HtmlAttribute("href", "/css"), true
+                         HtmlAttribute("href", "/assets/css/common.css"), true
                  )
          );
 }

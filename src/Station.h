@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
+#include <LittleFS.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
 #ifndef StationIOStation_h

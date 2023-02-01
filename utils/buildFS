@@ -1,0 +1,298 @@
+#!/bin/bash
+# @parseArger-begin
+# @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
+# @parseArger-declarations
+# @parseArger opt js "path to js file" --short j --repeat
+# @parseArger opt css "path to css file" --short c --repeat
+# @parseArger opt directory "additional directory path, all files will be gzipped" --short d --repeat
+# @parseArger opt file "file to add, will be gzipped" --short f --repeat
+# @parseArger opt file-no-gz "add a file without gzip" --short F --repeat
+# @parseArger opt node "node executable" --default-value "node"
+# @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
+# @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
+# @parseArger opt upload "station to upload to, will set --environment" --short -u --default-value "nodemcuv2"
+# @parseArger-declarations-end
+
+# @parseArger-parsing
+die()
+{
+	local _ret="${2:-1}"
+	test "${_PRINT_HELP:-no}" = yes && print_help >&2
+	echo "$1" >&2
+	exit "${_ret}"
+}
+
+
+begins_with_short_option()
+{
+	local first_option all_short_options=''
+	first_option="${1:0:1}"
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+}
+
+# POSITIONALS ARGUMENTS
+_positionals=();
+# OPTIONALS ARGUMENTS
+_arg_js=()
+_arg_css=()
+_arg_directory=()
+_arg_file=()
+_arg_file_no_gz=()
+_arg_node="node"
+_arg_pio="/home/didi/.platformio/penv/bin/pio"
+_arg_environement="nodemcuv2"
+_arg_upload="nodemcuv2"
+# FLAGS
+
+
+print_help()
+{
+	echo -e "I send an SOS to the world:"
+	echo -e "	-j, --js <js>: path to js file, repeatable"
+	echo -e "	-c, --css <css>: path to css file, repeatable"
+	echo -e "	-d, --directory <directory>: additional directory path, all files will be gzipped, repeatable"
+	echo -e "	-f, --file <file>: file to add, will be gzipped, repeatable"
+	echo -e "	-F, --file-no-gz <file-no-gz>: add a file without gzip, repeatable"
+	echo -e "	--node <node>: node executable [default: ' node ']"
+	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
+	echo -e "	-e, --environement <environement>: build environment [default: ' nodemcuv2 ']"
+	echo -e "	--u, --upload <upload>: station to upload to, will set --environment [default: ' nodemcuv2 ']"
+	echo -e "Usage :
+	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>]"
+}
+
+parse_commandline()
+{
+	_positionals_count=0
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			-j|--js)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_js+=("$2")
+				shift
+				;;
+			--js=*)
+				_arg_js+=("${_key##--js=}")
+				;;
+			-j*)
+				_arg_js+=("${_key##-j}")
+				;;
+			
+			-c|--css)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_css+=("$2")
+				shift
+				;;
+			--css=*)
+				_arg_css+=("${_key##--css=}")
+				;;
+			-c*)
+				_arg_css+=("${_key##-c}")
+				;;
+			
+			-d|--directory)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_directory+=("$2")
+				shift
+				;;
+			--directory=*)
+				_arg_directory+=("${_key##--directory=}")
+				;;
+			-d*)
+				_arg_directory+=("${_key##-d}")
+				;;
+			
+			-f|--file)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_file+=("$2")
+				shift
+				;;
+			--file=*)
+				_arg_file+=("${_key##--file=}")
+				;;
+			-f*)
+				_arg_file+=("${_key##-f}")
+				;;
+			
+			-F|--file-no-gz)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_file_no_gz+=("$2")
+				shift
+				;;
+			--file-no-gz=*)
+				_arg_file_no_gz+=("${_key##--file-no-gz=}")
+				;;
+			-F*)
+				_arg_file_no_gz+=("${_key##-F}")
+				;;
+			
+			--node)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_node="$2"
+				shift
+				;;
+			--node=*)
+				_arg_node="${_key##--node=}"
+				;;
+			
+			--pio)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_pio="$2"
+				shift
+				;;
+			--pio=*)
+				_arg_pio="${_key##--pio=}"
+				;;
+			
+			-e|--environement)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_environement="$2"
+				shift
+				;;
+			--environement=*)
+				_arg_environement="${_key##--environement=}"
+				;;
+			-e*)
+				_arg_environement="${_key##-e}"
+				;;
+			
+			--u|--upload)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_upload="$2"
+				shift
+				;;
+			--upload=*)
+				_arg_upload="${_key##--upload=}"
+				;;
+			--u*)
+				_arg_upload="${_key##--u}"
+				;;
+			
+			-h|--help)
+				print_help;
+				exit 0;
+				;;
+			-h*)
+				print_help;
+				exit 0;
+				;;
+			*)
+				_last_positional="$1"
+				_positionals+=("$_last_positional")
+				_positionals_count=$((_positionals_count + 1))
+				;;
+		esac
+		shift
+	done
+}
+
+
+handle_passed_args_count()
+{
+	local _required_args_string=""
+	test "${_positionals_count}" -le 0 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 0 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+	test "${_positionals_count}" -ge 0 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 0 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+}
+
+
+assign_positional_args()
+{
+	local _positional_name _shift_for=$1;
+	_positional_names="";
+	shift "$_shift_for"
+	for _positional_name in ${_positional_names};do
+		test $# -gt 0 || break;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1
+eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an Argbash bug." 1;
+		shift;
+	done
+}
+
+print_debug()
+{
+	print_help
+	# shellcheck disable=SC2145
+	echo "DEBUG: $0 $@";
+	
+	echo -e "\tjs: ${_arg_js | sed 's/-/_/g'}";
+	echo -e "\tcss: ${_arg_css | sed 's/-/_/g'}";
+	echo -e "\tdirectory: ${_arg_directory | sed 's/-/_/g'}";
+	echo -e "\tfile: ${_arg_file | sed 's/-/_/g'}";
+	echo -e "\tfile-no-gz: ${_arg_file-no-gz | sed 's/-/_/g'}";
+	echo -e "\tnode: ${_arg_node | sed 's/-/_/g'}";
+	echo -e "\tpio: ${_arg_pio | sed 's/-/_/g'}";
+	echo -e "\tenvironement: ${_arg_environement | sed 's/-/_/g'}";
+	echo -e "\tupload: ${_arg_upload | sed 's/-/_/g'}";
+
+}
+
+parse_commandline "$@"
+handle_passed_args_count
+assign_positional_args 1 "${_positionals[@]}"
+
+# @parseArger-parsing-end
+# print_debug "$@"
+# @parseArger-end
+
+# shellcheck source="../stations/stations"
+source "./stations/stations";
+
+rm -rf data;
+mkdir data;
+
+gzip_files() {
+  src_dir=$1;
+  dest_dir=$2;
+
+  for dir in "$src_dir"/*; do
+    if [ -d "$dir" ]; then
+      subdir=$(basename "$dir");
+      mkdir -p "$dest_dir/$subdir";
+      (gzip_files "$dir" "$dest_dir/$subdir");
+    elif [ -f "$dir" ]; then
+      filename=$(basename "$dir");
+			if [[ "$filename" == *.js ]] || [[ "$filename" == *.css ]]; then
+				"$_arg_node" node_modules/.bin/minify "$dir" | gzip -c - > "$dest_dir/$filename.gz";
+			else
+				gzip "$dir" -c > "$dest_dir/$filename.gz";
+			fi
+    fi
+  done
+}
+
+gzip_files "src/assets" "data/assets"
+
+for file in "${_arg_file[@]}"; do
+	(gzip "$file" -c > "data/$file.gz");
+done
+
+for dir in "${_arg_directory[@]}"; do
+	(gzip_files "$dir" "data/$dir");
+done
+
+for file in "${_arg_file_no_gz[@]}"; do
+	cp "$file" "data/$file";
+done
+
+for js in "${_arg_js[@]}"; do
+	jsname=$(basename "$js");
+	"$_arg_node" node_modules/.bin/minify "$js" | gzip -c - > "data/assets/js/$jsname.gz";
+done
+
+for css in "${_arg_css[@]}"; do
+	cssname=$(basename "$css");
+	"$_arg_node" node_modules/.bin/minify "$css" | gzip -c - > "data/assets/css/$cssname.gz";
+done
+
+if [ "$_arg_upload" != "" ]; then
+	vn="${_arg_upload}_board";
+	_arg_environement="${!vn}";
+fi
+
+"$_arg_pio" run -t buildfs -e "$_arg_environement";
+
+if [ "$_arg_upload" != "" ]; then
+	utils/uploadStation "$_arg_upload" --fs;
+fi

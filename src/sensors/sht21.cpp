@@ -152,7 +152,7 @@ String sht21::toXml(int index) {
 String sht21::jsUtils() {
   return HtmlElt(
       "script",
-      "const sht21_utils={inChart: name=>name!=='compensated_humidity'};"
+      "const sht21_utils={inChart: name=>['temperature', 'humidity'].includes(name)};"
   );
 }
 String sht21::toHtml() {

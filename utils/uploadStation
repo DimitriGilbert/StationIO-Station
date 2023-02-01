@@ -5,7 +5,9 @@
 # @parseArger pos name "station name"
 # @parseArger opt ip "station ip"
 # @parseArger opt board "PIO build environement name" --short b
+# @parseArger opt pio "pio executable" --default-value "$HOME/.platformio/penv/bin/pio"
 # @parseArger flag ota "OTA update" --on
+# @parseArger flag fs "upload fs"
 # @parseArger-declarations-end
 
 # @parseArger-parsing
@@ -31,8 +33,10 @@ _arg_name="";
 # OPTIONALS ARGUMENTS
 _arg_ip=
 _arg_board=
+_arg_pio="$HOME/.platformio/penv/bin/pio"
 # FLAGS
 _arg_ota="on"
+_arg_fs="off"
 
 
 print_help()
@@ -41,9 +45,11 @@ print_help()
 	echo -e "	name: station name"
 	echo -e "	--ip <ip>: station ip"
 	echo -e "	-b, --board <board>: PIO build environement name"
+	echo -e "	--pio <pio>: pio executable [default: ' $HOME/.platformio/penv/bin/pio ']"
 	echo -e "	--ota|--no-ota: OTA update, on by default (use --no-ota to turn it off)"
+	echo -e "	--fs|--no-fs: upload fs"
 	echo -e "Usage :
-	$0 <name> [--ip <value>] [--board <value>] [--[no-]ota]"
+	$0 <name> [--ip <value>] [--board <value>] [--pio <value>] [--[no-]ota] [--[no-]fs]"
 }
 
 parse_commandline()
@@ -74,9 +80,22 @@ parse_commandline()
 				_arg_board="${_key##-b}"
 				;;
 			
+			--pio)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_pio="$2"
+				shift
+				;;
+			--pio=*)
+				_arg_pio="${_key##--pio=}"
+				;;
+			
 			--no-ota|--ota)
 				_arg_ota="on"
 				test "${1:0:5}" = "--no-" && _arg_ota="off"
+				;;
+			--no-fs|--fs)
+				_arg_fs="on"
+				test "${1:0:5}" = "--no-" && _arg_fs="off"
 				;;
 			-h|--help)
 				print_help;
@@ -127,7 +146,9 @@ print_debug()
 	echo -e "\tname: ${_arg_name}";
 	echo -e "\tip: ${_arg_ip | sed 's/-/_/g'}";
 	echo -e "\tboard: ${_arg_board | sed 's/-/_/g'}";
+	echo -e "\tpio: ${_arg_pio | sed 's/-/_/g'}";
 	echo -e "\tota: ${_arg_ota | sed 's/-/_/g'}";
+	echo -e "\tfs: ${_arg_fs | sed 's/-/_/g'}";
 
 }
 
@@ -142,7 +163,13 @@ assign_positional_args 1 "${_positionals[@]}"
 if [ -f "stations/${_arg_name}.main.cpp" ]; then
 	# shellcheck source="../stations/stations"
 	source "./stations/stations";
-	cmd="$HOME/.platformio/penv/bin/pio run -t upload";
+	
+	piotgt="upload";
+	if [ "$_arg_fs" == "on" ]; then
+		piotgt="uploadfs";
+	fi
+	
+	cmd="$_arg_pio run -t $piotgt";
 
 	vn="${_arg_name}_board"
 	if [ "${!vn}" == "" ]; then
@@ -191,4 +218,3 @@ if [ -f "stations/${_arg_name}.main.cpp" ]; then
 else
 	die "Station ${_arg_name} not found";
 fi
-

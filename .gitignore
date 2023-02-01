@@ -11,3 +11,4 @@ src/**/*main.cpp.test.bak
 package-lock.json
 stations/
 StationIO-station.code-workspace
+data/

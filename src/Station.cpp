@@ -467,12 +467,19 @@ void EspStation::initWebServer() {
                   commonBody(this->toHtml()) + "</html>";
     request->send(200, "text/html", data);
   });
-  this->webServer.on("/js", [this](AsyncWebServerRequest* request) {
-    request->send(200, "application/javascript", commonJs());
-  });
-  this->webServer.on("/css", [this](AsyncWebServerRequest* request) {
-    request->send(200, "text/css", commonCss());
-  });
+  if (LittleFS.check()) {
+    this->webServer.serveStatic("/assets", LittleFS, "/assets");
+  } else {
+    // this->webServer.on("/assets/js/common.js", [this](AsyncWebServerRequest* request) {
+    //   request->send(200, "application/javascript", commonJs());
+    // });
+    // this->webServer.on(
+    //     "/assets/css/common.css",
+    //     [this](AsyncWebServerRequest* request) {
+    //       request->send(200, "text/css", commonCss());
+    //     }
+    // );
+  }
   this->webServer.on("/openapi", [this](AsyncWebServerRequest* request) {
     String out = "openapi: 3.0.3\n";
     out += "info:\n";
