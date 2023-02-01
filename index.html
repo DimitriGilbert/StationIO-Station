@@ -74,7 +74,8 @@
         <h2>What is StationIO ?</h2>
         <p>
           An Arduino framework-ish thingy that takes care of the (my?) basics !<br/>
-          It runs on ESP8266 and ESP32 boards, connects to WiFi, provides a webserver (with basic endpoints), support a bunch of sensor out of the box and provides an easy way to execute function on a timer.
+          It runs on ESP8266 and ESP32 boards, connects to WiFi, provides a webserver (with basic endpoints), use a file system, support a bunch of sensor out of the box 
+          and provides an easy way to execute function on a timer.
         </p>
         <h2>How does it work ?</h2>
         <p>
@@ -144,6 +145,20 @@
           Also, some stations talk to each other in order to decide
           what actions to execute. For example, I heat my upper floors using hot air taken from above my wood stove. <br/>
           All fans are controlled by a station that uses intake air temperature, my main room temperature and the heated room temperature to decide what speed to run them at.
+        </p>
+        <h2>Could you add support for ...</h2>
+        <p>
+          WOOOooow wow, heeeyy there, how ya doin' ? Huum, I'm sorry but I'm afraid not (for now).<br />
+          If you want a sensor that is not supported, you can add a "custom" sensor in the configuration tool, fill up the form, and boom, it'll generate the (basic) code in the "sensor" tab. <br />
+          I know it's not perfect, buuut, once you added and tested your sensor, make a pull request so the next lad can benefit from our collective work ! <br />
+          <br />
+          Now, if you want to modify/add/whatever js or css files (or any other type for that matter), put them in "src/assets/...". you can then use the built-in script "utils/buildFS" to build and upload the file system.<br />
+          Use "utils/buildFS --help" for more info.<br /><br />
+          Also, if you want to load a plugin, double click on this page title and paste the plugin url !
+        </p>
+        <h2>Plugins ? What plugins ?</h2>
+        <p>
+          There are plenty of plugins doing a variety of things, yup, that's for sure ! (<b style="color: blue;cursor: crosshair;">#jAiMaCarteALaRepubliqueEnMarche</b>)
         </p>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
@@ -548,8 +563,13 @@ cd StationIO
 # upload code to project board
 ./utils/uploadStation "<%~ it.stationName %>" --no-ota
 
+# build filesystem
+./utils/buildFS
+# upload filesystem to project board
+./utils/uploadStation "<%~ it.stationName %>" --no-ota --fs
+
 # use serial monitor to get the IP address
-# reset your board to see the initialisation output
+# reset your board to see the initialisation output and get the ip address
 pio device monitor -e nodemcuv2
 
 # upload with an ip address, --ip is needed only the first time (it will be saved in ./stations/stations)
