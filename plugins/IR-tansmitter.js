@@ -186,16 +186,16 @@ const IRTFrmTpl = `<div id="ir-remote">
   </div>
   <div class="row">
     <div class="col">
-      <label for="ir-remote-send-fn">IR send</label>
+      <label for="ir-remote-send-fn">IR endpoint code</label>
       <code-input type="text" class="form-control" name="ir-remote-send-fn" id="ir-remote-send-fn" value="int code = -1;
-        if (request->hasParam("code")) {
-          code = request->getParam("code")->value().toInt();
+        if (request->hasParam(\"code\")) {
+          code = request->getParam(\"code\")->value().toInt();
         }
 
         if (code != -1) {
           IrSender.sendNEC(code, 32);
         }
-        request->send(200, "text/plain", String(code));"></code-input>
+        request->send(200, \"text/plain\", String(code));"></code-input>
     </div>
   </div>
   <div class="row">
