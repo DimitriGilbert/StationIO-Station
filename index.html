@@ -1187,7 +1187,7 @@ TInfo tinfo;
 
           let i2ccl = frmData.get("i2c-clock");
           let i2cda = frmData.get("i2c-data");
-          if (i2ccl !== "" && i2cda !== "") {
+          if (i2ccl !== "" && i2ccl !== null && i2cda !== "" && i2cda !== null) {
             data.i2c = [i2cda, i2ccl];
           }
           

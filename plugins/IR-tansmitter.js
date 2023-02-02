@@ -164,6 +164,7 @@ const IRTSetupTpl = ` // IR Remote
 <% } %>
 `;
 const IRTFrmTpl = `<div id="ir-remote">
+  <h2 class="text-center">IR Remote</h2>
   <div class="row">
     <div class="col">
       <label for="ir-remote-pin">IR pin</label>
@@ -187,15 +188,7 @@ const IRTFrmTpl = `<div id="ir-remote">
   <div class="row">
     <div class="col">
       <label for="ir-remote-send-fn">IR endpoint code</label>
-      <code-input type="text" class="form-control" name="ir-remote-send-fn" id="ir-remote-send-fn" value="int code = -1;
-        if (request->hasParam(\"code\")) {
-          code = request->getParam(\"code\")->value().toInt();
-        }
-
-        if (code != -1) {
-          IrSender.sendNEC(code, 32);
-        }
-        request->send(200, \"text/plain\", String(code));"></code-input>
+      <code-input type="text" class="form-control" name="ir-remote-send-fn" id="ir-remote-send-fn" value=""></code-input>
     </div>
   </div>
   <div class="row">
@@ -216,7 +209,7 @@ const IRTFrmTpl = `<div id="ir-remote">
 
 function IRTBuildData(frmData) {
   return {
-    irPin: frmData.get("ir-remote-pin"),
+    irpin: frmData.get("ir-remote-pin"),
     irendpoint: frmData.get("ir-remote-endpoint"),
     irLogin: frmData.get("ir-endpoint-login"),
     irPassword: frmData.get("ir-endpoint-password"),
@@ -226,8 +219,6 @@ function IRTBuildData(frmData) {
     irsendcode: frmData.get("ir-remote-send-fn")
   };
 }
-
-
 
 if (StationIOPlugins !== undefined) {
   StationIOPlugins.include.push((frmData) => {
@@ -242,4 +233,13 @@ if (StationIOPlugins !== undefined) {
   document
     .getElementById("timers-config")
     .parentElement.appendChild(htmlToElements(IRTFrmTpl));
+  document.getElementById("ir-remote-send-fn").value = `int code = -1;
+if (request->hasParam("code")) {
+  code = request->getParam("code")->value().toInt();
+}
+
+if (code != -1) {
+  IrSender.sendNEC(code, 32);
+}
+request->send(200, "text/plain", String(code));`;
 }
