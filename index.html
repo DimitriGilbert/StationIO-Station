@@ -203,7 +203,7 @@
         <h2>How does it work ? Can I make one ?!?</h2>
         <p>
           NOOooow we're talking ! <br />
-          "Plugins" (...)  are just javascript file that I load after the initial load, I do not control ANYthing you are doing, (AT ALL)<br />
+          "Plugins" (...)  are just javascript files that I load after the initial load, I do not control ANYthing you are doing, (AT ALL)<br />
           Want to add html somewhere ? sure !<br />
           Add event listeners ? why not.<br />
           Overhaul the look and feel of the generator ? HELL YEAH !<br />
@@ -283,16 +283,16 @@
                       name="sensor-select"
                       id="sensor-select"
                     >
-                      <option value="dht11">dht11</option>
-                      <option value="bmp280">bmp280</option>
-                      <option value="bme280">bme280</option>
-                      <option value="bmp085">bmp085</option>
-                      <option value="sht21">sht21</option>
-                      <option value="mq2">mq2</option>
-                      <option value="mq135">mq135</option>
-                      <option value="ccs811">ccs811</option>
-                      <option value="linky">linky</option>
-                      <option value="custom">custom</option>
+                      <option id="sensor-opt-dht11" value="dht11" mesures="temperature,humidity" libs="adafruit/DHT sensor library">dht11</option>
+                      <option id="sensor-opt-bmp280" value="bmp280" mesures="temperature,pressure,altitude" libs="adafruit/Adafruit BMP280 Library">bmp280</option>
+                      <option id="sensor-opt-bme280" value="bme280" mesures="temperature,pressure,humidity,altitude" libs="adafruit/Adafruit BME280 Library">bme280</option>
+                      <option id="sensor-opt-bmp085" value="bmp085" mesures="temperature,pressure,altitude" libs="adafruit/Adafruit BMP085 Library">bmp085</option>
+                      <option id="sensor-opt-sht21" value="sht21" mesures="temperature,humidity,compensated_humidity" libs="git@github.com:enjoyneering/HTU2xD_SHT2x_Si70xx.git">sht21</option>
+                      <option id="sensor-opt-mq2" value="mq2" mesures="LPG,H2,CO,Alcohol,Propane,raw" libs="git@github.com:DimitriGilbert/MQSensorsLib.git">mq2</option>
+                      <option id="sensor-opt-mq135" value="mq135" mesures="CO,Alcohol,CO2,Toluen,NH4,Aceton,raw" libs="git@github.com:DimitriGilbert/MQSensorsLib.git">mq135</option>
+                      <option id="sensor-opt-ccs811" value="ccs811" mesures="" libs="">ccs811</option>
+                      <option id="sensor-opt-linky" value="linky" mesures="HCHP,HCHC,PTEC,PAPP" libs="hallard/LibTeleinfo">linky</option>
+                      <option id="sensor-opt-custom" value="custom">custom</option>
                     </select>
                   </div>
                   <div class="col-2">
@@ -1107,9 +1107,12 @@ TInfo tinfo;
         .addEventListener("click", () => {
           let sensorIndex = parseInt(document.getElementById("sensor-index").value);
           const sensor = sensorSelect.value;
+          const sensorOpt = document.getElementById(`sensor-opt-${sensor}`);
           let sensorForm = `<div class="row">
           <h3>${sensor} <button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode)">X</button></h3>
-          <input type="hidden" name="sensors[]" value="${sensor}::${sensorIndex}"/>`;
+          <input type="hidden" name="sensors[]" value="${sensor}::${sensorIndex}"/>
+          <input type="hidden" name="sensors_mesures[]" value="${sensorOpt.getAttribute("mesures")}"/>
+          <input type="hidden" name="sensors_libs[]" value="${sensorOpt.getAttribute("libs")}"/>`;
           if (Object.keys(sensorForms).includes(sensor)) {
             sensorForm += sensorForms[sensor](sensorIndex);
           }
@@ -1257,6 +1260,8 @@ TInfo tinfo;
         .getElementById("install-config-frm")
         .addEventListener("change", (evt)=>{
           let frmData = new FormData(evt.target.form!==undefined?evt.target.form:evt.target);
+          new FormData(document.getElementById("stationio-config-frm")).forEach((v, k) => frmData.append(k, v));
+          
           let data = {stationName: frmData.get("install-station-name")};
           let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
           switch (frmData.get("install-station-type")) {
@@ -1271,9 +1276,17 @@ TInfo tinfo;
               break;
           }
           installTpl += "\n"+installStioTpl;
-
+          
+          let pioLibs = [];
+          let snLibs = frmData.getAll("sensors_libs[]");
+          for (const sli in snLibs) {
+            pioLibs = pioLibs.concat(snLibs[sli].split(',').filter(el => !pioLibs.includes(el)));
+          }
+          let libInstall = pioLibs.length>0?`# PlatformIO libraries
+pio pkg install --library "${pioLibs.join('" --library "')}"
+`:"";
           data.plugins = {
-            install: getPluginsStr("install", frmData),
+            install: libInstall+getPluginsStr("install", frmData),
           };
           
           document.getElementById("install-output").value = eta.render(
