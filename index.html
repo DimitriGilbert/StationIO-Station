@@ -79,27 +79,27 @@
             href="#"
             class="nav-link active"
             id="nav-about"
-            onclick="navTo('about')"
+            navTo="about"
             >About</a
           >
-          <a href="#" class="nav-link" id="nav-config" onclick="navTo('config')"
+          <a href="#" class="nav-link" id="nav-config" navTo="config"
             >Configuration</a
           >
-          <a href="#" class="nav-link" id="nav-install" onclick="navTo('install')"
+          <a href="#" class="nav-link" id="nav-install" navTo="install"
             >Install</a
           >
           <a
             href="#"
             class="nav-link"
             id="nav-main-cpp"
-            onclick="navTo('main-cpp')"
+            navTo="main-cpp"
             >main.cpp</a
           >
           <a
             href="#"
             class="nav-link"
             id="nav-custom-sensors"
-            onclick="navTo('custom-sensors')"
+            navTo="custom-sensors"
             >Sensors</a
           >
         </nav>
@@ -113,9 +113,16 @@
         </p>
         <h2>How does it work ?</h2>
         <p>
-          It uses a set of classes to simply handle the basic station, sensors, callbacks on a
+          It uses a set of classes to handle the basic station, sensors, callbacks on a
           timer and web server endpoints, while still being arduino code.<br />
-          That way you can hookup your custom code in a breeze.
+          That way you can hookup your custom code in a breeze.<br />
+          There are a few (very inventivelly named) bash scripts to handle common tasks :
+          <ul>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/createStation">utils/createStation</a>, creates a station</li>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/uploadStation">utils/uploadStation</a>, uploads a station</li>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/buildFS">utils/buildFS</a>, builds the file system</li>
+          </ul>
+          All the script have plenty of options that are documented, so just use --help to get all the infos.
         </p>
         <h2>But.... WHY ?</h2>
         <p>
@@ -131,15 +138,16 @@
           doing nothing (a few MQQT message an hour). <br />
           ESPes have a good chunk of power and can easily handle a webserver and
           "on the edge" processing, not just executing command and reporting
-          values. And I really HATE copy/pasting....!
+          values.<br />
+          Another thing, doing stuff on arduino considering I have no idea what I'm doing is mostly copy/pasting...And I really HATE copy/pasting....! StationIO is more or less an "Arduino project copy/paste manager" XD...
         </p>
         <h2>Huuum.... how do you do that then ?</h2>
         <p>
           <ul>
             <li>Grab an esp8266 or esp32 boards</li>
             <li>Plug it to your conputer</li>
-            <li>Use the <a href="#" onclick="navTo('config')">Configuration</a> tool</li>
-            <li>Follow the <a href="#" onclick="navTo('install')">Install</a> script</li>
+            <li>Use the <a href="#" navTo="config">Configuration</a> tool</li>
+            <li>Follow the <a href="#" navTo="install">Install</a> script</li>
             <li>Build your circuit (don't look at me I have fat fingers !)</li>
             <li>Go to your device ip (you can use the "/fancy" endpoint for more eyecandy-ish, me no designer ok ! oh, and I don't care how it looks :P)</li>
             <li>Voila !!(maybe...tm)</li>
@@ -147,8 +155,8 @@
         </p>
         <h2>But it's for linux and I run windows (useless nerd !)</h2>
         <p>
-          Well I dunno... use <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank">WSL</a> or something...<br/>
-          Note that PIO is a python tool, so it should work on windows too, but I did not try it. And you really do not have to use my utils scripts (that are written in bash), just use PIO directly (i use the vscode extension while working on my stations).
+          Well I dunno... use <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank">WSL</a> or <a href="https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/" target="_blank" rel="noopener noreferrer">something</a> ...<br/>
+          Note that PIO is a python tool, so it should work on windows too, but I did not try it. And you really do not have to use my utils scripts (that are written in bash), just use PIO directly (I use the vscode extension while working on my stations).
         </p>
         <h2>What about MacOS ?</h2>
         <p>Look pal, I ain't responsible for your poor life choices, now if you care to donate a mac (those M2 pro minis look sweeeet) I promise to add support, how's that ?</p>
@@ -157,9 +165,9 @@
           Huuuum, ...., I did not even try ^^'. <br />
           It should be easy though, if your stack can fetch info with http
           queries, no problemo ! <br />
-          Onthe "/" endpoint, you can set the "Accept" header to "application/json",
+          On the "/" endpoint, you can set the "Accept" header to "application/json",
           "application/xml","text/csv", "text/plain" and you'll get a
-          corresponding response. Default is html<br />
+          corresponding response. It also works with the get attribute "format". Default is html<br />
           If you need MQTT, or other protocols, you should be able to integrate
           with timer callbacks, I think... <br />
           If timer callbacks do not work, fear not, you can still use standard
@@ -188,7 +196,7 @@
           <br />
           Now, if you want to modify/add/whatever js or css files (or any other type for that matter), put them in "src/assets/...". you can then use the built-in script "utils/buildFS" to build and upload the file system.<br />
           Use "utils/buildFS --help" for more info.<br /><br />
-          Also, if you want to load a <a href="#" onclick="new bootstrap.Modal('#pluginModal', {}).show()">plugin</a>
+          Also, if you want, you can load a <a href="#" onclick="new bootstrap.Modal('#pluginModal', {}).show()">plugin</a>
         </p>
         <h2>Plugins ? What plugins ?</h2>
         <p>
@@ -203,7 +211,7 @@
         <h2>How does it work ? Can I make one ?!?</h2>
         <p>
           NOOooow we're talking ! <br />
-          "Plugins" (...)  are just javascript files that I load after the initial load, I do not control ANYthing you are doing, (AT ALL)<br />
+          "Plugins"  are just javascript files that I load after the initial load, I do not control ANYthing you are doing, (AT ALL)<br />
           Want to add html somewhere ? sure !<br />
           Add event listeners ? why not.<br />
           Overhaul the look and feel of the generator ? HELL YEAH !<br />
@@ -216,8 +224,8 @@
         <p>
           This tool will help you to generate a StationIO station. You can
           configure your station, each modification regenerates the code for the
-          main file in <a href="#" onclick="navTo('main-cpp')">main.cpp</a>
-          as well as <a href="#" onclick="navTo('install')">installation</a> instructions/script.
+          main file in <a href="#" navTo="main-cpp">main.cpp</a>
+          as well as <a href="#" navTo="install">installation</a> instructions/script.
         </p>
         <form id="stationio-config-frm">
           <div class="row gx-5" id="configs">
@@ -939,35 +947,7 @@ String <%= it.sensorName %>::toHtml(int index) {
             "tinfo",
             `// linky sensor init
 void onLinkyData(ValueList* vallnk, uint8_t flag) {
-  // data in, light on
-  digitalWrite(LED_BUILTIN_AUX, LOW);
-  int index = -1;
-  float value = -1;
-  // interesting data point ?
-  if (strcmp(vallnk->name, "PAPP") == 0) {
-    index = 3;
-    value = atof(vallnk->value);
-    digitalWrite(LED_BUILTIN, LOW);
-  } else if (strcmp(vallnk->name, "HCHP") == 0) {
-    index = 0;
-    value = atof(vallnk->value);
-    digitalWrite(LED_BUILTIN, LOW);
-  } else if (strcmp(vallnk->name, "HCHC") == 0) {
-    index = 1;
-    value = atof(vallnk->value);
-    digitalWrite(LED_BUILTIN, LOW);
-  } else if (strcmp(vallnk->name, "PTEC") == 0) {
-    index = 2;
-    value = strcmp(vallnk->value, "HC..") == 0 ? 1 : 0;
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-  if (index != -1) {
-    // setting datapoint in station sensor
-    station.sensors[0]->setMesure(index, value);
-  }
-  // lights off
-  digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(LED_BUILTIN_AUX, HIGH);
+  LinkyOnData(&station, vallnk, flag);
 }
 TInfo tinfo;
 `,
@@ -1317,7 +1297,16 @@ pio pkg install --library "${pioLibs.join('" --library "')}"
       window.addEventListener("resize", () => {
         document.getElementById("main-cpp-output").style.height =
           window.innerHeight - 100 + "px";
-      }); 
+      });
+      
+      // initializing navigation
+      document
+        .querySelectorAll("[navTo]")
+        .forEach((el) => {
+          el.addEventListener("click", evt => {
+            navTo(evt.target.getAttribute("navTo"));
+          })
+        });
     </script>
     
     <!-- bootstrap -->

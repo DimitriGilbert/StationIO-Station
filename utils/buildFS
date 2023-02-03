@@ -2,11 +2,11 @@
 # @parseArger-begin
 # @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
 # @parseArger-declarations
-# @parseArger opt js "path to js file" --short j --repeat
-# @parseArger opt css "path to css file" --short c --repeat
-# @parseArger opt directory "additional directory path, all files will be gzipped" --short d --repeat
-# @parseArger opt file "file to add, will be gzipped" --short f --repeat
-# @parseArger opt file-no-gz "add a file without gzip" --short F --repeat
+# @parseArger opt js "path to js file, ':' to separate target directory (/assets/js by default)" --short j --repeat
+# @parseArger opt css "path to css file, ':' to separate target directory (/assets/css by default)" --short c --repeat
+# @parseArger opt directory "additional directory path, all files will be gzipped, ':' to separate target directory (/ by default)" --short d --repeat
+# @parseArger opt file "file to add, will be gzipped, ':' to separate target directory (/ by default)" --short f --repeat
+# @parseArger opt file-no-gz "add a file without gzip, ':' to separate target directory (/ by default)" --short F --repeat
 # @parseArger opt node "node executable" --default-value "node"
 # @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
@@ -265,25 +265,83 @@ gzip_files() {
 gzip_files "src/assets" "data/assets"
 
 for file in "${_arg_file[@]}"; do
-	(gzip "$file" -c > "data/$file.gz");
+	cpt="";
+	if [[ "$file" == *:* ]]; then
+		cpt="${file##*:}";
+		file="${file%%:*}";
+	fi
+	if [ "$cpt" != "" ]; then
+		cpt+="/";
+	fi
+	if [ ! -d "data/$cpt" ]; then
+		mkdir -p "data/$cpt";
+	fi
+
+	(gzip "$file" -c > "data/$cpt$(basename "$file").gz");
 done
 
-for dir in "${_arg_directory[@]}"; do
-	(gzip_files "$dir" "data/$dir");
+for dir2add in "${_arg_directory[@]}"; do
+	cpt="";
+	if [[ "$dir2add" == *:* ]]; then
+		cpt="${dir2add##*:}";
+		dir2add="${dir2add%%:*}";
+	fi
+	if [ "$cpt" != "" ]; then
+		cpt+="/";
+	fi
+	if [ ! -d "data/$cpt" ]; then
+		mkdir -p "data/$cpt";
+	fi
+
+	(gzip_files "$dir2add" "data/$cpt$dir2add");
 done
 
 for file in "${_arg_file_no_gz[@]}"; do
-	cp "$file" "data/$file";
+	cpt="";
+	if [[ "$file" == *:* ]]; then
+		cpt="${file##*:}";
+		file="${file%%:*}";
+	fi
+	if [ "$cpt" != "" ]; then
+		cpt+="/";
+	fi
+	if [ ! -d "data/$cpt" ]; then
+		mkdir -p "data/$cpt";
+	fi
+
+	cp "$file" "data/$(basename "$file")";
 done
 
 for js in "${_arg_js[@]}"; do
-	jsname=$(basename "$js");
-	"$_arg_node" node_modules/.bin/minify "$js" | gzip -c - > "data/assets/js/$jsname.gz";
+	cpt="";
+	if [[ "$js" == *:* ]]; then
+		cpt="${js##*:}";
+		js="${js%%:*}";
+	fi
+	if [ "$cpt" != "" ]; then
+		cpt+="/";
+	fi
+	if [ ! -d "data/assets/js/$cpt" ]; then
+		mkdir -p "data/assets/js/$cpt";
+	fi
+
+	"$_arg_node" node_modules/.bin/minify "$js" | gzip -c - > "data/assets/js/$cpt$(basename "$js").gz";
 done
 
 for css in "${_arg_css[@]}"; do
-	cssname=$(basename "$css");
-	"$_arg_node" node_modules/.bin/minify "$css" | gzip -c - > "data/assets/css/$cssname.gz";
+	cpt="";
+	if [[ "$css" == *:* ]]; then
+		cpt="${css##*:}";
+		css="${css%%:*}";
+	fi
+	if [ "$cpt" != "" ]; then
+		cpt+="/";
+	fi
+	if [ ! -d "data/assets/css/$cpt" ]; then
+		mkdir -p "data/assets/css/$cpt";
+	fi
+
+	"$_arg_node" node_modules/.bin/minify "$css" | gzip -c - > "data/assets/css/$(basename "$css").gz";
 done
 
 if [ "$_arg_upload" != "" ]; then
