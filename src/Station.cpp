@@ -39,7 +39,7 @@ void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
   this->log("Sensors : " + String(this->sensorCount));
   for (size_t i = 0; i < this->sensorCount; i++) {
     this->sensors[i]->begin();
-    this->logt(String(i) + " -> " + this->sensors[i]->name + " " + String(this->sensors[i]->status));
+    this->logt(String(i) + " -> " + this->sensors[i]->name + (this->sensors[i]->status==Sensor::StatusReady?" ready":" error"));
   }
 }
 
@@ -650,7 +650,9 @@ Esp32Station::Esp32Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP32";
 }
 Esp32Station::Esp32Station(String name, WifiInformation wifiInformation)
-    : EspStation(name, wifiInformation) {}
+    : EspStation(name, wifiInformation) {
+  this->stationTypeName = "ESP32";
+}
 Esp32Station::~Esp32Station() {}
 
 void Esp32Station::setup() {
@@ -672,13 +674,19 @@ Esp8266Station::Esp8266Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP8266";
 }
 Esp8266Station::Esp8266Station(String name, WifiInformation wifiInformation)
-    : EspStation(name, wifiInformation) {}
+    : EspStation(name, wifiInformation) {
+  this->stationTypeName = "ESP8266";
+}
 Esp8266Station::~Esp8266Station() {}
 
 void Esp8266Station::setup() {
   BaseStation::setup();
+  this->log("Available Heap :");
+  this->logt(String(ESP.getFreeHeap()));
+
+  this->log("Mounting LittleFS...");
   if (!LittleFS.begin()) {
-    this->log("Failed to mount LittleFS");
+    this->logt("Failed");
   }
   this->connect();
   this->serve();

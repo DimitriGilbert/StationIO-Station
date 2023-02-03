@@ -50,6 +50,7 @@
               <div class="col">
                 <ul id="plugins-list">
                   <li><a href="plugins/custom-i2c-pins.js" data-bs-dismiss="modal">Custom I2C pins</a></li>
+                  <li><a href="plugins/wifi-repeater.js" data-bs-dismiss="modal">Simple Wifi repeater</a></li>
                   <li><a href="plugins/IR-tansmitter.js" data-bs-dismiss="modal">IR Remote</a> (custom endpoint and 21,24,44 buttons remote)</li>
                   <li><a href="plugins/mini-hub-generator.js" data-bs-dismiss="modal">Minihub</a> WiP(tm)</li>
                 </ul>
@@ -187,11 +188,28 @@
           <br />
           Now, if you want to modify/add/whatever js or css files (or any other type for that matter), put them in "src/assets/...". you can then use the built-in script "utils/buildFS" to build and upload the file system.<br />
           Use "utils/buildFS --help" for more info.<br /><br />
-          Also, if you want to load a plugin, double click on this page title and paste the plugin url !
+          Also, if you want to load a <a href="#" onclick="new bootstrap.Modal('#pluginModal', {}).show()">plugin</a>
         </p>
         <h2>Plugins ? What plugins ?</h2>
         <p>
-          There are plenty of plugins doing a variety of things, yup, that's for sure ! (<b style="color: blue;cursor: crosshair;">#jAiMaCarteALaRepubliqueEnMarche</b>)
+          <!-- There are plenty of plugins doing a variety of things, yup, that's for sure ! (<b style="color: blue;cursor: crosshair;">#jAiMaCarteALaRepubliqueEnMarche</b>) -->
+          As of now, I have a few :
+          <ul>
+            <li>A way to set custom I2C pins</li>
+            <li>A simple and (kindda) customizable Wifi repeater/extender (taken from esp8266 arduino example ^^)</li>
+            <li>An Infrared Remote with support for 21, 24 and 44 buttons generic remotes plus an endpoint you can customize to support other things</li>
+          </ul>
+        </p>
+        <h2>How does it work ? Can I make one ?!?</h2>
+        <p>
+          NOOooow we're talking ! <br />
+          "Plugins" (...)  are just javascript file that I load after the initial load, I do not control ANYthing you are doing, (AT ALL)<br />
+          Want to add html somewhere ? sure !<br />
+          Add event listeners ? why not.<br />
+          Overhaul the look and feel of the generator ? HELL YEAH !<br />
+          The plugin "api" also provides a way to hook into the templates, so you can add your own stuff to the generated code.<br />
+          Go and have a look at the <a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/plugins/IR-tansmitter.js">IR remote plugin</a> to get an example.<br />
+          If you made something cool you'd like to share, don't hesitate to make a <a href="https://github.com/DimitriGilbert/StationIO-Station/pulls">pull request</a> so I can add it to the list of plugins !
         </p>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
@@ -1185,6 +1203,7 @@ TInfo tinfo;
             webServerRoutes: [],
           };
 
+          // TODO: get that to I2C plugin
           let i2ccl = frmData.get("i2c-clock");
           let i2cda = frmData.get("i2c-data");
           if (i2ccl !== "" && i2ccl !== null && i2cda !== "" && i2cda !== null) {
