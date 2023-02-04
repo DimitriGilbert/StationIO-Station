@@ -102,6 +102,13 @@
             navTo="custom-sensors"
             >Sensors</a
           >
+          <a href="https://github.com/DimitriGilbert/StationIO-Station" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="40" height="40">
+              <path
+                d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+              </path>
+            </svg>
+          </a>
         </nav>
       </div>
       <div id="stationio-about" class="stio-tab">
@@ -141,7 +148,7 @@
           values.<br />
           Another thing, doing stuff on arduino considering I have no idea what I'm doing is mostly copy/pasting...And I really HATE copy/pasting....! StationIO is more or less an "Arduino project copy/paste manager" XD...
         </p>
-        <h2>Huuum.... how do you do that then ?</h2>
+        <h2>Huuum.... how do you get that running then ?</h2>
         <p>
           <ul>
             <li>Grab an esp8266 or esp32 boards</li>
@@ -168,6 +175,9 @@
           On the "/" endpoint, you can set the "Accept" header to "application/json",
           "application/xml","text/csv", "text/plain" and you'll get a
           corresponding response. It also works with the get attribute "format". Default is html<br />
+          For more information, use the "/openapi" endpoint, it will give you a OpenApi doc file that 
+          you can use <a href="https://editor.swagger.io/" target="_blank" rel="noopener noreferrer">there</a> 
+          for more details (yes, if you use addEndpoint, they'll appear too :D)<br />
           If you need MQTT, or other protocols, you should be able to integrate
           with timer callbacks, I think... <br />
           If timer callbacks do not work, fear not, you can still use standard
@@ -186,7 +196,8 @@
           stations in real time for a quick look. <br />
           Also, some stations talk to each other in order to decide
           what actions to execute. For example, I heat my upper floors using hot air taken from above my wood stove. <br/>
-          All fans are controlled by a station that uses intake air temperature, my main room temperature and the heated room temperature to decide what speed to run them at.
+          All fans are controlled by a station that uses intake air temperature, my main room temperature and the heated room temperature to decide what speed to run them at.<br />
+          I plan on "smartifying" (cough) my garden and greenhouse (hence the Wifi extender) the spring so I'll probably update a few things here and there.
         </p>
         <h2>Could you add support for ...</h2>
         <p>
@@ -200,7 +211,6 @@
         </p>
         <h2>Plugins ? What plugins ?</h2>
         <p>
-          <!-- There are plenty of plugins doing a variety of things, yup, that's for sure ! (<b style="color: blue;cursor: crosshair;">#jAiMaCarteALaRepubliqueEnMarche</b>) -->
           As of now, I have a few :
           <ul>
             <li>A way to set custom I2C pins</li>
@@ -218,6 +228,17 @@
           The plugin "api" also provides a way to hook into the templates, so you can add your own stuff to the generated code.<br />
           Go and have a look at the <a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/plugins/IR-tansmitter.js">IR remote plugin</a> to get an example.<br />
           If you made something cool you'd like to share, don't hesitate to make a <a href="https://github.com/DimitriGilbert/StationIO-Station/pulls">pull request</a> so I can add it to the list of plugins !
+        </p>
+        <h2>Duuuude, your code is trash, that's not how how you do..., ...</h2>
+        <p>
+          Yuuuup, I'm not too proud of a few things, how sensor work for example, how do you do proper inheritance and stuff in C++ anyway ? Yes my interfaces are all other the place, I guess you haven't seen my office ^^'. Strings are bad they say ! Meh!, maybe.) <br />
+          I'll gladly take a bit of time to make things better so any suggestions/fingers in the right direction/examples are very welcome !
+          Use github's issues to report things, or make a pull request !
+        </p>
+        <h2>Can I use it for my project ?</h2>
+        <p>
+          That's what the license says :). Don't expect extensive and ultra responsive support, but if you encounter bug with my core code or the generated one, please open an <a href="https://github.com/DimitriGilbert/StationIO-Station/issues">issue</a> on github.<br />
+          I'll do my best to fix things as this is the codebase for MY home automation (I'd like to keep it "bug free" :P)
         </p>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
