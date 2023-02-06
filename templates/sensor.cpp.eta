@@ -1,7 +1,7 @@
       var #include <Arduino.h>
 #include "./<%= it.sensorName %>.h"
 
-#include "../html.h"
+#include "./html.h"
 
 <%= it.sensorName %>::<%= it.sensorName %>(<%= it.sensorInitializer!==undefined&&it.sensorInitializer.params!==undefined?it.sensorInitializer.params:"" %>) : Sensor("<%= it.sensorName %>") {<%= it.sensorInitializer!==undefined&&it.sensorInitializer.body!==undefined?it.sensorInitializer.body:"" %> 
 

@@ -102,7 +102,7 @@
             navTo="custom-sensors"
             >Sensors</a
           >
-          <a href="https://github.com/DimitriGilbert/StationIO-Station" target="_blank">
+          <a id="nav-github" href="https://github.com/DimitriGilbert/StationIO-Station" target="_blank">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="40" height="40">
               <path
                 d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
@@ -162,7 +162,7 @@
         </p>
         <h2>But it's for linux and I run windows (useless nerd !)</h2>
         <p>
-          Well I dunno... use <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank">WSL</a> or <a href="https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/" target="_blank" rel="noopener noreferrer">something</a> ...<br/>
+          Well I dunno... use <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank" rel="noopener noreferrer">WSL</a> or <a href="https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/" target="_blank" rel="noopener noreferrer">something</a> ...<br/>
           Note that PIO is a python tool, so it should work on windows too, but I did not try it. And you really do not have to use my utils scripts (that are written in bash), just use PIO directly (I use the vscode extension while working on my stations).
         </p>
         <h2>What about MacOS ?</h2>
@@ -361,13 +361,12 @@
       </div>
       <div id="stationio-install" class="d-none stio-tab">
         <div>
-          <p>This install guide is for linux systems.</p>
+          <p>This install guide is for linux systems. It is bash so little to no effort shoud go into running it on mac (I don't have one)<br/>
+            As said in the About section, windows user should use WSL, I know I could install a VM but I have no use for it. If you tried and had to do special things to make it work, 
+            please open an <a href="https://github.com/DimitriGilbert/StationIO-Station/issues">issue</a> with the relevant information so I can update the install script.</p>
+          </p>
           <p>
-            You need
             <a href="https://platformio.org/install/cli">PlateformIO</a>
-            installed (core or IDE) to use the following command. It should work
-            with other IDE (arduinoIDE et al) but I didn't try for now as I
-            focus on the "framework" itself
           </p>
         </div>
         <form action="" id="install-config-frm">
@@ -624,8 +623,9 @@ cd StationIO
 ./utils/createStation "<%~ it.stationName %>" -b nodemcuv2
 
 # if you have custom sensors copy the code from the "sensors" tab to the relevant files in src/sensors/
-<% if(it.plugins!==undefined && it.plugins.install !== undefined && it.plugins.install !== "") {%>
 
+<%~ it.libInstall %>
+<% if(it.plugins!==undefined && it.plugins.install !== undefined && it.plugins.install !== "") {%>
 # plugin install
 <%~ it.plugins.install %>
 
@@ -1283,11 +1283,13 @@ TInfo tinfo;
           for (const sli in snLibs) {
             pioLibs = pioLibs.concat(snLibs[sli].split(',').filter(el => !pioLibs.includes(el)));
           }
-          let libInstall = pioLibs.length>0?`# PlatformIO libraries
+          data.libInstall = pioLibs.length>0?`# Installing dependencies using PlatformIO
 pio pkg install --library "${pioLibs.join('" --library "')}"
+
 `:"";
+
           data.plugins = {
-            install: libInstall+getPluginsStr("install", frmData),
+            install: getPluginsStr("install", frmData),
           };
           
           document.getElementById("install-output").value = eta.render(
@@ -1304,6 +1306,8 @@ pio pkg install --library "${pioLibs.join('" --library "')}"
         );
         document.getElementById("main-cpp-output").style.height =
           window.innerHeight - 100 + "px";
+        document.getElementById("install-output").style.height =
+          window.innerHeight - 250 + "px";
         
         document.getElementsByTagName("h1")[1].addEventListener('dblclick', (event) => {
           new bootstrap.Modal('#pluginModal', {}).show()

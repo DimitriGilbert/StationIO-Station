@@ -11,7 +11,10 @@ if(typeof sensor !== "string"){
 }%>
 #include "./sensors/<%=sensorname %>.h"
 <%})}%>
-
+<% if(it.plugins !== undefined && it.plugins.include !== undefined && it.plugins.include !== ""){%>
+// including plugins
+<%~ it.plugins.include %>
+<%}%>
 // initializing station
 StationClass station(
   "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
@@ -70,6 +73,10 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
   EspStation::StationWebCallbackInfo_t endpoint_<%= epi %> = {"<%= route.url %>", "<%= route.login %>", "<%= route.password %>", <%~ route.callback %>};<%})%> 
 
 <%}}%>
+<% if(it.plugins !== undefined && it.plugins.declaration !== undefined && it.plugins.declaration !== ""){%>
+// declaring plugins
+<%~ it.plugins.declaration %>
+<%}%>
 
 void setup() {
   Wire.begin(<%= it.i2c!==undefined?(it.i2c[0]+", "+it.i2c[1]):""%>);
@@ -95,6 +102,11 @@ void setup() {
   station.setupOTA();
 
   // ___ custom code goes here ___
+<% if(it.plugins !== undefined && it.plugins.setup !== undefined && it.plugins.setup !== ""){%>
+  
+  // setting up plugins
+  <%~ it.plugins.setup %>
+<%}%>
 }
 
 void loop() {
@@ -108,5 +120,10 @@ if(typeof sensor !== "string" && sensor.length !== undefined && sensor.length > 
 
 <%}})}%>
   // ___ custom code goes here ___
+<% if(it.plugins !== undefined && it.plugins.loop !== undefined && it.plugins.loop !== ""){%>
+  
+  // loop plugins
+  <%~ it.plugins.loop %>
+<%}%>
 }
 

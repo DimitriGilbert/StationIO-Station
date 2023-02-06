@@ -10,7 +10,7 @@
 # @parseArger opt node "node executable" --default-value "node"
 # @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
-# @parseArger opt upload "station to upload to, will set --environment" --short -u --default-value "nodemcuv2"
+# @parseArger opt upload "station to upload to, will set --environment" --short u
 # @parseArger-declarations-end
 
 # @parseArger-parsing
@@ -41,7 +41,7 @@ _arg_file_no_gz=()
 _arg_node="node"
 _arg_pio="/home/didi/.platformio/penv/bin/pio"
 _arg_environement="nodemcuv2"
-_arg_upload="nodemcuv2"
+_arg_upload=
 # FLAGS
 
 
@@ -56,7 +56,7 @@ print_help()
 	echo -e "	--node <node>: node executable [default: ' node ']"
 	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
 	echo -e "	-e, --environement <environement>: build environment [default: ' nodemcuv2 ']"
-	echo -e "	--u, --upload <upload>: station to upload to, will set --environment [default: ' nodemcuv2 ']"
+	echo -e "	-u, --upload <upload>: station to upload to, will set --environment"
 	echo -e "Usage :
 	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>]"
 }
@@ -158,7 +158,7 @@ parse_commandline()
 				_arg_environement="${_key##-e}"
 				;;
 			
-			--u|--upload)
+			-u|--upload)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_upload="$2"
 				shift
@@ -166,8 +166,8 @@ parse_commandline()
 			--upload=*)
 				_arg_upload="${_key##--upload=}"
 				;;
-			--u*)
-				_arg_upload="${_key##--u}"
+			-u*)
+				_arg_upload="${_key##-u}"
 				;;
 			
 			-h|--help)
