@@ -1,27 +1,5 @@
-const msecPerDay = 86400000;
-
 function daysSinceDate(date, periodStart) {
   return Math.floor((date - periodStart) / msecPerDay);
-}
-function setCookie(name, value, days) {
-  let expires;
-  if (days) {
-    let date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    expires = "; expires=" + date.toGMTString();
-  } else {
-    expires = "";
-  }
-  document.cookie = name + "=" + value + expires + "; path=/";
-}
-function getCookie(name, defVal) {
-  let match = document.cookie.match(new RegExp(name + "=([^;]+)"));
-  let val = match ? match[1] : null;
-  if (val === null) {
-    val = defVal;
-    setCookie(name, val, 365);
-  }
-  return val;
 }
 
 function lnkFrmTpl(HPoffset, HCoffset, date) {
@@ -34,11 +12,9 @@ setTimeout(() => {
     hc_offset: getCookie("lnkhco", 0),
     date_offset: getCookie("lnkdo", new Date().getFullYear() + "-01-01"),
   };
-  dgeli("chart-control").parentElement.innerHTML += lnkFrmTpl(
-    linky_utils.addon.hp_offset,
-    linky_utils.addon.hc_offset,
-    linky_utils.addon.date_offset
-  );
+  let ltp = dcrel("div");
+  ltp.innerHTML = lnkFrmTpl(linky_utils.addon.hp_offset, linky_utils.addon.hc_offset, linky_utils.addon.date_offset);
+  dgeli("chCtrlC").parentElement.appendChild(ltp);
   setTimeout(() => {
     dgeli("updLnkBtn").addEventListener("click", function (e) {
       let frmd = new FormData(e.target.form);
@@ -47,29 +23,31 @@ setTimeout(() => {
       linky_utils.addon.date_offset = frmd.get("lnkFDate");
     });
     dqsa(
-        ".sensor.linky>.snMss>.snMs.hp>.snMs-value"
+        ".sensor.linky>.snMss>.snMs.hp>.snMs-unit"
       )[0]
       .addEventListener("updated", function (e) {
         let tmv =
-          (parseFloat(e.target.innerHTML) - linky_utils.addon.hp_offset) /
+          (parseFloat(e.target.previousSibling.innerHTML) -
+            linky_utils.addon.hp_offset) /
           daysSinceDate(new Date(), new Date(linky_utils.addon.date_offset));
         tmv = Math.round(tmv * 100) / 100;
-        e.target.nextElementSibling.innerHTML +=
+        e.target.innerHTML +=
           " (" + tmv +
           " KWh/day)";
       });
     dqsa(
-        ".sensor.linky>.snMss>.snMs.hc>.snMs-value"
+        ".sensor.linky>.snMss>.snMs.hc>.snMs-unit"
       )[0]
       .addEventListener("updated", function (e) {
         let tmv =
-          (parseFloat(e.target.innerHTML) - linky_utils.addon.hc_offset) /
+          (parseFloat(e.target.previousSibling.innerHTML) -
+            linky_utils.addon.hc_offset) /
           daysSinceDate(new Date(), new Date(linky_utils.addon.date_offset));
         tmv = Math.round(tmv * 100) / 100;
-        e.target.nextElementSibling.innerHTML +=
+        e.target.innerHTML +=
           " (" + tmv +
           " KWh/day)";
       });
   }, 1000);
-}, 1000);
+}, 2500);
 

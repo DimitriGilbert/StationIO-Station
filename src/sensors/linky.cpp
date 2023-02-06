@@ -192,7 +192,43 @@ String Linky::toHtml(int index) {
 }
 
 String LinkyJsExtra() {
-  return "const msecPerDay=864e5;function daysSinceDate(e,t){return Math.floor((e-t)/864e5)}function setCookie(e,t,n){let l;if(n){let e=new Date;e.setTime(e.getTime()+24*n*60*60*1e3),l=\"; expires=\"+e.toGMTString()}else l=\"\";document.cookie=e+\"=\"+t+l+\"; path=/\"}function getCookie(e,t){let n=document.cookie.match(new RegExp(e+\"=([^;]+)\")),l=n?n[1]:null;return null===l&&(l=t,setCookie(e,l,365)),l}function lnkFrmTpl(e,t,n){return'<form id=\"lnkF\"><div class=\"row\"><div class=\"form-group col\"><label for=\"lnkFHPO\">HP offset</label><input type=\"number\" class=\"form-control\" id=\"lnkFHPO\" name=\"lnkFHPO\" value=\"'+e+'\"></div><div class=\"form-group col\"><label for=\"lnkFHCO\">HC offset</label><input type=\"number\" class=\"form-control\" id=\"lnkFHCO\" name=\"lnkFHCO\" value=\"'+t+'\"></div><div class=\"form-group col\"><label for=\"lnkFDate\">period start</label><input type=\"date\" class=\"form-control\" id=\"lnkFDate\" name=\"lnkFDate\" value=\"'+n+'\"></div><div class=\"col\"><button class=\"btn btn-primary\" type=\"button\" id=\"updLnkBtn\">Update</button></div></div></form>'}setTimeout((()=>{linky_utils.addon={hp_offset:getCookie(\"lnkhpo\",0),hc_offset:getCookie(\"lnkhco\",0),date_offset:getCookie(\"lnkdo\",(new Date).getFullYear()+\"-01-01\")},dgeli(\"chart-control\").parentElement.innerHTML+=lnkFrmTpl(linky_utils.addon.hp_offset,linky_utils.addon.hc_offset,linky_utils.addon.date_offset),setTimeout((()=>{dgeli(\"updLnkBtn\").addEventListener(\"click\",(function(e){let t=new FormData(e.target.form);linky_utils.addon.hp_offset=t.get(\"lnkFHPO\"),linky_utils.addon.hc_offset=t.get(\"lnkFHCO\"),linky_utils.addon.date_offset=t.get(\"lnkFDate\")})),dqsa(\".sensor.linky>.snMss>.snMs.hp>.snMs-value\")[0].addEventListener(\"updated\",(function(e){let t=(parseFloat(e.target.innerHTML)-linky_utils.addon.hp_offset)/daysSinceDate(new Date,new Date(linky_utils.addon.date_offset));t=Math.round(100*t)/100,e.target.nextElementSibling.innerHTML+=\" (\"+t+\" KWh/day)\"})),dqsa(\".sensor.linky>.snMss>.snMs.hc>.snMs-value\")[0].addEventListener(\"updated\",(function(e){let t=(parseFloat(e.target.innerHTML)-linky_utils.addon.hc_offset)/daysSinceDate(new Date,new Date(linky_utils.addon.date_offset));t=Math.round(100*t)/100,e.target.nextElementSibling.innerHTML+=\" (\"+t+\" KWh/day)\"}))}),1e3)}),1e3);";
+  return "function daysSinceDate(e,t){return "
+         "Math.floor((e-t)/msecPerDay)}function lnkFrmTpl(e,t,n){return'<form "
+         "id=\"lnkF\"><div class=\"row\"><div class=\"form-group col\"><label "
+         "for=\"lnkFHPO\">HP offset</label><input type=\"number\" "
+         "class=\"form-control\" id=\"lnkFHPO\" name=\"lnkFHPO\" "
+         "value=\"'+e+'\"></div><div class=\"form-group col\"><label "
+         "for=\"lnkFHCO\">HC offset</label><input type=\"number\" "
+         "class=\"form-control\" id=\"lnkFHCO\" name=\"lnkFHCO\" "
+         "value=\"'+t+'\"></div><div class=\"form-group col\"><label "
+         "for=\"lnkFDate\">period start</label><input type=\"date\" "
+         "class=\"form-control\" id=\"lnkFDate\" name=\"lnkFDate\" "
+         "value=\"'+n+'\"></div><div class=\"col\"><button class=\"btn "
+         "btn-primary\" type=\"button\" "
+         "id=\"updLnkBtn\">Update</button></div></div></"
+         "form>'}setTimeout((()=>{linky_utils.addon={hp_offset:getCookie("
+         "\"lnkhpo\",0),hc_offset:getCookie(\"lnkhco\",0),date_offset:"
+         "getCookie(\"lnkdo\",(new Date).getFullYear()+\"-01-01\")};let "
+         "e=dcrel(\"div\");e.innerHTML=lnkFrmTpl(linky_utils.addon.hp_offset,"
+         "linky_utils.addon.hc_offset,linky_utils.addon.date_offset),dgeli("
+         "\"chCtrlC\").parentElement.appendChild(e),setTimeout((()=>{dgeli("
+         "\"updLnkBtn\").addEventListener(\"click\",(function(e){let t=new "
+         "FormData(e.target.form);linky_utils.addon.hp_offset=t.get("
+         "\"lnkFHPO\"),linky_utils.addon.hc_offset=t.get(\"lnkFHCO\"),linky_"
+         "utils.addon.date_offset=t.get(\"lnkFDate\")})),dqsa(\".sensor.linky>."
+         "snMss>.snMs.hp>.snMs-unit\")[0].addEventListener(\"updated\",("
+         "function(e){let "
+         "t=(parseFloat(e.target.previousSibling.innerHTML)-linky_utils.addon."
+         "hp_offset)/daysSinceDate(new Date,new "
+         "Date(linky_utils.addon.date_offset));t=Math.round(100*t)/"
+         "100,e.target.innerHTML+=\" (\"+t+\" "
+         "KWh/"
+         "day)\"})),dqsa(\".sensor.linky>.snMss>.snMs.hc>.snMs-unit\")[0]."
+         "addEventListener(\"updated\",(function(e){let "
+         "t=(parseFloat(e.target.previousSibling.innerHTML)-linky_utils.addon."
+         "hc_offset)/daysSinceDate(new Date,new "
+         "Date(linky_utils.addon.date_offset));t=Math.round(100*t)/"
+         "100,e.target.innerHTML+=\" (\"+t+\" KWh/day)\"}))}),1e3)}),2500);";
 }
 String LinkyJsonData(ValueList *me) {
   bool firstdata = true;

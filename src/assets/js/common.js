@@ -150,10 +150,29 @@ var chtFrmTpl = (uTimer) => {
   let ctrFrm = dcrel("form");
   ctrFrm.setAttribute("id", "chart-control");
   // string litterals do not compile in c++ -_-
-  ctrFrm.innerHTML =
-    '<div class="row"><div class="col-6"><div class="row"><div class="form-group col-6"><label for="chtDfrom">From</label><input type="range" class="form-range" name="chtDfrom"  id="chtDfrom" value="0" min="0"></div><div class="form-group col-6"><label for="chtDto">To</label><input type="range" class="form-range" id="chtDto" name="chtDto" value="0" min="0"></div></div></div><div class="col-6"><div class="form-group"><label for="updTimer">Update Every</label><input type="number" class="form-control" id="updTimer" name="updTimer" value="' +
-    uTimer +
-    '" min="5" max="600"></div></div><div class="col-12"><button type="button" class="btn btn-primary" id="upd-cht-btn">Update</button></div></div>';
+  ctrFrm.innerHTML = `<div class="row">
+    <div class="col-6">
+      <div class="row">
+        <div class="form-group col-6">
+          <label for="chtDfrom">From</label>
+          <input type="range" class="form-range" name="chtDfrom"  id="chtDfrom" value="0" min="0">
+        </div>
+        <div class="form-group col-6">
+          <label for="chtDto">To</label>
+          <input type="range" class="form-range" id="chtDto" name="chtDto" value="0" min="0">
+        </div>
+      </div>
+    </div>
+  <div class="col-6">
+    <div class="form-group">
+      <label for="updTimer">Update Every</label>
+      <input type="number" class="form-control" id="updTimer" name="updTimer" value="${uTimer}" min="5" max="600">
+    </div>
+  </div>
+  <div class="col-12">
+    <button type="button" class="btn btn-primary" id="upd-cht-btn">Update</button>
+  </div>
+</div>`;
   ctrFrm.lastElementChild.lastElementChild.addEventListener("click", (e) => {
     if (_Station.conf.chart === undefined) {
       _Station.conf.chart = {};
@@ -252,12 +271,12 @@ function chtOnDataUpd() {
       if (useSenUtil(snn, "inChart", msn)) {
         _Station.conf.chart.datas[di].push(
           _Station.sensors[snn][msn][_Station.sensors[snn][msn].length - 1]
-          );
-          di++;
-        }
+        );
+        di++;
+      }
     }
   }
-  
+
   let lln = _Station.conf.chart.labels.length - 1;
   dgeli("chtDfrom").setAttribute("max", lln);
   dgeli("chtDto").setAttribute("max", lln);
