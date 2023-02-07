@@ -115,7 +115,7 @@
         <h2>What is StationIO ?</h2>
         <p>
           An Arduino framework-ish thingy that takes care of the (my?) basics !<br/>
-          It runs on ESP8266 and ESP32 boards, connects to WiFi, provides a webserver (with basic endpoints), use a file system, support a bunch of sensor out of the box 
+          It runs on ESP8266 and ESP32 boards, connects to WiFi, provides a web server (with basic endpoints), use a file system (and a command line utility to build said FS), support a bunch of sensor out of the box 
           and provides an easy way to execute function on a timer.
         </p>
         <h2>How does it work ?</h2>
@@ -133,7 +133,7 @@
         </p>
         <h2>But.... WHY ?</h2>
         <p>
-          I know there are plenty of great iot stack out there but I do not like
+          I know there are plenty of great IOT stack out there but I do not like
           their architecture, it is too centralized to my taste. I'd rather have independent microservices that can be queried by
           whatever wants to. <br />
           So instead of stations reporting to a central hub, I can have my hub
@@ -144,9 +144,8 @@
           know it sounds weird to read) on an interpreter (for micropython) or
           doing nothing (a few MQQT message an hour). <br />
           ESPes have a good chunk of power and can easily handle a webserver and
-          "on the edge" processing, not just executing command and reporting
-          values.<br />
-          Another thing, doing stuff on arduino considering I have no idea what I'm doing is mostly copy/pasting...And I really HATE copy/pasting....! StationIO is more or less an "Arduino project copy/paste manager" XD...
+          "on the edge" processing, not just reporting values.<br />
+          Another thing, doing stuff on arduino, considering I have no idea what I'm doing, is mostly copy/pasting (and trials, and errors, mostly errors)...And I really HATE copy/pasting....! StationIO is more or less an "Arduino project copy/paste manager" XD...
         </p>
         <h2>Huuum.... how do you get that running then ?</h2>
         <p>
@@ -177,7 +176,7 @@
           corresponding response. It also works with the get attribute "format". Default is html<br />
           For more information, use the "/openapi" endpoint, it will give you a OpenApi doc file that 
           you can use <a href="https://editor.swagger.io/" target="_blank" rel="noopener noreferrer">there</a> 
-          for more details (yes, if you use addEndpoint, they'll appear too :D)<br />
+          for more details (yes, if you use addEndpoint, they'll appear in the doc too :D)<br />
           If you need MQTT, or other protocols, you should be able to integrate
           with timer callbacks, I think... <br />
           If timer callbacks do not work, fear not, you can still use standard
@@ -225,13 +224,14 @@
           Want to add html somewhere ? sure !<br />
           Add event listeners ? why not.<br />
           Overhaul the look and feel of the generator ? HELL YEAH !<br />
-          The plugin "api" also provides a way to hook into the templates, so you can add your own stuff to the generated code.<br />
+          Add code to main.cpp (or install, or custom sensor) output ? Go. For. It.<br />
+          The plugin "api" provides a way to hook into the templates, so you can add your own stuff to the generated code.<br />
           Go and have a look at the <a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/plugins/IR-tansmitter.js">IR remote plugin</a> to get an example.<br />
           If you made something cool you'd like to share, don't hesitate to make a <a href="https://github.com/DimitriGilbert/StationIO-Station/pulls">pull request</a> so I can add it to the list of plugins !
         </p>
         <h2>Duuuude, your code is trash, that's not how how you do..., ...</h2>
         <p>
-          Yuuuup, I'm not too proud of a few things, how sensor work for example, how do you do proper inheritance and stuff in C++ anyway ? Yes my interfaces are all other the place, I guess you haven't seen my office ^^'. Strings are bad they say ! Meh!, maybe.) <br />
+          Yuuuup, I'm not too proud of a few things, how sensor work for example, but how do you do proper inheritance and stuff in C++ anyway ? Yes my interfaces are all other the place, I guess you haven't seen my office ^^'. Strings are bad they say ! Meh!, maybe. <br />
           I'll gladly take a bit of time to make things better so any suggestions/fingers in the right direction/examples are very welcome !
           Use github's issues to report things, or make a pull request !
         </p>
@@ -240,6 +240,7 @@
           That's what the license says :). Don't expect extensive and ultra responsive support, but if you encounter bug with my core code or the generated one, please open an <a href="https://github.com/DimitriGilbert/StationIO-Station/issues">issue</a> on github.<br />
           I'll do my best to fix things as this is the codebase for MY home automation (I'd like to keep it "bug free" :P)
         </p>
+        <h3>Now go, little one, your next project awaits <a href="#" navTo="config">...</a></h3>
       </div>
       <div id="stationio-config" class="d-none stio-tab">
         <p>
