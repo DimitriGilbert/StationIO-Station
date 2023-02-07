@@ -1,4 +1,4 @@
-      var #include <Arduino.h>
+#include <Arduino.h>
 #include <Wire.h>
 #include "./Station.h"
 
@@ -19,8 +19,8 @@ if(typeof sensor !== "string"){
 StationClass station(
   "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
   {
-    ssid : "NEVER PUT YOUR WIFI INFO",
-    password : "IN A RANDOM FORM ON THE WEB !! !"
+    ssid : "<%~ it.wifi.ssid %>",
+    password : "<%~ it.wifi.pass %>"
   }
 <% } %>);
 
