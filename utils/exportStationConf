@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ ! -d "./stations/.stations" ]; then
+	mkdir "./stations/.stations";
+fi
+
+if [ -f "stations/.stations/${1}" ]; then
+	source "stations/.stations/${1}"
+  eval "stationIOip=\"\${${1}_ip}\"";
+  eval "stationIOboard=\"\${${1}_board}\"";
+  eval "stationIOsensors=(\"\${${1}_sensors[@]}\")";
+fi
