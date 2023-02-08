@@ -50,9 +50,7 @@ class Linky : public Sensor {
   void loop();
 };
 
-String LinkyJsExtra();
 String LinkyJsonData(ValueList *me);
-void LinkyRegisterEndpoints(EspStation &station, char *login, char *password);
 void LinkyOnData(BaseStation *station, ValueList *vallnk, uint8_t flag);
 
 #endif

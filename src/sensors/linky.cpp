@@ -180,7 +180,7 @@ String Linky::jsUtils() {
       ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
       ",inChart:name=>name==='power'"
       ",conso:{hp:[], hc:[]}};setTimeout(()=>{let lscr="
-      "document.createElement('script');lscr.src='/linky/js';"
+      "document.createElement('script');lscr.src='assets/js/linky.js';"
       "document.head.appendChild(lscr);}, 500);"
   );
 }
@@ -191,45 +191,7 @@ String Linky::toHtml(int index) {
   return SensorMesureToHtml(this->getMesure(index), this->read(index));
 }
 
-String LinkyJsExtra() {
-  return "function daysSinceDate(e,t){return "
-         "Math.floor((e-t)/msecPerDay)}function lnkFrmTpl(e,t,n){return'<form "
-         "id=\"lnkF\"><div class=\"row\"><div class=\"form-group col\"><label "
-         "for=\"lnkFHPO\">HP offset</label><input type=\"number\" "
-         "class=\"form-control\" id=\"lnkFHPO\" name=\"lnkFHPO\" "
-         "value=\"'+e+'\"></div><div class=\"form-group col\"><label "
-         "for=\"lnkFHCO\">HC offset</label><input type=\"number\" "
-         "class=\"form-control\" id=\"lnkFHCO\" name=\"lnkFHCO\" "
-         "value=\"'+t+'\"></div><div class=\"form-group col\"><label "
-         "for=\"lnkFDate\">period start</label><input type=\"date\" "
-         "class=\"form-control\" id=\"lnkFDate\" name=\"lnkFDate\" "
-         "value=\"'+n+'\"></div><div class=\"col\"><button class=\"btn "
-         "btn-primary\" type=\"button\" "
-         "id=\"updLnkBtn\">Update</button></div></div></"
-         "form>'}setTimeout((()=>{linky_utils.addon={hp_offset:getCookie("
-         "\"lnkhpo\",0),hc_offset:getCookie(\"lnkhco\",0),date_offset:"
-         "getCookie(\"lnkdo\",(new Date).getFullYear()+\"-01-01\")};let "
-         "e=dcrel(\"div\");e.innerHTML=lnkFrmTpl(linky_utils.addon.hp_offset,"
-         "linky_utils.addon.hc_offset,linky_utils.addon.date_offset),dgeli("
-         "\"chCtrlC\").parentElement.appendChild(e),setTimeout((()=>{dgeli("
-         "\"updLnkBtn\").addEventListener(\"click\",(function(e){let t=new "
-         "FormData(e.target.form);linky_utils.addon.hp_offset=t.get("
-         "\"lnkFHPO\"),linky_utils.addon.hc_offset=t.get(\"lnkFHCO\"),linky_"
-         "utils.addon.date_offset=t.get(\"lnkFDate\")})),dqsa(\".sensor.linky>."
-         "snMss>.snMs.hp>.snMs-unit\")[0].addEventListener(\"updated\",("
-         "function(e){let "
-         "t=(parseFloat(e.target.previousSibling.innerHTML)-linky_utils.addon."
-         "hp_offset)/daysSinceDate(new Date,new "
-         "Date(linky_utils.addon.date_offset));t=Math.round(100*t)/"
-         "100,e.target.innerHTML+=\" (\"+t+\" "
-         "KWh/"
-         "day)\"})),dqsa(\".sensor.linky>.snMss>.snMs.hc>.snMs-unit\")[0]."
-         "addEventListener(\"updated\",(function(e){let "
-         "t=(parseFloat(e.target.previousSibling.innerHTML)-linky_utils.addon."
-         "hc_offset)/daysSinceDate(new Date,new "
-         "Date(linky_utils.addon.date_offset));t=Math.round(100*t)/"
-         "100,e.target.innerHTML+=\" (\"+t+\" KWh/day)\"}))}),1e3)}),2500);";
-}
+// from hallard/teleinfo library example
 String LinkyJsonData(ValueList *me) {
   bool firstdata = true;
   String out = "";
@@ -275,14 +237,6 @@ String LinkyJsonData(ValueList *me) {
     out.concat("}");
   }
   return out;
-}
-void LinkyRegisterEndpoints(EspStation &station_, char *login, char *password) {
-  station_.addEndpoint(
-      {"/linky/js", login, password,
-       [](BaseStation *station, AsyncWebServerRequest *request) {
-         request->send(200, "text/javascript", LinkyJsExtra());
-       }}
-  );
 }
 
 void LinkyOnData(BaseStation* station, ValueList* vallnk, uint8_t flag) {
