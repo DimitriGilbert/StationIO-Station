@@ -176,41 +176,31 @@ assign_positional_args 1 "${_positionals[@]}"
 if [ -f "stations/${_arg_name}.main.cpp" ]; then
 	# shellcheck source="../stations/stations"
 	source "./stations/stations";
+	# shellcheck source=./exportStationConf
+	source "utils/exportStationConf" "${_arg_name}";	
 	
-	piotgt="upload";
+	ucmd="${_arg_pio} run -t upload";
 	if [ "$_arg_fs" == "on" ]; then
-		piotgt="uploadfs";
-	fi
-	
-	cmd="$_arg_pio run -t $piotgt";
-
-	vn="${_arg_name}_board"
-	if [ "${!vn}" == "" ]; then
-		echo "${_arg_name}_board=">>"stations/stations"
+		ucmd+="fs";
 	fi
 
 	if [ "$_arg_board" == "" ]; then
-		_arg_board="${!vn}";
+		_arg_board="${stationIOboard}";
 	else
-		sed "s/${_arg_name}_board.*/${_arg_name}_board=${_arg_board}/g" -i "stations/stations"
+		./utils/setStation "${_arg_name}" --board "${_arg_board}";
 	fi
 	if [ "$_arg_board" != "" ]; then
-		cmd="$cmd -e ${_arg_board}";
-	fi
-
-	ipn="${_arg_name}_ip";
-	if [ "${!ipn}" == "" ]; then
-		echo "${_arg_name}_ip=">>"stations/stations"
+		ucmd="$ucmd -e ${_arg_board}";
 	fi
 
 	if [ "$_arg_ip" == "" ]; then
-		_arg_ip="${!ipn}";
+		_arg_ip="${stationIOip}";
 	else
-		sed "s/${_arg_name}_ip.*/${_arg_name}_ip=${_arg_ip}/g" -i "stations/stations"
+		./utils/setStation "${_arg_name}" --ip "${_arg_ip}";
 	fi
 
 	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
-		cmd="$cmd --upload-port ${_arg_ip}";
+		ucmd="$ucmd --upload-port ${_arg_ip}";
 	fi
 
 	if [ -f "src/main.cpp" ]; then
@@ -220,9 +210,9 @@ if [ -f "stations/${_arg_name}.main.cpp" ]; then
 	cp "stations/${_arg_name}.main.cpp" "src/main.cpp";
 
 	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
-		(export PLATFORMIO_UPLOAD_FLAGS=--host_port=$_arg_port; $cmd;)
+		(export PLATFORMIO_UPLOAD_FLAGS=--host_port=$_arg_port; $ucmd;)
 	else
-		$cmd;
+		$ucmd;
 	fi
 
 	# if success

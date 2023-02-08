@@ -147,6 +147,15 @@ assign_positional_args 1 "${_positionals[@]}"
 # print_debug "$@"
 # @parseArger-end
 
+if [ ! -d "./stations/.stations" ]; then
+	mkdir "./stations/.stations";
+fi
+if [ ! -f "./stations/.stations/${_arg_name}" ]; then
+	echo "# StationIO configuration for ${_arg_name} " > "./stations/.stations/${_arg_name}";
+fi
+echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/.stations/${_arg_name}";
+echo "${_arg_name}_board=${_arg_board}" >> "./stations/.stations/${_arg_name}";
+
 echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/stations";
 echo "${_arg_name}_board=${_arg_board}" >> "./stations/stations";
 

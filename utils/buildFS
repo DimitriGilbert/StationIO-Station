@@ -239,6 +239,28 @@ assign_positional_args 1 "${_positionals[@]}"
 # shellcheck source="../stations/stations"
 source "./stations/stations";
 
+
+if [ "$_arg_upload" != "" ]; then
+	# shellcheck source=./exportStationConf
+	source "utils/exportStationConf" "${_arg_upload}";
+	# check if station has bee loaded
+	# shellcheck disable=SC2154
+	if [ "$stationIOip" == "" ]; then
+		die "Station ${_arg_upload} not found";
+	fi
+	# set station board as env
+	_arg_environement="${stationIOboard}";
+	# TODO: check station sensors for js and css files to add for upload
+	for _sensor in "${stationIOsensors[@]}"; do
+		if [ -f "src/sensors/${_sensor}.js" ]; then
+			_arg_js+=("src/sensors/${_sensor}.js:");
+		fi
+		if [ -f "src/sensors/${_sensor}.css" ]; then
+			_arg_css+=("src/sensors/${_sensor}.css:");
+		fi
+	done
+fi
+
 rm -rf data;
 mkdir data;
 
@@ -343,11 +365,6 @@ for css in "${_arg_css[@]}"; do
 
 	"$_arg_node" node_modules/.bin/minify "$css" | gzip -c - > "data/assets/css/$(basename "$css").gz";
 done
-
-if [ "$_arg_upload" != "" ]; then
-	vn="${_arg_upload}_board";
-	_arg_environement="${!vn}";
-fi
 
 "$_arg_pio" run -t buildfs -e "$_arg_environement";
 
