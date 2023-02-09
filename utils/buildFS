@@ -11,6 +11,7 @@
 # @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
 # @parseArger opt upload "station to upload to, will set --environment" --short u
+# @parseArger flag dry "do not upload (just build for a station)" --short D
 # @parseArger-declarations-end
 
 # @parseArger-parsing
@@ -43,6 +44,7 @@ _arg_pio="/home/didi/.platformio/penv/bin/pio"
 _arg_environement="nodemcuv2"
 _arg_upload=
 # FLAGS
+_arg_dry="off"
 
 
 print_help()
@@ -57,8 +59,9 @@ print_help()
 	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
 	echo -e "	-e, --environement <environement>: build environment [default: ' nodemcuv2 ']"
 	echo -e "	-u, --upload <upload>: station to upload to, will set --environment"
+	echo -e "	-D|--dry|--no-dry: do not upload (just build for a station)"
 	echo -e "Usage :
-	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>]"
+	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>] [--[no-]dry]"
 }
 
 parse_commandline()
@@ -170,6 +173,10 @@ parse_commandline()
 				_arg_upload="${_key##-u}"
 				;;
 			
+			-D|--no-dry|--dry)
+				_arg_dry="on"
+				test "${1:0:5}" = "--no-" && _arg_dry="off"
+				;;
 			-h|--help)
 				print_help;
 				exit 0;
@@ -225,6 +232,7 @@ print_debug()
 	echo -e "\tpio: ${_arg_pio | sed 's/-/_/g'}";
 	echo -e "\tenvironement: ${_arg_environement | sed 's/-/_/g'}";
 	echo -e "\tupload: ${_arg_upload | sed 's/-/_/g'}";
+	echo -e "\tdry: ${_arg_dry | sed 's/-/_/g'}";
 
 }
 
@@ -243,6 +251,7 @@ source "./stations/stations";
 if [ "$_arg_upload" != "" ]; then
 	# shellcheck source=./exportStationConf
 	source "utils/exportStationConf" "${_arg_upload}";
+	
 	# check if station has bee loaded
 	# shellcheck disable=SC2154
 	if [ "$stationIOip" == "" ]; then
@@ -250,7 +259,8 @@ if [ "$_arg_upload" != "" ]; then
 	fi
 	# set station board as env
 	_arg_environement="${stationIOboard}";
-	# TODO: check station sensors for js and css files to add for upload
+	
+	# check station sensors for js and css files to add for upload
 	for _sensor in "${stationIOsensors[@]}"; do
 		if [ -f "src/sensors/${_sensor}.js" ]; then
 			_arg_js+=("src/sensors/${_sensor}.js:");
@@ -259,6 +269,13 @@ if [ "$_arg_upload" != "" ]; then
 			_arg_css+=("src/sensors/${_sensor}.css:");
 		fi
 	done
+	# add station static files and directories
+	if [ "${#stationIOfiles[@]}" -gt 0 ]; then
+		_arg_file=("${stationIOfiles[@]}" "${_arg_file[@]}");
+	fi
+	if [ "${#stationIOdirectories[@]}" -gt 0 ]; then
+		_arg_directory=("${stationIOdirectories[@]}" "${_arg_directory[@]}");
+	fi
 fi
 
 rm -rf data;
@@ -368,6 +385,6 @@ done
 
 "$_arg_pio" run -t buildfs -e "$_arg_environement";
 
-if [ "$_arg_upload" != "" ]; then
+if [ "$_arg_upload" != "" ] && [ "$_arg_dry" != "on" ]; then
 	utils/uploadStation "$_arg_upload" --fs;
 fi

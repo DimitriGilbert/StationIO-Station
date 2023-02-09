@@ -8,4 +8,8 @@ if [ -f "stations/.stations/${1}" ]; then
   eval "stationIOip=\"\${${1}_ip}\"";
   eval "stationIOboard=\"\${${1}_board}\"";
   eval "stationIOsensors=(\"\${${1}_sensors[@]}\")";
+  eval "stationIOjs=(\"\${${1}_js[@]}\")";
+  eval "stationIOcss=(\"\${${1}_css[@]}\")";
+  eval "stationIOfiles=(\"\${${1}_files[@]}\")";
+  eval "stationIOdirectories=(\"\${${1}_directories[@]}\")";
 fi

@@ -6,6 +6,10 @@
 # @parseArger opt sensor "sensor to add" --short s --repeat
 # @parseArger opt ip "ip address" --short i --default-value "0"
 # @parseArger opt board "pio env" --default-value "nodemcuv2"
+# @parseArger opt data-file "data-file to add" --repeat
+# @parseArger opt data-directory "data-directory to add" --repeat
+# @parseArger opt js "js to add" --repeat
+# @parseArger opt css "css to add" --repeat
 # @parseArger-declarations-end
 
 # @parseArger-parsing
@@ -32,6 +36,10 @@ _arg_name="";
 _arg_sensor=()
 _arg_ip="0"
 _arg_board="nodemcuv2"
+_arg_data_file=()
+_arg_data_directory=()
+_arg_js=()
+_arg_css=()
 # FLAGS
 
 
@@ -42,8 +50,12 @@ print_help()
 	echo -e "	-s, --sensor <sensor>: sensor to add, repeatable"
 	echo -e "	-i, --ip <ip>: ip address [default: ' 0 ']"
 	echo -e "	--board <board>: pio env [default: ' nodemcuv2 ']"
+	echo -e "	--data-file <data-file>: data-file to add, repeatable"
+	echo -e "	--data-directory <data-directory>: data-directory to add, repeatable"
+	echo -e "	--js <js>: js to add, repeatable"
+	echo -e "	--css <css>: css to add, repeatable"
 	echo -e "Usage :
-	$0 <name> [--sensor <value>] [--ip <value>] [--board <value>]"
+	$0 <name> [--sensor <value>] [--ip <value>] [--board <value>] [--data-file <value>] [--data-directory <value>] [--js <value>] [--css <value>]"
 }
 
 parse_commandline()
@@ -84,6 +96,42 @@ parse_commandline()
 				;;
 			--board=*)
 				_arg_board="${_key##--board=}"
+				;;
+			
+			--data-file)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_data_file+=("$2")
+				shift
+				;;
+			--data-file=*)
+				_arg_data_file+=("${_key##--data-file=}")
+				;;
+			
+			--data-directory)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_data_directory+=("$2")
+				shift
+				;;
+			--data-directory=*)
+				_arg_data_directory+=("${_key##--data-directory=}")
+				;;
+			
+			--js)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_js+=("$2")
+				shift
+				;;
+			--js=*)
+				_arg_js+=("${_key##--js=}")
+				;;
+			
+			--css)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_css+=("$2")
+				shift
+				;;
+			--css=*)
+				_arg_css+=("${_key##--css=}")
 				;;
 			
 			-h|--help)
@@ -136,6 +184,10 @@ print_debug()
 	echo -e "\tsensor: ${_arg_sensor | sed 's/-/_/g'}";
 	echo -e "\tip: ${_arg_ip | sed 's/-/_/g'}";
 	echo -e "\tboard: ${_arg_board | sed 's/-/_/g'}";
+	echo -e "\tdata-file: ${_arg_data-file | sed 's/-/_/g'}";
+	echo -e "\tdata-directory: ${_arg_data-directory | sed 's/-/_/g'}";
+	echo -e "\tjs: ${_arg_js | sed 's/-/_/g'}";
+	echo -e "\tcss: ${_arg_css | sed 's/-/_/g'}";
 
 }
 
@@ -158,9 +210,16 @@ if [ "$stationIOip" == "" ]; then
 	stationIOip="0"
 	stationIOboard="nodemcuv2"
 	stationIOsensors=()
+	stationIOjs=()
+	stationIOcss=()
+	stationIOfiles=()
+	stationIOdirectories=()
 fi
 
 if [ "$_arg_ip" != "" ]; then
+	if [ "$stationIOip" != "" ] && [ "$_arg_ip" == 0 ]; then
+		_arg_ip="$stationIOip";
+	fi
 	stationIOip="${_arg_ip}";
 fi
 
@@ -172,8 +231,27 @@ if [ "${#_arg_sensor[@]}" -gt 0 ]; then
 	stationIOsensors=("${_arg_sensor[@]}");
 fi
 
+if [ "${#_arg_js[@]}" -gt 0 ]; then
+	stationIOjs=("${_arg_js[@]}");
+fi
+
+if [ "${#_arg_css[@]}" -gt 0 ]; then
+	stationIOcss=("${_arg_css[@]}");
+fi
+
+if [ "${#_arg_data_file[@]}" -gt 0 ]; then
+	stationIOfiles=("${_arg_data_file[@]}");
+fi
+
+if [ "${#_arg_data_directory[@]}" -gt 0 ]; then
+	stationIOdirectories=("${_arg_data_directory[@]}");
+fi
+
 echo -e "# StationIO configuration for ${_arg_name} station" > "stations/.stations/${_arg_name}";
 echo -e "${_arg_name}_ip=\"${stationIOip}\"" >> "stations/.stations/${_arg_name}";
 echo -e "${_arg_name}_board=\"${stationIOboard}\"" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_sensors=( ${stationIOsensors[*]} )" >> "stations/.stations/${_arg_name}";
-
+echo -e "${_arg_name}_sensors=( $(out=""; for sen in "${stationIOsensors[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_js=( $(out=""; for sen in "${stationIOjs[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_css=( $(out=""; for sen in "${stationIOcss[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_files=( $(out=""; for sen in "${stationIOfiles[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_directories=( $(out=""; for sen in "${stationIOdirectories[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
