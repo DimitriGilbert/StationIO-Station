@@ -16,7 +16,7 @@ utils/buildFS [--js <value>] [--css <value>] [--directory <value>] [--file <valu
  -f, --file <file>: file to add, will be gzipped, ':' to separate target directory (/ by default), repeatable
  -F, --file-no-gz <file-no-gz>: add a file without gzip, ':' to separate target directory (/ by default), repeatable
  --node <node>: node executable [default: ' node ']
- --pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']
+ --pio <pio>: pio executable [default: ' $HOME/.platformio/penv/bin/pio ']
  -e, --environement <environement>: build environment [default: ' nodemcuv2 ']
  -u, --upload <upload>: station to upload to, will set --environment
  -D|--dry|--no-dry: do not upload (just build for a station)
@@ -89,7 +89,7 @@ Usage :
  --ip <ip>: station ip
  --port <port>: host port upload flags, avoid random for firewalls [default: ' 46667 ']
  -b, --board <board>: PIO build environement name
- --pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']
+ --pio <pio>: pio executable [default: ' $HOME/.platformio/penv/bin/pio ']
  --ota|--no-ota: OTA update, on by default (use --no-ota to turn it off)
  --fs|--no-fs: upload fs
 ```

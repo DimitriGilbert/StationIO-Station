@@ -8,7 +8,7 @@
 # @parseArger opt file "file to add, will be gzipped, ':' to separate target directory (/ by default)" --short f --repeat
 # @parseArger opt file-no-gz "add a file without gzip, ':' to separate target directory (/ by default)" --short F --repeat
 # @parseArger opt node "node executable" --default-value "node"
-# @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
+# @parseArger opt pio "pio executable" --default-value "$HOME/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
 # @parseArger opt upload "station to upload to, will set --environment" --short u
 # @parseArger flag dry "do not upload (just build for a station)" --short D
@@ -40,7 +40,7 @@ _arg_directory=()
 _arg_file=()
 _arg_file_no_gz=()
 _arg_node="node"
-_arg_pio="/home/didi/.platformio/penv/bin/pio"
+_arg_pio="$HOME/.platformio/penv/bin/pio"
 _arg_environement="nodemcuv2"
 _arg_upload=
 # FLAGS
@@ -56,7 +56,7 @@ print_help()
 	echo -e "	-f, --file <file>: file to add, will be gzipped, ':' to separate target directory (/ by default), repeatable"
 	echo -e "	-F, --file-no-gz <file-no-gz>: add a file without gzip, ':' to separate target directory (/ by default), repeatable"
 	echo -e "	--node <node>: node executable [default: ' node ']"
-	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
+	echo -e "	--pio <pio>: pio executable [default: ' $HOME/.platformio/penv/bin/pio ']"
 	echo -e "	-e, --environement <environement>: build environment [default: ' nodemcuv2 ']"
 	echo -e "	-u, --upload <upload>: station to upload to, will set --environment"
 	echo -e "	-D|--dry|--no-dry: do not upload (just build for a station)"
