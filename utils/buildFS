@@ -247,7 +247,7 @@ assign_positional_args 1 "${_positionals[@]}"
 # shellcheck source="../stations/stations"
 source "./stations/stations";
 
-
+# a station has been defined
 if [ "$_arg_upload" != "" ]; then
 	# shellcheck source=./exportStationConf
 	source "utils/exportStationConf" "${_arg_upload}";
