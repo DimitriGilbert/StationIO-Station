@@ -1047,8 +1047,8 @@ TInfo tinfo;
                 </div>
               </div>`)
             );
-            soutEl.lastElementChild.firstElementChild.lastElementChild.value = eta.render(sensorHTpl, tplData);
-            soutEl.lastElementChild.lastElementChild.lastElementChild.value = eta.render(sensorCppTpl, tplData);
+            soutEl.lastElementChild.firstElementChild.lastElementChild.value = eta_.renderString(sensorHTpl, tplData);
+            soutEl.lastElementChild.lastElementChild.lastElementChild.value = eta_.renderString(sensorCppTpl, tplData);
 
             if (form.get(`custom-mesure-${index}-gen-adv`) == "on") {
               if (typeof ret == "string") {
@@ -1246,7 +1246,7 @@ TInfo tinfo;
             loop: getPluginsStr("loop",frmData),
           };
 
-          document.getElementById("main-cpp-output").value = eta.render(
+          document.getElementById("main-cpp-output").value = eta_.renderString(
             mainCppTpl,
             data
           );
@@ -1270,11 +1270,11 @@ TInfo tinfo;
             case "none":
               break;
             case "tgz":
-              data.stationInstall = eta.render(installStioTgzTpl, data)+"\n";
+              data.stationInstall = eta_.renderString(installStioTgzTpl, data)+"\n";
               break;
             case "git":
             default:
-              data.stationInstall = eta.render(installStioGitTpl, data)+"\n";
+              data.stationInstall = eta_.renderString(installStioGitTpl, data)+"\n";
               break;
           }
           installTpl += "\n"+installStioTpl;
@@ -1293,7 +1293,7 @@ pio pkg install --library "${pioLibs.join('" --library "')}"
             install: getPluginsStr("install", frmData),
           };
           
-          document.getElementById("install-output").value = eta.render(
+          document.getElementById("install-output").value = eta_.renderString(
             installTpl,
             data
           );
@@ -1319,6 +1319,7 @@ pio pkg install --library "${pioLibs.join('" --library "')}"
             addScript(event.target.getAttribute('href'));
           });
         })
+        window.eta_=new eta.Eta();
       });
       window.addEventListener("resize", () => {
         document.getElementById("main-cpp-output").style.height =

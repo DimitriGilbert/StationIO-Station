@@ -33,6 +33,8 @@ More info in [there](documentation/sensors.md).
 To cap everything, I have a set of utility scripts written in bash to do the heavy lifting.
 All heve a `--help` option if you do not feel like going through the [documentation](documentation/utils.md)
 
+If you are wondering, what do I use to add options and flags to my scripts, it is a small bash programm I created called [ParseArger](https://github.com/DimitriGilbert/parseArger). It will create (or update) all the parsing code based of information you provide (with options and flags and...).
+
 ## Background and Philosophy
 
 Even for seasoned developers, the arduino world can seem daunting :
