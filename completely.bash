@@ -52,6 +52,10 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
       ;;
 
+    'read'*'--output')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
+      ;;
+
     'build-fs'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--js -j --css -c --directory -d --file -f --file-no-gz -F --node --pio --environement -e --upload -u --dry --no-dry -D")" -- "$cur" )
       ;;
@@ -69,7 +73,7 @@ _StationIO_completions() {
       ;;
 
     'read'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi) --sensor -s --format -f --mesure -m --output -o")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--sensor -s --format -f --mesure -m --output -o")" -- "$cur" )
       ;;
 
     *)

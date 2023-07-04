@@ -351,7 +351,7 @@
                     id="addEndpointButton"
                     class="btn btn-primary btn-lg"
                   >
-                    Add an endpoint
+                    Add an endpoint to the web server
                   </button>
                 </div>
                 <div id="endpoints-list"></div>
@@ -1109,7 +1109,7 @@ TInfo tinfo;
 
       document
         .getElementById("addSensorButton")
-        .addEventListener("click", () => {
+        .addEventListener("click", (e) => {
           let sensorIndex = parseInt(document.getElementById("sensor-index").value);
           const sensor = sensorSelect.value;
           const sensorOpt = document.getElementById(`sensor-opt-${sensor}`);
@@ -1123,6 +1123,7 @@ TInfo tinfo;
           }
           sensorsList.appendChild(htmlToElements(sensorForm + "</div>"));
           document.getElementById("sensor-index").value = sensorIndex + 1;
+          e.target.form.dispatchEvent(new Event("change"));
         });
     </script>
     <script id="timer.js">
@@ -1130,7 +1131,7 @@ TInfo tinfo;
       const timersCount = document.getElementById("timers-count");
       const addTimerButton = document.getElementById("addTimerButton");
 
-      addTimerButton.addEventListener("click", () => {
+      addTimerButton.addEventListener("click", (e) => {
         const timerId = timersCount.value;
         timersCount.value++;
         timersList.appendChild(
@@ -1153,6 +1154,7 @@ TInfo tinfo;
           </div>
         </div>`)
         );
+        e.target.form.dispatchEvent(new Event("change"));
       });
     </script>
     <script id="endpoint.js">
@@ -1160,7 +1162,7 @@ TInfo tinfo;
       const endpointsCount = document.getElementById("endpoint-count");
       const addEndpointButton = document.getElementById("addEndpointButton");
 
-      addEndpointButton.addEventListener("click", () => {
+      addEndpointButton.addEventListener("click", (e) => {
         const endpointId = endpointsCount.value;
         endpointsCount.value++;
         let epEl = endpointsList.appendChild(
@@ -1188,6 +1190,7 @@ TInfo tinfo;
         </div>`)
         );
         epEl.lastElementChild.lastElementChild.value = `[](BaseStation* station, AsyncWebServerRequest* request) {\n\tstation->log("web server query");\n\trequest->send(200, "text/html", station->toHtml());\n}`;
+        e.target.form.dispatchEvent(new Event("change"));
       });
     </script>
     <script id="init.js">

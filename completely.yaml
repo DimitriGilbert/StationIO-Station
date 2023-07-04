@@ -91,7 +91,6 @@ StationIO upload:
 - --fs
 - --no-fs
 StationIO read:
-- $(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi)
 - --sensor
 - -s
 - --format
@@ -100,4 +99,9 @@ StationIO read:
 - -m
 - --output
 - -o
+
+
+
+StationIO read*--output:
+- <file>
 
