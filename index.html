@@ -1123,7 +1123,7 @@ TInfo tinfo;
           }
           sensorsList.appendChild(htmlToElements(sensorForm + "</div>"));
           document.getElementById("sensor-index").value = sensorIndex + 1;
-          e.target.form.dispatchEvent(new Event("change"));
+          e.target.form.form.dispatchEvent(new Event("change", {bubbles: true}));
         });
     </script>
     <script id="timer.js">
@@ -1197,71 +1197,75 @@ TInfo tinfo;
       document
         .getElementById("stationio-config-frm")
         .addEventListener("change", (e) => {
-          let frmData = new FormData(e.target.form);
+          let frmData = new FormData(
+            document.getElementById("stationio-config-frm")
+          );
           // reset sensor output
           document.getElementById("stationio-custom-sensors").innerHTML = "";
-
-          const data = {
-            name: frmData.get("station-name"),
-            wifi: {
-              ssid: frmData.get("wifi-ssid"),
-              password: frmData.get("wifi-password"),
-            },
-            sensors: [],
-            // callbacks: [],
-            // loops:frmData,
-            timers: [],
-            webServerRoutes: [],
-          };
-
-          // TODO: get that to I2C plugin
-          let i2ccl = frmData.get("i2c-clock");
-          let i2cda = frmData.get("i2c-data");
-          if (i2ccl !== "" && i2ccl !== null && i2cda !== "" && i2cda !== null) {
-            data.i2c = [i2cda, i2ccl];
-          }
-          
-          frmData.getAll("sensors[]").forEach((sensor, sensI) => {
-            let snA = sensor.split("::");
-            if (Object.keys(sensorParseForms).includes(snA[0])) {
-              data.sensors.push(sensorParseForms[snA[0]](frmData, snA[1]));
-            } else {
-              data.sensors.push(snA[0]);
+          if (frmData.get("station-name") !== null) {
+            
+            const data = {
+              name: frmData.get("station-name"),
+              wifi: {
+                ssid: frmData.get("wifi-ssid"),
+                password: frmData.get("wifi-password"),
+              },
+              sensors: [],
+              // callbacks: [],
+              // loops:frmData,
+              timers: [],
+              webServerRoutes: [],
+            };
+  
+            // TODO: get that to I2C plugin
+            let i2ccl = frmData.get("i2c-clock");
+            let i2cda = frmData.get("i2c-data");
+            if (i2ccl !== "" && i2ccl !== null && i2cda !== "" && i2cda !== null) {
+              data.i2c = [i2cda, i2ccl];
             }
-          });
-          frmData.getAll("timers[]").forEach((timer) => {
-            data.timers.push({
-              name: frmData.get(`timer-${timer}-name`),
-              interval: frmData.get(`timer-${timer}-interval`),
-              callback: frmData.get(`timer-${timer}-callback`),
+            
+            frmData.getAll("sensors[]").forEach((sensor, sensI) => {
+              let snA = sensor.split("::");
+              if (Object.keys(sensorParseForms).includes(snA[0])) {
+                data.sensors.push(sensorParseForms[snA[0]](frmData, snA[1]));
+              } else {
+                data.sensors.push(snA[0]);
+              }
             });
-          });
-          frmData.getAll("endpoints[]").forEach((endpts) => {
-            data.webServerRoutes.push({
-              url: frmData.get(`endpoint-${endpts}-route`),
-              login: frmData.get(`endpoint-${endpts}-login`),
-              password: frmData.get(`endpoint-${endpts}-password`),
-              callback: frmData.get(`endpoint-${endpts}-callback`),
+            frmData.getAll("timers[]").forEach((timer) => {
+              data.timers.push({
+                name: frmData.get(`timer-${timer}-name`),
+                interval: frmData.get(`timer-${timer}-interval`),
+                callback: frmData.get(`timer-${timer}-callback`),
+              });
             });
-          });
-
-          data.plugins = {
-            include:getPluginsStr("include",frmData),
-            declaration: getPluginsStr("declaration",frmData),
-            setup: getPluginsStr("setup",frmData),
-            loop: getPluginsStr("loop",frmData),
-          };
-
-          document.getElementById("main-cpp-output").value = eta_.renderString(
-            mainCppTpl,
-            data
-          );
-          
-          document.getElementById("install-station-name").value = data.name;
-          document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
-          
-          if (document.getElementById("stationio-custom-sensors").innerHTML == "") {
-            document.getElementById("stationio-custom-sensors").innerHTML = 'No custom sensors defined yet';
+            frmData.getAll("endpoints[]").forEach((endpts) => {
+              data.webServerRoutes.push({
+                url: frmData.get(`endpoint-${endpts}-route`),
+                login: frmData.get(`endpoint-${endpts}-login`),
+                password: frmData.get(`endpoint-${endpts}-password`),
+                callback: frmData.get(`endpoint-${endpts}-callback`),
+              });
+            });
+  
+            data.plugins = {
+              include:getPluginsStr("include",frmData),
+              declaration: getPluginsStr("declaration",frmData),
+              setup: getPluginsStr("setup",frmData),
+              loop: getPluginsStr("loop",frmData),
+            };
+  
+            document.getElementById("main-cpp-output").value = eta_.renderString(
+              mainCppTpl,
+              data
+            );
+            
+            document.getElementById("install-station-name").value = data.name;
+            document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
+            
+            if (document.getElementById("stationio-custom-sensors").innerHTML == "") {
+              document.getElementById("stationio-custom-sensors").innerHTML = 'No custom sensors defined yet';
+            }
           }
         });
       document
