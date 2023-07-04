@@ -36,10 +36,6 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -- "$cur" )
       ;;
 
-    'create-main'*'--sensor')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d src/sensors ]; then echo $(cd src/sensors && /usr/bin/ls *.h | sed 's/\.h//g') ;fi)")" -- "$cur" )
-      ;;
-
     'create-main'*'--file')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
       ;;
@@ -80,12 +76,16 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi) --ip --port -p --board -b --pio --ota --no-ota --fs --no-fs")" -- "$cur" )
       ;;
 
+    'list'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--ip --no-ip --board --no-board")" -- "$cur" )
+      ;;
+
     'read'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi) --sensor -s --format -f --mesure -m --output -o")" -- "$cur" )
       ;;
 
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create create-main read set-conf upload")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create create-main list read set-conf upload")" -- "$cur" )
       ;;
 
   esac

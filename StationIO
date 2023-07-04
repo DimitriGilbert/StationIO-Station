@@ -4,7 +4,7 @@
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-leftovers leftovers
 # @parseArger-declarations
-# @parseArger pos target "target cmd" --subcommand-directory "utils" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "read" --one-of "set-conf" --one-of "upload"
+# @parseArger pos target "target cmd" --subcommand-directory "utils" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "list" --one-of "read" --one-of "set-conf" --one-of "upload"
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -32,7 +32,7 @@ begins_with_short_option()
 # POSITIONALS ARGUMENTS
 _positionals=();
 _arg_target="";
-_one_of_arg_target=("build-fs" "create" "create-main" "read" "set-conf" "upload" );
+_one_of_arg_target=("build-fs" "create" "create-main" "list" "read" "set-conf" "upload" );
 _arg_subcommand_arg="_arg_target";
 __subcommand=();
 # OPTIONALS ARGUMENTS
@@ -57,7 +57,7 @@ print_help()
 	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
 		_helpHasBeenPrinted=0;
 		echo -e "StationIO CLI:"
-	echo -e "	target: target cmd [one of 'build-fs' 'create' 'create-main' 'read' 'set-conf' 'upload']"
+	echo -e "	target: target cmd [one of 'build-fs' 'create' 'create-main' 'list' 'read' 'set-conf' 'upload']"
 	echo -e "Usage :
 	$0 <target>";
 	fi

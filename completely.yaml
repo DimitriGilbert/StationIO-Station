@@ -2,6 +2,7 @@ StationIO:
 - build-fs
 - create
 - create-main
+- list
 - read
 - set-conf
 - upload
@@ -64,10 +65,21 @@ StationIO create-main:
 - --file
 
 
-StationIO create-main*--sensor:
-- $(if [ -d src/sensors ]; then echo $(cd src/sensors && /usr/bin/ls *.h | sed 's/\.h//g') ;fi)
+
+
+
+
+
+
+
+
 StationIO create-main*--file:
 - <file>
+StationIO list:
+- --ip
+- --no-ip
+- --board
+- --no-board
 StationIO read:
 - $(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi)
 - --sensor

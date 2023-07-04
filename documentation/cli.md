@@ -4,7 +4,7 @@
 
 ```
 StationIO CLI:
-	target: target cmd [one of 'build-fs' 'create' 'createStation-cli' 'set-conf' 'upload' 'build-fs' 'read']
+	target: target cmd [one of 'build-fs' 'create' 'create-main' 'list' 'read' 'set-conf' 'upload']
 Usage :
 	./StationIO <target>
 ```
@@ -45,7 +45,7 @@ Usage :
 	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/create <name> [--ip <value>] [--board <value>] [--[no-]config] [--[no-]edit] [--[no-]force]
 ```
 
-## ./StationIO createStation-cli
+## ./StationIO create-main
 
 ```
 ./StationIO sub command help
@@ -64,7 +64,34 @@ Usage :
 	--node <node>: node executable [default: ' node ']
 	--file <file>: file to output to
 Usage :
-	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/createStation-cli <name> [--sensor <value>] [--timer <value>] [--endpoint <value>] [--wifi-ssid <value>] [--wifi-pass <value>] [--include <value>] [--declare <value>] [--setup <value>] [--loop <value>] [--node <value>] [--file <value>]
+	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/create-main <name> [--sensor <value>] [--timer <value>] [--endpoint <value>] [--wifi-ssid <value>] [--wifi-pass <value>] [--include <value>] [--declare <value>] [--setup <value>] [--loop <value>] [--node <value>] [--file <value>]
+```
+
+## ./StationIO list
+
+```
+./StationIO sub command help
+	
+list stations:
+	--ip|--no-ip: show ips
+	--board|--no-board: show board
+Usage :
+	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/list [--[no-]ip] [--[no-]board]
+```
+
+## ./StationIO read
+
+```
+./StationIO sub command help
+	
+Read station data:
+	station: station name
+	-s, --sensor <sensor>: sensor id, repeatable
+	-f, --format <format>: output format [default: ' plain '] [one of 'json' 'csv' 'xml' 'plain' 'html']
+	-m, --mesure <mesure>: mesure id, can conflict with sensor, repeatable
+	-o, --output <output>: output file
+Usage :
+	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/read <station> [--sensor <value>] [--format <value>] [--mesure <value>] [--output <value>]
 ```
 
 ## ./StationIO set-conf
@@ -100,19 +127,4 @@ Upload a station to the board:
 	--fs|--no-fs: upload fs
 Usage :
 	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/upload <name> [--ip <value>] [--port <value>] [--board <value>] [--pio <value>] [--[no-]ota] [--[no-]fs]
-```
-
-## ./StationIO read
-
-```
-./StationIO sub command help
-	
-Read station data:
-	station: station name
-	-s, --sensor <sensor>: sensor id, repeatable
-	-f, --format <format>: output format [default: ' plain '] [one of 'json' 'csv' 'xml' 'plain' 'html']
-	-m, --mesure <mesure>: mesure id, can conflict with sensor, repeatable
-	-o, --output <output>: output file
-Usage :
-	/home/didi/worskpace/Code/StationIO/StationIO-station/utils/read <station> [--sensor <value>] [--format <value>] [--mesure <value>] [--output <value>]
 ```
