@@ -1,10 +1,10 @@
 StationIO:
 - build-fs
 - create
-- createStation-cli
+- create-main
+- read
 - set-conf
 - upload
-- read
 StationIO build-fs:
 - --js
 - -j
@@ -45,7 +45,7 @@ StationIO create:
 - --no-edit
 - --force
 - --no-force
-StationIO createStation-cli:
+StationIO create-main:
 - --sensor
 - -s
 - --timer
@@ -62,6 +62,27 @@ StationIO createStation-cli:
 - --loop
 - --node
 - --file
+
+
+StationIO create-main*--sensor:
+- $(if [ -d src/sensors ]; then echo $(cd src/sensors && /usr/bin/ls *.h | sed 's/\.h//g') ;fi)
+StationIO create-main*--file:
+- <file>
+StationIO read:
+- $(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi)
+- --sensor
+- -s
+- --format
+- -f
+- --mesure
+- -m
+- --output
+- -o
+
+
+
+StationIO read*--output:
+- <file>
 StationIO set-conf:
 - $(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi)
 - --sensor
@@ -90,18 +111,4 @@ StationIO upload:
 - --no-ota
 - --fs
 - --no-fs
-StationIO read:
-- --sensor
-- -s
-- --format
-- -f
-- --mesure
-- -m
-- --output
-- -o
-
-
-
-StationIO read*--output:
-- <file>
 

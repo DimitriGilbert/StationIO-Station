@@ -4,7 +4,7 @@
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
 # @parseArger pos name "station name"
-# @parseArger opt sensor "sensor to add" --short s --repeat
+# @parseArger opt sensor "sensor to add" --short s --repeat --complete-custom "if [ -d src/sensors ]; then echo $(cd src/sensors && /usr/bin/ls *.h | sed 's/\.h//g') ;fi"
 # @parseArger opt timer "timer to add" --short t --repeat
 # @parseArger opt endpoint "endpoint to add" --short e --repeat
 # @parseArger opt wifi-ssid "wifi ssid" --short w
@@ -14,7 +14,7 @@
 # @parseArger opt setup "setup string"
 # @parseArger opt loop "loop string"
 # @parseArger opt node "node executable" --default-value "node"
-# @parseArger opt file "file to output to"
+# @parseArger opt file "file to output to" --complete "file"
 # @parseArger-declarations-end
 
 # @parseArger-utils

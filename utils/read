@@ -3,7 +3,7 @@
 # @parseArger-help "Read station data" --option "help" --short-option "h"
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
-# @parseArger pos station "station name"
+# @parseArger pos station "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
 # @parseArger opt sensor "sensor id" --short s --repeat
 # @parseArger opt format "output format" --short f --default-value "plain" --one-of "json" --one-of "csv" --one-of "xml" --one-of "plain" --one-of "html"
 # @parseArger opt mesure "mesure id, can conflict with sensor" --short m --repeat

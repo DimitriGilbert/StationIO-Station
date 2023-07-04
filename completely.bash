@@ -36,8 +36,12 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -- "$cur" )
       ;;
 
-    'createStation-cli'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--sensor -s --timer -t --endpoint -e --wifi-ssid -w --wifi-pass -p --include --declare --setup --loop --node --file")" -- "$cur" )
+    'create-main'*'--sensor')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d src/sensors ]; then echo $(cd src/sensors && /usr/bin/ls *.h | sed 's/\.h//g') ;fi)")" -- "$cur" )
+      ;;
+
+    'create-main'*'--file')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
       ;;
 
     'build-fs'*'--file')
@@ -54,6 +58,10 @@ _StationIO_completions() {
 
     'read'*'--output')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
+      ;;
+
+    'create-main'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--sensor -s --timer -t --endpoint -e --wifi-ssid -w --wifi-pass -p --include --declare --setup --loop --node --file")" -- "$cur" )
       ;;
 
     'build-fs'*)
@@ -73,11 +81,11 @@ _StationIO_completions() {
       ;;
 
     'read'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--sensor -s --format -f --mesure -m --output -o")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi) --sensor -s --format -f --mesure -m --output -o")" -- "$cur" )
       ;;
 
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create createStation-cli set-conf upload read")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create create-main read set-conf upload")" -- "$cur" )
       ;;
 
   esac
