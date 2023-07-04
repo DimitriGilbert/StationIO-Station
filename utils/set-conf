@@ -3,7 +3,7 @@
 # @parseArger-help "Set station configuration" --option "help" --short-option "h"
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
-# @parseArger pos name "station name"
+# @parseArger pos name "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
 # @parseArger opt sensor "sensor to add" --short s --repeat
 # @parseArger opt ip "ip address" --short i --default-value "0"
 # @parseArger opt board "pio env" --short b --default-value "nodemcuv2"
@@ -293,12 +293,15 @@ trap on_interrupt INT;
 # print_debug "$@"
 # @parseArger-end
 
+# shellcheck source=common
+source "$_SCRIPT_DIR/common";
+
 if [ ! -d "./stations/.stations" ]; then
 	mkdir "./stations/.stations";
 fi
 
-# shellcheck source=./exportStationConf
-source "utils/exportStationConf" "${_arg_name}";
+# shellcheck source=./export-conf
+source "$STATIONIO_DIR/utils/export-conf" "${_arg_name}";
 
 if [ "$stationIOip" == "" ]; then
 	stationIOip="0"
@@ -341,11 +344,11 @@ if [ "${#_arg_data_directory[@]}" -gt 0 ]; then
 	stationIOdirectories=("${_arg_data_directory[@]}");
 fi
 
-echo -e "# StationIO configuration for ${_arg_name} station" > "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_ip=\"${stationIOip}\"" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_board=\"${stationIOboard}\"" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_sensors=( $(out=""; for sen in "${stationIOsensors[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_js=( $(out=""; for sen in "${stationIOjs[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_css=( $(out=""; for sen in "${stationIOcss[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_files=( $(out=""; for sen in "${stationIOfiles[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
-echo -e "${_arg_name}_directories=( $(out=""; for sen in "${stationIOdirectories[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "stations/.stations/${_arg_name}";
+echo -e "# StationIO configuration for ${_arg_name} station" > "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_ip=\"${stationIOip}\"" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_board=\"${stationIOboard}\"" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_sensors=( $(out=""; for sen in "${stationIOsensors[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_js=( $(out=""; for sen in "${stationIOjs[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_css=( $(out=""; for sen in "${stationIOcss[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_files=( $(out=""; for sen in "${stationIOfiles[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";
+echo -e "${_arg_name}_directories=( $(out=""; for sen in "${stationIOdirectories[@]}";do out+=" \"$sen\""; done; echo "$out"; ) )" >> "$STATIONIO_DIR/stations/.stations/${_arg_name}";

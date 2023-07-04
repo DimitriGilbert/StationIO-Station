@@ -1,0 +1,15 @@
+#!/bin/bash
+
+STATIONIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/..";
+export STATIONIO_DIR;
+
+station_file() {
+  echo "${STATIONIO_DIR}/stations/.stations/${1}";
+}
+station_exists() {
+  if [ -f "$(station_file "${1}")" ]; then
+    return 0;
+  else
+    return 1;
+  fi
+}

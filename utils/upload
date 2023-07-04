@@ -3,7 +3,7 @@
 # @parseArger-help "Upload a station to the board" --option "help" --short-option "h"
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
-# @parseArger pos name "station name"
+# @parseArger pos name "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
 # @parseArger opt ip "station ip"
 # @parseArger opt port "host port upload flags, avoid random for firewalls" --short p --default-value "46667"
 # @parseArger opt board "PIO build environement name" --short b
@@ -259,11 +259,14 @@ trap on_interrupt INT;
 # print_debug "$@"
 # @parseArger-end
 
-if [ -f "stations/${_arg_name}.main.cpp" ]; then
+# shellcheck source=common
+source "$_SCRIPT_DIR/common";
+
+if station_exists "${_arg_name}"; then
 	# shellcheck source="../stations/stations"
-	source "./stations/stations";
-	# shellcheck source=./exportStationConf
-	source "utils/exportStationConf" "${_arg_name}";	
+	source "$STATIONIO_DIR/stations/stations";
+	# shellcheck source=./export-conf
+	source "$STATIONIO_DIR/utils/export-conf" "${_arg_name}";	
 	
 	ucmd="${_arg_pio} run -t upload";
 	if [ "$_arg_fs" == "on" ]; then
@@ -273,7 +276,7 @@ if [ -f "stations/${_arg_name}.main.cpp" ]; then
 	if [ "$_arg_board" == "" ]; then
 		_arg_board="${stationIOboard}";
 	else
-		./utils/setStation "${_arg_name}" --board "${_arg_board}";
+		"$STATIONIO_DIR/utils/set-conf" "${_arg_name}" --board "${_arg_board}";
 	fi
 	if [ "$_arg_board" != "" ]; then
 		ucmd="$ucmd -e ${_arg_board}";
@@ -282,18 +285,18 @@ if [ -f "stations/${_arg_name}.main.cpp" ]; then
 	if [ "$_arg_ip" == "" ]; then
 		_arg_ip="${stationIOip}";
 	else
-		./utils/setStation "${_arg_name}" --ip "${_arg_ip}";
+		"$STATIONIO_DIR/utils/set-conf" "${_arg_name}" --ip "${_arg_ip}";
 	fi
 
 	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
 		ucmd="$ucmd --upload-port ${_arg_ip}";
 	fi
 
-	if [ -f "src/main.cpp" ]; then
-		mv "src/main.cpp" "src/main.cpp.bak";
+	if [ -f "$STATIONIO_DIR/src/main.cpp" ]; then
+		mv "$STATIONIO_DIR/src/main.cpp" "$STATIONIO_DIR/src/main.cpp.bak";
 	fi
 
-	cp "stations/${_arg_name}.main.cpp" "src/main.cpp";
+	cp "$STATIONIO_DIR/stations/${_arg_name}.main.cpp" "$STATIONIO_DIR/src/main.cpp";
 
 	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
 		(export PLATFORMIO_UPLOAD_FLAGS=--host_port=$_arg_port; $ucmd;)
@@ -303,9 +306,9 @@ if [ -f "stations/${_arg_name}.main.cpp" ]; then
 
 	# if success
 	if [ $? -eq 0 ]; then
-		rm "src/main.cpp";
-		if [ -f "src/main.cpp.bak" ]; then
-			mv "src/main.cpp.bak" "src/main.cpp";
+		rm "$STATIONIO_DIR/src/main.cpp";
+		if [ -f "$STATIONIO_DIR/src/main.cpp.bak" ]; then
+			mv "$STATIONIO_DIR/src/main.cpp.bak" "$STATIONIO_DIR/src/main.cpp";
 		fi
 	fi
 else

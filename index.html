@@ -620,8 +620,11 @@ rm $STIOinstall_TMP_FILE;`;
 # Go to the station directory
 cd StationIO
 
+# sourcing bash completion, to install it permanently add it to your .bashrc or .zshrc
+source completely.bash
+
 # create your station and copy "main.cpp" output to "stations/<%~ it.stationName %>.main.cpp"
-./utils/createStation "<%~ it.stationName %>" -b nodemcuv2
+./StationIO create "<%~ it.stationName %>" -b nodemcuv2
 
 # if you have custom sensors copy the code from the "sensors" tab to the relevant files in src/sensors/
 
@@ -632,19 +635,19 @@ cd StationIO
 
 <%} %>
 # upload code to project board
-./utils/uploadStation "<%~ it.stationName %>" --no-ota
+./StationIO upload "<%~ it.stationName %>" --no-ota
 
 # build filesystem
-./utils/buildFS
+./StationIO build-fs
 # upload filesystem to project board
-./utils/uploadStation "<%~ it.stationName %>" --no-ota --fs
+./StationIO upload "<%~ it.stationName %>" --no-ota --fs
 
 # use serial monitor to get the IP address
 # reset your board to see the initialisation output and get the ip address
 pio device monitor -e nodemcuv2
 
 # upload with an ip address, --ip is needed only the first time (it will be saved in ./stations/stations)
-./utils/uploadStation "<%~ it.stationName %>" --ip <ip address>
+./StationIO upload "<%~ it.stationName %>" --ip <ip address>
 `;
 
       // Sensor tpl

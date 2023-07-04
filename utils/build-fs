@@ -3,15 +3,15 @@
 # @parseArger-help "Build station filesystem" --option "help" --short-option "h"
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
-# @parseArger opt js "path to js file, ':' to separate target directory (/assets/js by default)" --short j --repeat
-# @parseArger opt css "path to css file, ':' to separate target directory (/assets/css by default)" --short c --repeat
-# @parseArger opt directory "additional directory path, all files will be gzipped, ':' to separate target directory (/ by default)" --short d --repeat
-# @parseArger opt file "file to add, will be gzipped, ':' to separate target directory (/ by default)" --short f --repeat
-# @parseArger opt file-no-gz "add a file without gzip, ':' to separate target directory (/ by default)" --short F --repeat
+# @parseArger opt js "path to js file, ':' to separate target directory (/assets/js by default)" --short j --repeat --complete file
+# @parseArger opt css "path to css file, ':' to separate target directory (/assets/css by default)" --short c --repeat --complete file
+# @parseArger opt directory "additional directory path, all files will be gzipped, ':' to separate target directory (/ by default)" --short d --repeat --complete directory
+# @parseArger opt file "file to add, will be gzipped, ':' to separate target directory (/ by default)" --short f --repeat  --complete file
+# @parseArger opt file-no-gz "add a file without gzip, ':' to separate target directory (/ by default)" --short F --repeat  --complete file
 # @parseArger opt node "node executable" --default-value "node"
 # @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
-# @parseArger opt upload "station to upload to, will set --environment" --short u
+# @parseArger opt upload "station to upload to, will set --environment" --short u --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
 # @parseArger flag dry "do not upload (just build for a station)" --short D
 # @parseArger-declarations-end
 
@@ -325,31 +325,34 @@ trap on_interrupt INT;
 # print_debug "$@"
 # @parseArger-end
 
+# shellcheck source=common
+source "$_SCRIPT_DIR/common";
 # shellcheck source="../stations/stations"
 source "./stations/stations";
 
 # a station has been defined
-if [ "$_arg_upload" != "" ]; then
-	# shellcheck source=./exportStationConf
-	source "utils/exportStationConf" "${_arg_upload}";
+if [ "$_arg_upload" != "" ] && station_exists "${_arg_upload}"; then
+	# shellcheck source=./export-conf
+	source "$STATIONIO_DIR/utils/export-conf" "${_arg_upload}";
 	
 	# check if station has bee loaded
 	# shellcheck disable=SC2154
 	if [ "$stationIOip" == "" ]; then
-		die "Station ${_arg_upload} not found";
+		die "Station ${_arg_upload} has no ip";
 	fi
 	# set station board as env
 	_arg_environement="${stationIOboard}";
 	
 	# check station sensors for js and css files to add for upload
 	for _sensor in "${stationIOsensors[@]}"; do
-		if [ -f "src/sensors/${_sensor}.js" ]; then
-			_arg_js+=("src/sensors/${_sensor}.js:");
+		if [ -f "$STATIONIO_DIR/src/sensors/${_sensor}.js" ]; then
+			_arg_js+=("$STATIONIO_DIR/src/sensors/${_sensor}.js:");
 		fi
-		if [ -f "src/sensors/${_sensor}.css" ]; then
-			_arg_css+=("src/sensors/${_sensor}.css:");
+		if [ -f "$STATIONIO_DIR/src/sensors/${_sensor}.css" ]; then
+			_arg_css+=("$STATIONIO_DIR/src/sensors/${_sensor}.css:");
 		fi
 	done
+
 	# add station static files and directories
 	if [ "${#stationIOfiles[@]}" -gt 0 ]; then
 		_arg_file=("${stationIOfiles[@]}" "${_arg_file[@]}");
@@ -374,7 +377,7 @@ gzip_files() {
     elif [ -f "$dir" ]; then
       filename=$(basename "$dir");
 			if [[ "$filename" == *.js ]] || [[ "$filename" == *.css ]]; then
-				"$_arg_node" node_modules/.bin/minify "$dir" | gzip -c - > "$dest_dir/$filename.gz";
+				"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$dir" | gzip -c - > "$dest_dir/$filename.gz";
 			else
 				gzip "$dir" -c > "$dest_dir/$filename.gz";
 			fi
@@ -382,7 +385,7 @@ gzip_files() {
   done
 }
 
-gzip_files "src/assets" "data/assets"
+gzip_files "$STATIONIO_DIR/src/assets" "$STATIONIO_DIR/data/assets"
 
 for file in "${_arg_file[@]}"; do
 	cpt="";
@@ -393,11 +396,11 @@ for file in "${_arg_file[@]}"; do
 	if [ "$cpt" != "" ]; then
 		cpt+="/";
 	fi
-	if [ ! -d "data/$cpt" ]; then
-		mkdir -p "data/$cpt";
+	if [ ! -d "$STATIONIO_DIR/data/$cpt" ]; then
+		mkdir -p "$STATIONIO_DIR/data/$cpt";
 	fi
 
-	(gzip "$file" -c > "data/$cpt$(basename "$file").gz");
+	(gzip "$file" -c > "$STATIONIO_DIR/data/$cpt$(basename "$file").gz");
 done
 
 for dir2add in "${_arg_directory[@]}"; do
@@ -409,11 +412,11 @@ for dir2add in "${_arg_directory[@]}"; do
 	if [ "$cpt" != "" ]; then
 		cpt+="/";
 	fi
-	if [ ! -d "data/$cpt" ]; then
-		mkdir -p "data/$cpt";
+	if [ ! -d "data$STATIONIO_DIR//$cpt" ]; then
+		mkdir -p "data$STATIONIO_DIR//$cpt";
 	fi
 
-	(gzip_files "$dir2add" "data/$cpt$dir2add");
+	(gzip_files "$dir2add" "data$STATIONIO_DIR//$cpt$dir2add");
 done
 
 for file in "${_arg_file_no_gz[@]}"; do
@@ -425,11 +428,11 @@ for file in "${_arg_file_no_gz[@]}"; do
 	if [ "$cpt" != "" ]; then
 		cpt+="/";
 	fi
-	if [ ! -d "data/$cpt" ]; then
-		mkdir -p "data/$cpt";
+	if [ ! -d "data$STATIONIO_DIR//$cpt" ]; then
+		mkdir -p "data$STATIONIO_DIR//$cpt";
 	fi
 
-	cp "$file" "data/$(basename "$file")";
+	cp "$file" "data$STATIONIO_DIR//$(basename "$file")";
 done
 
 for js in "${_arg_js[@]}"; do
@@ -441,11 +444,11 @@ for js in "${_arg_js[@]}"; do
 	if [ "$cpt" != "" ]; then
 		cpt+="/";
 	fi
-	if [ ! -d "data/assets/js/$cpt" ]; then
-		mkdir -p "data/assets/js/$cpt";
+	if [ ! -d "$STATIONIO_DIR/data/assets/js/$cpt" ]; then
+		mkdir -p "$STATIONIO_DIR/data/assets/js/$cpt";
 	fi
 
-	"$_arg_node" node_modules/.bin/minify "$js" | gzip -c - > "data/assets/js/$cpt$(basename "$js").gz";
+	"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$js" | gzip -c - > "$STATIONIO_DIR/data/assets/js/$cpt$(basename "$js").gz";
 done
 
 for css in "${_arg_css[@]}"; do
@@ -457,15 +460,15 @@ for css in "${_arg_css[@]}"; do
 	if [ "$cpt" != "" ]; then
 		cpt+="/";
 	fi
-	if [ ! -d "data/assets/css/$cpt" ]; then
-		mkdir -p "data/assets/css/$cpt";
+	if [ ! -d "$STATIONIO_DIR/data/assets/css/$cpt" ]; then
+		mkdir -p "$STATIONIO_DIR/data/assets/css/$cpt";
 	fi
 
-	"$_arg_node" node_modules/.bin/minify "$css" | gzip -c - > "data/assets/css/$(basename "$css").gz";
+	"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$css" | gzip -c - > "$STATIONIO_DIR/data/assets/css/$(basename "$css").gz";
 done
 
 "$_arg_pio" run -t buildfs -e "$_arg_environement";
 
 if [ "$_arg_upload" != "" ] && [ "$_arg_dry" != "on" ]; then
-	utils/uploadStation "$_arg_upload" --fs;
+	"$STATIONIO_DIR/utils/upload" "$_arg_upload" --fs;
 fi

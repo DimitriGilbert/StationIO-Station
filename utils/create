@@ -8,6 +8,7 @@
 # @parseArger opt board "PIO build environement name" --short b
 # @parseArger flag config "open configurator" --on
 # @parseArger flag edit "open editor" --on
+# @parseArger flag force "erase if exists"
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -41,6 +42,7 @@ _arg_board=
 # FLAGS
 _arg_config="on"
 _arg_edit="on"
+_arg_force="off"
 _verbose_level="0";
 
 
@@ -57,8 +59,9 @@ print_help()
 	echo -e "	-b, --board <board>: PIO build environement name"
 	echo -e "	--config|--no-config: open configurator, on by default (use --no-config to turn it off)"
 	echo -e "	--edit|--no-edit: open editor, on by default (use --no-edit to turn it off)"
+	echo -e "	--force|--no-force: erase if exists"
 	echo -e "Usage :
-	$0 <name> [--ip <value>] [--board <value>] [--[no-]config] [--[no-]edit]";
+	$0 <name> [--ip <value>] [--board <value>] [--[no-]config] [--[no-]edit] [--[no-]force]";
 	fi
 
 }
@@ -134,6 +137,12 @@ parse_commandline()
 			--no-edit)
 				_arg_edit="off"
 				;;
+			--force)
+				_arg_force="on"
+				;;
+			--no-force)
+				_arg_force="off"
+				;;
 			-h|--help)
 				print_help;
 				exit 0;
@@ -207,6 +216,7 @@ print_debug()
 	echo -e "\tboard: ${_arg_board}";
 	echo -e "\tconfig: ${_arg_config}";
 	echo -e "\tedit: ${_arg_edit}";
+	echo -e "\tforce: ${_arg_force}";
 
 }
 
@@ -230,34 +240,35 @@ trap on_interrupt INT;
 # print_debug "$@"
 # @parseArger-end
 
-if [ ! -d "./stations/.stations" ]; then
-	mkdir "./stations/.stations";
+# shellcheck source=common
+source "$_SCRIPT_DIR/common";
+if [ ! -d "$STATIONIO_DIR/stations/.stations" ]; then
+	mkdir "$STATIONIO_DIR/stations/.stations";
 fi
-if [ ! -f "./stations/.stations/${_arg_name}" ]; then
+
+if ! station_exists "$_arg_name" || [ "$_arg_force" == "on" ]; then
 	echo "# StationIO configuration for ${_arg_name} " > "./stations/.stations/${_arg_name}";
-fi
-echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/.stations/${_arg_name}";
-echo "${_arg_name}_board=${_arg_board}" >> "./stations/.stations/${_arg_name}";
+	echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/.stations/${_arg_name}";
+	echo "${_arg_name}_board=${_arg_board}" >> "./stations/.stations/${_arg_name}";
 
-echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/stations";
-echo "${_arg_name}_board=${_arg_board}" >> "./stations/stations";
+	echo "${_arg_name}_ip=${_arg_ip}" >> "./stations/stations";
+	echo "${_arg_name}_board=${_arg_board}" >> "./stations/stations";
 
-if [ ! -f "./stations/${_arg_name}.main.cpp" ]; then
 	echo "" > "./stations/${_arg_name}.main.cpp";
-else
-	echo "Station already exists";
-fi
 
-if [ "${_arg_config}" = "on" ]; then
-	echo "Use the configurator to create the station code, hit enter when done";
-	xdg-open "./index.html";
-	# shellcheck disable=SC2034
-	read -r configDone;
-fi
+	if [ "${_arg_config}" = "on" ]; then
+		echo "Use the configurator to create the station code, hit enter when done";
+		xdg-open "./index.html";
+		# shellcheck disable=SC2034
+		read -r configDone;
+	fi
 
-if [ "${_arg_edit}" = "on" ]; then
-	echo "Copy the station code to the station file, hit enter when done";
-	xdg-open "./stations/${_arg_name}.main.cpp";
-	# shellcheck disable=SC2034
-	read -r stationCode;
+	if [ "${_arg_edit}" = "on" ]; then
+		echo "Copy the station code to the station file, hit enter when done";
+		xdg-open "./stations/${_arg_name}.main.cpp";
+		# shellcheck disable=SC2034
+		read -r stationCode;
+	fi
+else 
+ die "Station already exists" 1;
 fi
