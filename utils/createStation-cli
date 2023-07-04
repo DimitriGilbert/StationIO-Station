@@ -1,6 +1,7 @@
 #!/bin/bash
 # @parseArger-begin
-# @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
+# @parseArger-help "[WIP] create a station main.cpp" --option "help" --short-option "h"
+# @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
 # @parseArger pos name "station name"
 # @parseArger opt sensor "sensor to add" --short s --repeat
@@ -16,12 +17,17 @@
 # @parseArger opt file "file to output to"
 # @parseArger-declarations-end
 
+# @parseArger-utils
+_helpHasBeenPrinted=1;
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";
+# @parseArger-utils-end
+
 # @parseArger-parsing
 die()
 {
 	local _ret="${2:-1}"
 	test "${_PRINT_HELP:-no}" = yes && print_help >&2
-	echo "$1" >&2
+	log "$1" -3 >&2
 	exit "${_ret}"
 }
 
@@ -49,11 +55,17 @@ _arg_loop=
 _arg_node="node"
 _arg_file=
 # FLAGS
+_verbose_level="0";
+
 
 
 print_help()
 {
-	echo -e "I send an SOS to the world:"
+	_triggerSCHelp=1;
+
+	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
+		_helpHasBeenPrinted=0;
+		echo -e "[WIP] create a station main.cpp:"
 	echo -e "	name: station name"
 	echo -e "	-s, --sensor <sensor>: sensor to add, repeatable"
 	echo -e "	-t, --timer <timer>: timer to add, repeatable"
@@ -67,7 +79,40 @@ print_help()
 	echo -e "	--node <node>: node executable [default: ' node ']"
 	echo -e "	--file <file>: file to output to"
 	echo -e "Usage :
-	$0 <name> [--sensor <value>] [--timer <value>] [--endpoint <value>] [--wifi-ssid <value>] [--wifi-pass <value>] [--include <value>] [--declare <value>] [--setup <value>] [--loop <value>] [--node <value>] [--file <value>]"
+	$0 <name> [--sensor <value>] [--timer <value>] [--endpoint <value>] [--wifi-ssid <value>] [--wifi-pass <value>] [--include <value>] [--declare <value>] [--setup <value>] [--loop <value>] [--node <value>] [--file <value>]";
+	fi
+
+}
+
+log() {
+	local _arg_msg="${1}";
+	local _arg_level="${2:"0"}";
+	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
+		case "$_arg_level" in
+			-3)
+				_arg_COLOR="\033[0;31m";
+				;;
+			-2)
+				_arg_COLOR="\033[0;33m";
+				;;
+			-1)
+				_arg_COLOR="\033[1;33m";
+				;;
+			1)
+				_arg_COLOR="\033[0;32m";
+				;;
+			2)
+				_arg_COLOR="\033[1;36m";
+				;;
+			3)
+				_arg_COLOR="\033[0;36m";
+				;;
+			*)
+				_arg_COLOR="\033[0m";
+				;;
+		esac
+		echo -e "${_arg_COLOR}${_arg_msg}\033[0m";
+	fi
 }
 
 parse_commandline()
@@ -199,6 +244,23 @@ parse_commandline()
 				print_help;
 				exit 0;
 				;;
+			-v|--version)
+				print_version;
+				exit 0;
+				;;
+			-v*)
+				print_version;
+				exit 0;
+				;;
+			--verbose)
+				if [ $# -lt 2 ];then
+					_verbose_level="$((_verbose_level + 1))";
+				else
+					_verbose_level="$2";
+					shift;
+				fi
+				;;
+			
 			*)
 				_last_positional="$1"
 				_positionals+=("$_last_positional")
@@ -213,8 +275,13 @@ parse_commandline()
 handle_passed_args_count()
 {
 	local _required_args_string="name"
-	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+	if [ "${_positionals_count}" -gt 1 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
+	fi
+	if [ "${_positionals_count}" -lt 1 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 1 (namely: $_required_args_string), but got only ${_positionals_count}.
+	${_positionals[*]}" 1;
+	fi
 }
 
 
@@ -225,8 +292,8 @@ assign_positional_args()
 	shift "$_shift_for"
 	for _positional_name in ${_positional_names};do
 		test $# -gt 0 || break;
-		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1
-eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an Argbash bug." 1;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
+		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
 		shift;
 	done
 }
@@ -238,23 +305,35 @@ print_debug()
 	echo "DEBUG: $0 $@";
 	
 	echo -e "\tname: ${_arg_name}";
-	echo -e "\tsensor: ${_arg_sensor | sed 's/-/_/g'}";
-	echo -e "\ttimer: ${_arg_timer | sed 's/-/_/g'}";
-	echo -e "\tendpoint: ${_arg_endpoint | sed 's/-/_/g'}";
-	echo -e "\twifi-ssid: ${_arg_wifi-ssid | sed 's/-/_/g'}";
-	echo -e "\twifi-pass: ${_arg_wifi-pass | sed 's/-/_/g'}";
-	echo -e "\tinclude: ${_arg_include | sed 's/-/_/g'}";
-	echo -e "\tdeclare: ${_arg_declare | sed 's/-/_/g'}";
-	echo -e "\tsetup: ${_arg_setup | sed 's/-/_/g'}";
-	echo -e "\tloop: ${_arg_loop | sed 's/-/_/g'}";
-	echo -e "\tnode: ${_arg_node | sed 's/-/_/g'}";
-	echo -e "\tfile: ${_arg_file | sed 's/-/_/g'}";
+	echo -e "\tsensor: ${_arg_sensor[*]}";
+	echo -e "\ttimer: ${_arg_timer[*]}";
+	echo -e "\tendpoint: ${_arg_endpoint[*]}";
+	echo -e "\twifi-ssid: ${_arg_wifi_ssid}";
+	echo -e "\twifi-pass: ${_arg_wifi_pass}";
+	echo -e "\tinclude: ${_arg_include}";
+	echo -e "\tdeclare: ${_arg_declare}";
+	echo -e "\tsetup: ${_arg_setup}";
+	echo -e "\tloop: ${_arg_loop}";
+	echo -e "\tnode: ${_arg_node}";
+	echo -e "\tfile: ${_arg_file}";
 
 }
 
-parse_commandline "$@"
-handle_passed_args_count
-assign_positional_args 1 "${_positionals[@]}"
+print_version()
+{
+	echo "";
+}
+
+on_interrupt() {
+	die Process aborted! 130;
+}
+
+parse_commandline "$@";
+handle_passed_args_count;
+assign_positional_args 1 "${_positionals[@]}";
+trap on_interrupt INT;
+
+
 
 # @parseArger-parsing-end
 # print_debug "$@"

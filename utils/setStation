@@ -1,23 +1,29 @@
 #!/bin/bash
 # @parseArger-begin
-# @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
+# @parseArger-help "Set station configuration" --option "help" --short-option "h"
+# @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
 # @parseArger pos name "station name"
 # @parseArger opt sensor "sensor to add" --short s --repeat
 # @parseArger opt ip "ip address" --short i --default-value "0"
-# @parseArger opt board "pio env" --default-value "nodemcuv2"
-# @parseArger opt data-file "data-file to add" --repeat
-# @parseArger opt data-directory "data-directory to add" --repeat
-# @parseArger opt js "js to add" --repeat
-# @parseArger opt css "css to add" --repeat
+# @parseArger opt board "pio env" --short b --default-value "nodemcuv2"
+# @parseArger opt data-file "data-file to add" --short f --repeat
+# @parseArger opt data-directory "data-directory to add" --short d --repeat
+# @parseArger opt js "js to add" --short j --repeat
+# @parseArger opt css "css to add" --short c --repeat
 # @parseArger-declarations-end
+
+# @parseArger-utils
+_helpHasBeenPrinted=1;
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";
+# @parseArger-utils-end
 
 # @parseArger-parsing
 die()
 {
 	local _ret="${2:-1}"
 	test "${_PRINT_HELP:-no}" = yes && print_help >&2
-	echo "$1" >&2
+	log "$1" -3 >&2
 	exit "${_ret}"
 }
 
@@ -41,21 +47,60 @@ _arg_data_directory=()
 _arg_js=()
 _arg_css=()
 # FLAGS
+_verbose_level="0";
+
 
 
 print_help()
 {
-	echo -e "I send an SOS to the world:"
+	_triggerSCHelp=1;
+
+	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
+		_helpHasBeenPrinted=0;
+		echo -e "Set station configuration:"
 	echo -e "	name: station name"
 	echo -e "	-s, --sensor <sensor>: sensor to add, repeatable"
 	echo -e "	-i, --ip <ip>: ip address [default: ' 0 ']"
-	echo -e "	--board <board>: pio env [default: ' nodemcuv2 ']"
-	echo -e "	--data-file <data-file>: data-file to add, repeatable"
-	echo -e "	--data-directory <data-directory>: data-directory to add, repeatable"
-	echo -e "	--js <js>: js to add, repeatable"
-	echo -e "	--css <css>: css to add, repeatable"
+	echo -e "	-b, --board <board>: pio env [default: ' nodemcuv2 ']"
+	echo -e "	-f, --data-file <data-file>: data-file to add, repeatable"
+	echo -e "	-d, --data-directory <data-directory>: data-directory to add, repeatable"
+	echo -e "	-j, --js <js>: js to add, repeatable"
+	echo -e "	-c, --css <css>: css to add, repeatable"
 	echo -e "Usage :
-	$0 <name> [--sensor <value>] [--ip <value>] [--board <value>] [--data-file <value>] [--data-directory <value>] [--js <value>] [--css <value>]"
+	$0 <name> [--sensor <value>] [--ip <value>] [--board <value>] [--data-file <value>] [--data-directory <value>] [--js <value>] [--css <value>]";
+	fi
+
+}
+
+log() {
+	local _arg_msg="${1}";
+	local _arg_level="${2:"0"}";
+	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
+		case "$_arg_level" in
+			-3)
+				_arg_COLOR="\033[0;31m";
+				;;
+			-2)
+				_arg_COLOR="\033[0;33m";
+				;;
+			-1)
+				_arg_COLOR="\033[1;33m";
+				;;
+			1)
+				_arg_COLOR="\033[0;32m";
+				;;
+			2)
+				_arg_COLOR="\033[1;36m";
+				;;
+			3)
+				_arg_COLOR="\033[0;36m";
+				;;
+			*)
+				_arg_COLOR="\033[0m";
+				;;
+		esac
+		echo -e "${_arg_COLOR}${_arg_msg}\033[0m";
+	fi
 }
 
 parse_commandline()
@@ -89,7 +134,7 @@ parse_commandline()
 				_arg_ip="${_key##-i}"
 				;;
 			
-			--board)
+			-b|--board)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_board="$2"
 				shift
@@ -97,8 +142,11 @@ parse_commandline()
 			--board=*)
 				_arg_board="${_key##--board=}"
 				;;
+			-b*)
+				_arg_board="${_key##-b}"
+				;;
 			
-			--data-file)
+			-f|--data-file)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_data_file+=("$2")
 				shift
@@ -106,8 +154,11 @@ parse_commandline()
 			--data-file=*)
 				_arg_data_file+=("${_key##--data-file=}")
 				;;
+			-f*)
+				_arg_data_file+=("${_key##-f}")
+				;;
 			
-			--data-directory)
+			-d|--data-directory)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_data_directory+=("$2")
 				shift
@@ -115,8 +166,11 @@ parse_commandline()
 			--data-directory=*)
 				_arg_data_directory+=("${_key##--data-directory=}")
 				;;
+			-d*)
+				_arg_data_directory+=("${_key##-d}")
+				;;
 			
-			--js)
+			-j|--js)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_js+=("$2")
 				shift
@@ -124,14 +178,20 @@ parse_commandline()
 			--js=*)
 				_arg_js+=("${_key##--js=}")
 				;;
+			-j*)
+				_arg_js+=("${_key##-j}")
+				;;
 			
-			--css)
+			-c|--css)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_css+=("$2")
 				shift
 				;;
 			--css=*)
 				_arg_css+=("${_key##--css=}")
+				;;
+			-c*)
+				_arg_css+=("${_key##-c}")
 				;;
 			
 			-h|--help)
@@ -142,6 +202,23 @@ parse_commandline()
 				print_help;
 				exit 0;
 				;;
+			-v|--version)
+				print_version;
+				exit 0;
+				;;
+			-v*)
+				print_version;
+				exit 0;
+				;;
+			--verbose)
+				if [ $# -lt 2 ];then
+					_verbose_level="$((_verbose_level + 1))";
+				else
+					_verbose_level="$2";
+					shift;
+				fi
+				;;
+			
 			*)
 				_last_positional="$1"
 				_positionals+=("$_last_positional")
@@ -156,8 +233,13 @@ parse_commandline()
 handle_passed_args_count()
 {
 	local _required_args_string="name"
-	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+	if [ "${_positionals_count}" -gt 1 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
+	fi
+	if [ "${_positionals_count}" -lt 1 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 1 (namely: $_required_args_string), but got only ${_positionals_count}.
+	${_positionals[*]}" 1;
+	fi
 }
 
 
@@ -168,8 +250,8 @@ assign_positional_args()
 	shift "$_shift_for"
 	for _positional_name in ${_positional_names};do
 		test $# -gt 0 || break;
-		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1
-eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an Argbash bug." 1;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
+		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
 		shift;
 	done
 }
@@ -181,19 +263,31 @@ print_debug()
 	echo "DEBUG: $0 $@";
 	
 	echo -e "\tname: ${_arg_name}";
-	echo -e "\tsensor: ${_arg_sensor | sed 's/-/_/g'}";
-	echo -e "\tip: ${_arg_ip | sed 's/-/_/g'}";
-	echo -e "\tboard: ${_arg_board | sed 's/-/_/g'}";
-	echo -e "\tdata-file: ${_arg_data-file | sed 's/-/_/g'}";
-	echo -e "\tdata-directory: ${_arg_data-directory | sed 's/-/_/g'}";
-	echo -e "\tjs: ${_arg_js | sed 's/-/_/g'}";
-	echo -e "\tcss: ${_arg_css | sed 's/-/_/g'}";
+	echo -e "\tsensor: ${_arg_sensor[*]}";
+	echo -e "\tip: ${_arg_ip}";
+	echo -e "\tboard: ${_arg_board}";
+	echo -e "\tdata-file: ${_arg_data_file[*]}";
+	echo -e "\tdata-directory: ${_arg_data_directory[*]}";
+	echo -e "\tjs: ${_arg_js[*]}";
+	echo -e "\tcss: ${_arg_css[*]}";
 
 }
 
-parse_commandline "$@"
-handle_passed_args_count
-assign_positional_args 1 "${_positionals[@]}"
+print_version()
+{
+	echo "";
+}
+
+on_interrupt() {
+	die Process aborted! 130;
+}
+
+parse_commandline "$@";
+handle_passed_args_count;
+assign_positional_args 1 "${_positionals[@]}";
+trap on_interrupt INT;
+
+
 
 # @parseArger-parsing-end
 # print_debug "$@"

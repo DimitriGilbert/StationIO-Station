@@ -1,6 +1,7 @@
 #!/bin/bash
 # @parseArger-begin
-# @parseArger-help "I send an SOS to the world" --option "help" --short-option "h"
+# @parseArger-help "Build station filesystem" --option "help" --short-option "h"
+# @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
 # @parseArger opt js "path to js file, ':' to separate target directory (/assets/js by default)" --short j --repeat
 # @parseArger opt css "path to css file, ':' to separate target directory (/assets/css by default)" --short c --repeat
@@ -8,18 +9,23 @@
 # @parseArger opt file "file to add, will be gzipped, ':' to separate target directory (/ by default)" --short f --repeat
 # @parseArger opt file-no-gz "add a file without gzip, ':' to separate target directory (/ by default)" --short F --repeat
 # @parseArger opt node "node executable" --default-value "node"
-# @parseArger opt pio "pio executable" --default-value "$HOME/.platformio/penv/bin/pio"
+# @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
 # @parseArger opt environement "build environment" --short e --default-value "nodemcuv2"
 # @parseArger opt upload "station to upload to, will set --environment" --short u
 # @parseArger flag dry "do not upload (just build for a station)" --short D
 # @parseArger-declarations-end
+
+# @parseArger-utils
+_helpHasBeenPrinted=1;
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";
+# @parseArger-utils-end
 
 # @parseArger-parsing
 die()
 {
 	local _ret="${2:-1}"
 	test "${_PRINT_HELP:-no}" = yes && print_help >&2
-	echo "$1" >&2
+	log "$1" -3 >&2
 	exit "${_ret}"
 }
 
@@ -40,28 +46,67 @@ _arg_directory=()
 _arg_file=()
 _arg_file_no_gz=()
 _arg_node="node"
-_arg_pio="$HOME/.platformio/penv/bin/pio"
+_arg_pio="/home/didi/.platformio/penv/bin/pio"
 _arg_environement="nodemcuv2"
 _arg_upload=
 # FLAGS
 _arg_dry="off"
+_verbose_level="0";
+
 
 
 print_help()
 {
-	echo -e "I send an SOS to the world:"
+	_triggerSCHelp=1;
+
+	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
+		_helpHasBeenPrinted=0;
+		echo -e "Build station filesystem:"
 	echo -e "	-j, --js <js>: path to js file, ':' to separate target directory (/assets/js by default), repeatable"
 	echo -e "	-c, --css <css>: path to css file, ':' to separate target directory (/assets/css by default), repeatable"
 	echo -e "	-d, --directory <directory>: additional directory path, all files will be gzipped, ':' to separate target directory (/ by default), repeatable"
 	echo -e "	-f, --file <file>: file to add, will be gzipped, ':' to separate target directory (/ by default), repeatable"
 	echo -e "	-F, --file-no-gz <file-no-gz>: add a file without gzip, ':' to separate target directory (/ by default), repeatable"
 	echo -e "	--node <node>: node executable [default: ' node ']"
-	echo -e "	--pio <pio>: pio executable [default: ' $HOME/.platformio/penv/bin/pio ']"
+	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
 	echo -e "	-e, --environement <environement>: build environment [default: ' nodemcuv2 ']"
 	echo -e "	-u, --upload <upload>: station to upload to, will set --environment"
 	echo -e "	-D|--dry|--no-dry: do not upload (just build for a station)"
 	echo -e "Usage :
-	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>] [--[no-]dry]"
+	$0 [--js <value>] [--css <value>] [--directory <value>] [--file <value>] [--file-no-gz <value>] [--node <value>] [--pio <value>] [--environement <value>] [--upload <value>] [--[no-]dry]";
+	fi
+
+}
+
+log() {
+	local _arg_msg="${1}";
+	local _arg_level="${2:"0"}";
+	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
+		case "$_arg_level" in
+			-3)
+				_arg_COLOR="\033[0;31m";
+				;;
+			-2)
+				_arg_COLOR="\033[0;33m";
+				;;
+			-1)
+				_arg_COLOR="\033[1;33m";
+				;;
+			1)
+				_arg_COLOR="\033[0;32m";
+				;;
+			2)
+				_arg_COLOR="\033[1;36m";
+				;;
+			3)
+				_arg_COLOR="\033[0;36m";
+				;;
+			*)
+				_arg_COLOR="\033[0m";
+				;;
+		esac
+		echo -e "${_arg_COLOR}${_arg_msg}\033[0m";
+	fi
 }
 
 parse_commandline()
@@ -173,9 +218,11 @@ parse_commandline()
 				_arg_upload="${_key##-u}"
 				;;
 			
-			-D|--no-dry|--dry)
+			-D|--dry)
 				_arg_dry="on"
-				test "${1:0:5}" = "--no-" && _arg_dry="off"
+				;;
+			--no-dry)
+				_arg_dry="off"
 				;;
 			-h|--help)
 				print_help;
@@ -185,6 +232,23 @@ parse_commandline()
 				print_help;
 				exit 0;
 				;;
+			-v|--version)
+				print_version;
+				exit 0;
+				;;
+			-v*)
+				print_version;
+				exit 0;
+				;;
+			--verbose)
+				if [ $# -lt 2 ];then
+					_verbose_level="$((_verbose_level + 1))";
+				else
+					_verbose_level="$2";
+					shift;
+				fi
+				;;
+			
 			*)
 				_last_positional="$1"
 				_positionals+=("$_last_positional")
@@ -199,8 +263,13 @@ parse_commandline()
 handle_passed_args_count()
 {
 	local _required_args_string=""
-	test "${_positionals_count}" -le 0 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 0 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-	test "${_positionals_count}" -ge 0 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 0 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+	if [ "${_positionals_count}" -gt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 0 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
+	fi
+	if [ "${_positionals_count}" -lt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 0 (namely: $_required_args_string), but got only ${_positionals_count}.
+	${_positionals[*]}" 1;
+	fi
 }
 
 
@@ -211,8 +280,8 @@ assign_positional_args()
 	shift "$_shift_for"
 	for _positional_name in ${_positional_names};do
 		test $# -gt 0 || break;
-		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1
-eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an Argbash bug." 1;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
+		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
 		shift;
 	done
 }
@@ -223,22 +292,34 @@ print_debug()
 	# shellcheck disable=SC2145
 	echo "DEBUG: $0 $@";
 	
-	echo -e "\tjs: ${_arg_js | sed 's/-/_/g'}";
-	echo -e "\tcss: ${_arg_css | sed 's/-/_/g'}";
-	echo -e "\tdirectory: ${_arg_directory | sed 's/-/_/g'}";
-	echo -e "\tfile: ${_arg_file | sed 's/-/_/g'}";
-	echo -e "\tfile-no-gz: ${_arg_file-no-gz | sed 's/-/_/g'}";
-	echo -e "\tnode: ${_arg_node | sed 's/-/_/g'}";
-	echo -e "\tpio: ${_arg_pio | sed 's/-/_/g'}";
-	echo -e "\tenvironement: ${_arg_environement | sed 's/-/_/g'}";
-	echo -e "\tupload: ${_arg_upload | sed 's/-/_/g'}";
-	echo -e "\tdry: ${_arg_dry | sed 's/-/_/g'}";
+	echo -e "\tjs: ${_arg_js[*]}";
+	echo -e "\tcss: ${_arg_css[*]}";
+	echo -e "\tdirectory: ${_arg_directory[*]}";
+	echo -e "\tfile: ${_arg_file[*]}";
+	echo -e "\tfile-no-gz: ${_arg_file_no_gz[*]}";
+	echo -e "\tnode: ${_arg_node}";
+	echo -e "\tpio: ${_arg_pio}";
+	echo -e "\tenvironement: ${_arg_environement}";
+	echo -e "\tupload: ${_arg_upload}";
+	echo -e "\tdry: ${_arg_dry}";
 
 }
 
-parse_commandline "$@"
-handle_passed_args_count
-assign_positional_args 1 "${_positionals[@]}"
+print_version()
+{
+	echo "";
+}
+
+on_interrupt() {
+	die Process aborted! 130;
+}
+
+parse_commandline "$@";
+handle_passed_args_count;
+assign_positional_args 1 "${_positionals[@]}";
+trap on_interrupt INT;
+
+
 
 # @parseArger-parsing-end
 # print_debug "$@"

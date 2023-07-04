@@ -613,7 +613,9 @@ void EspStation::connectWifi() {
     this->log("Wifi :");
     this->logt("no wifi information, starting AP mode");
     // I know, for testing purpose, only... #ItllBeFine
-    this->wifi.softAP(this->name+"_net", this->name+"_password");
+    String ssid_ = this->name+"_net";
+    String password_ = this->name+"_password";
+    this->wifi.softAP(ssid_.c_str(), password_.c_str());
     this->status = EspStation::StatusReady;
   }
 }

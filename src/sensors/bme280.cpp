@@ -26,7 +26,7 @@ const u_int* bme280::mesuresSampleRates[4] = {
 
 // void bme280::onSetup(StationClass station, int index) {}
 void bme280::begin() {
-  Serial.println("bme280::begin()");
+  // Serial.println("bme280::begin()");
   this->bme.begin() || this->bme.begin(BME280_ADDRESS_ALTERNATE)
       ? this->status = Sensor::StatusReady
       : (this->status = Sensor::StatusError) &&
