@@ -83,4 +83,8 @@ class WifiManager {
   boolean enableAP(const char* ssid, const char* password);
   boolean disableAP();
 
+  boolean addNetwork(NetworkInformation network);
+  boolean setNetwork(NetworkInformation network, int16_t index);
+  boolean removeNetwork(int16_t network);
+
 };

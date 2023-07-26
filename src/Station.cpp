@@ -263,12 +263,6 @@ String BaseStation::getSensorName(int index) {
 EspStation::EspStation(String name) : BaseStation(name), webServer(80) {
   this->stationTypeName = "ESP";
 }
-// EspStation::EspStation(String name, NetworkInformation& wifiInformation)
-//     : BaseStation(name), webServer(80) {
-//   this->stationTypeName = "ESP";
-//   this->wifiManager.networks[0].ssid = wifiInformation.ssid;
-//   this->wifiManager.networks[0].password = wifiInformation.password;
-// }
 EspStation::~EspStation() {}
 
 void EspStation::setup() {
@@ -293,7 +287,7 @@ void EspStation::connect(String hostname) {
 }
 void EspStation::connect(NetworkInformation wifiInformation) {
   this->wifiManager.logger = this->logger;
-  this->wifiManager.begin(wifiInformation);
+  this->wifiManager.begin(wifiInformation, String("SIO_"+this->name).c_str());
   this->wifiManager.connect();
   this->serve();
 }
@@ -633,10 +627,6 @@ void EspStation::serveWeb() {
 Esp32Station::Esp32Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP32";
 }
-// Esp32Station::Esp32Station(String name, NetworkInformation wifiInformation)
-//     : EspStation(name, wifiInformation) {
-//   this->stationTypeName = "ESP32";
-// }
 Esp32Station::~Esp32Station() {}
 
 void Esp32Station::setup() {
@@ -659,9 +649,5 @@ void Esp32Station::setup(NetworkInformation wifiInformation) {
 Esp8266Station::Esp8266Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP8266";
 }
-// Esp8266Station::Esp8266Station(String name, WifiInformation wifiInformation)
-//     : EspStation(name, wifiInformation) {
-//   this->stationTypeName = "ESP8266";
-// }
 Esp8266Station::~Esp8266Station() {}
 #endif

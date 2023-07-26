@@ -86,7 +86,7 @@ boolean WifiManager::connect(int16_t network) {
   }
 
   currentNetwork = network;
-  return connect(networks[currentNetwork]);
+  return connect(networks[currentNetwork].ssid, networks[currentNetwork].password);
 }
 
 boolean WifiManager::connect(NetworkInformation network) {
@@ -94,6 +94,7 @@ boolean WifiManager::connect(NetworkInformation network) {
     logger.log("network ssid is NULL", -2);
     return false;
   }
+  addNetwork(network);
 
   return connect(network.ssid, network.password);
 }
@@ -159,3 +160,31 @@ boolean WifiManager::disableAP() {
   wifi.mode(WIFI_STA);
   return !isAPEnabled();
 }
+
+boolean WifiManager::addNetwork(NetworkInformation network) {
+  for (size_t neti = 0; neti < StationIONetworkPoolSize; neti++) {
+    if (networks[neti].ssid == NULL) {
+      networks[neti] = network;
+      return true;
+    }
+  }
+  networks[StationIONetworkPoolSize - 1] = network;
+  return true;
+}
+boolean WifiManager::setNetwork(NetworkInformation network, int16_t index) {
+  if (index < 0 || index >= StationIONetworkPoolSize) {
+    return false;
+  }
+
+  networks[index] = network;
+  return true;
+}
+boolean WifiManager::removeNetwork(int16_t network) {
+  if (network < 0 || network >= StationIONetworkPoolSize) {
+    return false;
+  }
+
+  networks[network] = {"", ""};
+  return true;
+}
+
