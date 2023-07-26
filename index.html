@@ -491,13 +491,15 @@ if(typeof sensor !== "string"){
 <%~ it.plugins.include %>
 <%}%>
 // initializing station
-StationClass station(
-  "<%= it.name %>"<% if(it.wifi!==undefined){%> ,
-  {
-    ssid : "NEVER PUT YOUR WIFI INFO",
-    password : "IN A RANDOM FORM ON THE WEB !! !"
-  }
-<% } %>);
+StationClass station("<%= it.name %>");
+
+<% if(it.wifi!==undefined){%>
+// wifi config
+NetworkInformation wifiInformation = {
+  ssid : "NEVER PUT YOUR WIFI INFO",
+  password : "IN A RANDOM FORM ON THE WEB !! !"
+}
+<% } %>
 
 <% if(it.sensors!==undefined && it.sensors.length > 0){%>
 // ___ sensors ___
@@ -555,7 +557,7 @@ if(it.webServerRoutes!==undefined && it.webServerRoutes.length > 0){if(it.webSer
 
 void setup() {
   Wire.begin(<%= it.i2c!==undefined?(it.i2c[0]+", "+it.i2c[1]):""%>);
-  station.setup();
+  station.setup(<% if(it.wifi!==undefined){%>wifiInformation<% } %>);
 
   <% if(it.sensors!==undefined && it.sensors.length > 0){%>// setting up sensors
   station.setupSensors(sensors, <%= it.sensors.length %>);
