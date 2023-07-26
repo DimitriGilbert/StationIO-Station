@@ -12,7 +12,7 @@ class SimpleLogger {
   void begin();
   void begin(int16_t speed);
   void begin(HardwareSerial& serial);
-  void begin(HardwareSerial& serial, int8_t speed);
+  void begin(HardwareSerial& serial, int16_t speed);
 
   void log(const String& data);
   void log(const String& data, int8_t level);

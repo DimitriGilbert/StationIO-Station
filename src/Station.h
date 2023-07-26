@@ -139,8 +139,10 @@ class EspStation : public BaseStation {
 
 
   EspStation(String name);
-  EspStation(String name, NetworkInformation wifiInformation);
   ~EspStation();
+
+  void setup();
+  void setup(NetworkInformation wifiInformation);
 
   void initWebServer();
   void setupWebServer(StationWebCallbackInfo_t** routes, int callbackCount);
@@ -159,9 +161,9 @@ class Esp32Station : public EspStation {
  private:
  public:
   Esp32Station(String name);
-  Esp32Station(String name, NetworkInformation wifiInformation);
   ~Esp32Station();
   void setup();
+  void setup(NetworkInformation wifiInformation);
 };
 typedef Esp32Station StationClass;
 #elif defined(ESP8266)
@@ -169,9 +171,7 @@ class Esp8266Station : public EspStation {
  private:
  public:
   Esp8266Station(String name);
-  Esp8266Station(String name, NetworkInformation wifiInformation);
   ~Esp8266Station();
-  void setup();
 };
 typedef Esp8266Station StationClass;
 #else

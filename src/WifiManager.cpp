@@ -80,7 +80,8 @@ boolean WifiManager::connect() {
 }
 
 boolean WifiManager::connect(int16_t network) {
-  if (network < 0 || network >= reachableNetworkCount) {
+  if (network < 0 || network >= StationIONetworkPoolSize) {
+    logger.log("network index does not exists", -2);
     return false;
   }
 
@@ -90,6 +91,7 @@ boolean WifiManager::connect(int16_t network) {
 
 boolean WifiManager::connect(NetworkInformation network) {
   if (network.ssid == NULL) {
+    logger.log("network ssid is NULL", -2);
     return false;
   }
 

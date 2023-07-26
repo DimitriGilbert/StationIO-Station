@@ -15,7 +15,7 @@ BaseStation::BaseStation(String name) {
   this->name = name;
   // this->serial = Serial;
   this->stationTypeName = "Arduino";
-  this->log("starting...");
+  // this->log("starting...");
 }
 
 BaseStation::~BaseStation() {}
@@ -263,28 +263,45 @@ String BaseStation::getSensorName(int index) {
 EspStation::EspStation(String name) : BaseStation(name), webServer(80) {
   this->stationTypeName = "ESP";
 }
-EspStation::EspStation(String name, NetworkInformation wifiInformation)
-    : BaseStation(name), webServer(80) {
-  this->stationTypeName = "ESP";
-  this->wifiManager.networks[0] = wifiInformation;
-}
+// EspStation::EspStation(String name, NetworkInformation& wifiInformation)
+//     : BaseStation(name), webServer(80) {
+//   this->stationTypeName = "ESP";
+//   this->wifiManager.networks[0].ssid = wifiInformation.ssid;
+//   this->wifiManager.networks[0].password = wifiInformation.password;
+// }
 EspStation::~EspStation() {}
+
+void EspStation::setup() {
+  BaseStation::setup();
+  this->log("Available Heap :");
+  this->logt(String(ESP.getFreeHeap()));
+}
+void EspStation::setup(NetworkInformation wifiInformation) {
+  this->setup();
+  this->connect(wifiInformation);
+}
 
 void EspStation::connect() { this->connect("SIO_"+this->name); }
 void EspStation::connect(String hostname) {
   char* hn = (char*)malloc(hostname.length()+1);
   strcpy(hn, hostname.c_str());
+  this->wifiManager.logger = this->logger;
   this->wifiManager.hostname = hn;
   this->wifiManager.begin();
   this->wifiManager.connect();
+  this->serve();
 }
 void EspStation::connect(NetworkInformation wifiInformation) {
+  this->wifiManager.logger = this->logger;
   this->wifiManager.begin(wifiInformation);
   this->wifiManager.connect();
+  this->serve();
 }
 void EspStation::connect(NetworkInformation wifiInformation, String hostname) {
+  this->wifiManager.logger = this->logger;
   this->wifiManager.begin(wifiInformation, hostname.c_str());
   this->wifiManager.connect();
+  this->serve();
 }
 
 
@@ -606,9 +623,7 @@ void EspStation::serve() { this->serveWeb(); }
 
 void EspStation::serveWeb() {
   // if (this->ready(EspStation::StatusReady) &&
-  if (this->wifi.status() == WL_CONNECTED &&
-      strlen(this->wifiInformation.ssid) > 0 &&
-      strlen(this->wifiInformation.password) > 0) {
+  if (this->wifiManager.isConnected()) {
     this->initWebServer();
     this->webServer.begin();
   }
@@ -618,10 +633,10 @@ void EspStation::serveWeb() {
 Esp32Station::Esp32Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP32";
 }
-Esp32Station::Esp32Station(String name, NetworkInformation wifiInformation)
-    : EspStation(name, wifiInformation) {
-  this->stationTypeName = "ESP32";
-}
+// Esp32Station::Esp32Station(String name, NetworkInformation wifiInformation)
+//     : EspStation(name, wifiInformation) {
+//   this->stationTypeName = "ESP32";
+// }
 Esp32Station::~Esp32Station() {}
 
 void Esp32Station::setup() {
@@ -634,25 +649,19 @@ void Esp32Station::setup() {
       this->log("LittleFS formatted successfully");
     }
   }
-  this->connect();
-  this->serve();
+}
+void Esp32Station::setup(NetworkInformation wifiInformation) {
+  this->setup();
+  this->connect(wifiInformation);
 }
 #elif defined(ESP8266)
 // ESP8266
 Esp8266Station::Esp8266Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP8266";
 }
-Esp8266Station::Esp8266Station(String name, WifiInformation wifiInformation)
-    : EspStation(name, wifiInformation) {
-  this->stationTypeName = "ESP8266";
-}
+// Esp8266Station::Esp8266Station(String name, WifiInformation wifiInformation)
+//     : EspStation(name, wifiInformation) {
+//   this->stationTypeName = "ESP8266";
+// }
 Esp8266Station::~Esp8266Station() {}
-
-void Esp8266Station::setup() {
-  BaseStation::setup();
-  this->log("Available Heap :");
-  this->logt(String(ESP.getFreeHeap()));
-  this->connect();
-  this->serve();
-}
 #endif

@@ -18,21 +18,27 @@ void SimpleLogger::begin(HardwareSerial& serial) {
   begin();
 }
 
-void SimpleLogger::begin(HardwareSerial& serial, int8_t speed) {
+void SimpleLogger::begin(HardwareSerial& serial, int16_t speed) {
   sr = serial;
   begin(speed);
 }
 
 void SimpleLogger::log(const String& data) {
-  log(data.c_str(), 0);
+  if (level <= this->level) {
+    sr.println(data);
+  }
 }
 
 void SimpleLogger::log(const String& data, int8_t level) {
-  log(data.c_str(), level);
+  if (level <= this->level) {
+    sr.println(data);
+  }
 }
 
 void SimpleLogger::log(const char*& data) {
-  log(data, 0);
+  if (level <= this->level) {
+    sr.println(data);
+  }
 }
 
 void SimpleLogger::log(const char*& data, int8_t level) {
@@ -42,15 +48,21 @@ void SimpleLogger::log(const char*& data, int8_t level) {
 }
 
 void SimpleLogger::logt(const String& data) {
-  logt(data.c_str(), 0);
+  if (level <= this->level) {
+    log(("\t"+String(data)).c_str(), level);
+  }
 }
 
 void SimpleLogger::logt(const String& data, int8_t level) {
-  logt(data.c_str(), level);
+  if (level <= this->level) {
+    log(("\t"+String(data)).c_str(), level);
+  }
 }
 
 void SimpleLogger::logt(const char*& data) {
-  logt(data, 0);
+  if (level <= this->level) {
+    log(("\t"+String(data)).c_str(), level);
+  }
 }
 
 void SimpleLogger::logt(const char*& data, int8_t level) {
