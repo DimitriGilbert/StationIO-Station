@@ -254,14 +254,27 @@
             <div class="col">
               <h2 class="text-center">Main config</h2>
               <div class="row">
-                <label for="station-name">Station Name</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  name="station-name"
-                  id="station-name"
-                  placeholder="Station Name"
-                />
+                <div class="col">
+                  <label for="station-type">Station Type</label>
+                  <select
+                    class="form-select"
+                    name="station-type"
+                    id="station-type"
+                  >
+                    <option value="esp8266">esp8266</option>
+                    <option value="esp32">esp32</option>
+                  </select>
+                </div>
+                <div class="col">
+                  <label for="station-name">Station Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="station-name"
+                    id="station-name"
+                    placeholder="Station Name"
+                  />
+                </div>
               </div>
               <div id="wifi-config" class="row">
                 <div class="col">
@@ -381,6 +394,17 @@
                 id="install-station-name"
                 placeholder="Station Name"
               />
+            </div>
+            <div class="col">
+              <label for="install-board-type">Station Type</label>
+              <select
+                class="form-select"
+                name="install-board-type"
+                id="install-board-type"
+              >
+                <option value="esp8266">esp8266</option>
+                <option value="esp32">esp32</option>
+              </select>
             </div>
             <div class="col">
               <label for="install-station-type">install type</label>
@@ -624,7 +648,7 @@ cd StationIO
 source completely.bash
 
 # create your station and copy "main.cpp" output to "stations/<%~ it.stationName %>.main.cpp"
-./StationIO create "<%~ it.stationName %>" -b nodemcuv2
+./StationIO create "<%~ it.stationName %>" -b <%~ it.stationType === undefined ? "nodemcuv2" : it.stationType %>
 
 # if you have custom sensors copy the code from the "sensors" tab to the relevant files in src/sensors/
 
@@ -1206,6 +1230,7 @@ TInfo tinfo;
             
             const data = {
               name: frmData.get("station-name"),
+              type: frmData.get("station-type"),
               wifi: {
                 ssid: frmData.get("wifi-ssid"),
                 password: frmData.get("wifi-password"),
@@ -1261,6 +1286,15 @@ TInfo tinfo;
             );
             
             document.getElementById("install-station-name").value = data.name;
+            document.getElementById("install-board-type").value = data.type;
+            document.getElementById("install-board-type").childNodes.forEach((el) => {
+              if (el.value == data.type) {
+                el.setAttribute("selected", "selected");
+              } else {
+                el.removeAttribute("selected");
+              }
+            });
+
             document.getElementById("install-config-frm").dispatchEvent(new Event('change'));
             
             if (document.getElementById("stationio-custom-sensors").innerHTML == "") {
@@ -1274,7 +1308,7 @@ TInfo tinfo;
           let frmData = new FormData(evt.target.form!==undefined?evt.target.form:evt.target);
           new FormData(document.getElementById("stationio-config-frm")).forEach((v, k) => frmData.append(k, v));
           
-          let data = {stationName: frmData.get("install-station-name")};
+          let data = {stationName: frmData.get("install-station-name"),stationType: frmData.get("install-board-type")};
           let installTpl = frmData.has("install-station-pio")&&frmData.get("install-station-pio")=="on"?installPIOtpl+"\n":"";
           switch (frmData.get("install-station-type")) {
             case "none":

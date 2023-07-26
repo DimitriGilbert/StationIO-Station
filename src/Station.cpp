@@ -20,17 +20,30 @@ BaseStation::BaseStation(String name) {
 
 BaseStation::~BaseStation() {}
 void BaseStation::setSerial(HardwareSerial sr) { this->serial = sr; }
-void BaseStation::log(const String& data) { this->serial.println(data); }
+void BaseStation::log(const String& data) { this->logger.log(data,0); }
 void BaseStation::logt(const String& data) {
-  this->serial.println("\t" + data);
+  this->logger.logt(data,0);
+}
+void BaseStation::log(const String& data, int8_t level) {
+  this->logger.log(data,level);
+}
+void BaseStation::logt(const String& data, int8_t level) {
+  this->logger.logt(data,level);
 }
 
 void BaseStation::setup() {
-  this->serial.begin(9600);
+  this->logger.begin(this->serial, 9600);
   this->log("\nWelcome to StationIO");
-  this->logt("on " + this->stationTypeName);
+  this->logt("on " + this->stationTypeName, 1);
   this->logt("station " + this->name);
   this->status = BaseStation::StatusReady;
+  // it has its own thing, did not test on 8266 or arduino
+  #ifndef ESP32
+  this->log("Mounting LittleFS...");
+  if (!LittleFS.begin()) {
+    this->logt("Failed", -2);
+  }
+  #endif
 }
 
 void BaseStation::setupSensors(Sensor** sensors, size_t sensorCount) {
@@ -249,24 +262,31 @@ String BaseStation::getSensorName(int index) {
 // ESP Staion
 EspStation::EspStation(String name) : BaseStation(name), webServer(80) {
   this->stationTypeName = "ESP";
-  this->setWifiInformation({ssid : "", password : ""});
 }
-EspStation::EspStation(String name, WifiInformation wifiInformation)
+EspStation::EspStation(String name, NetworkInformation wifiInformation)
     : BaseStation(name), webServer(80) {
   this->stationTypeName = "ESP";
-  this->setWifiInformation(wifiInformation);
+  this->wifiManager.networks[0] = wifiInformation;
 }
 EspStation::~EspStation() {}
 
-void EspStation::setWifiInformation(WifiInformation wifiInformation) {
-  this->wifiInformation = wifiInformation;
+void EspStation::connect() { this->connect("SIO_"+this->name); }
+void EspStation::connect(String hostname) {
+  char* hn = (char*)malloc(hostname.length()+1);
+  strcpy(hn, hostname.c_str());
+  this->wifiManager.hostname = hn;
+  this->wifiManager.begin();
+  this->wifiManager.connect();
+}
+void EspStation::connect(NetworkInformation wifiInformation) {
+  this->wifiManager.begin(wifiInformation);
+  this->wifiManager.connect();
+}
+void EspStation::connect(NetworkInformation wifiInformation, String hostname) {
+  this->wifiManager.begin(wifiInformation, hostname.c_str());
+  this->wifiManager.connect();
 }
 
-void EspStation::connect(String hostname) { 
-  this->wifi.setHostname(hostname.c_str());
-  this->connect();
-}
-void EspStation::connect() { this->connectWifi(); }
 
 void EspStation::initWebServer() {
   this->log("Web Server :");
@@ -582,59 +602,6 @@ void EspStation::addEndpoint(StationWebCallbackInfo_t endpoint) {
   this->openApiStr += "    x-stio: true\n";
 }
 
-void EspStation::connectWifi(WifiInformation wifiInformation) {
-  this->setWifiInformation(wifiInformation);
-  this->connectWifi();
-}
-
-void EspStation::connectWifi() {
-  if (strlen(this->wifiInformation.ssid) > 0 &&
-      strlen(this->wifiInformation.password) > 0) {
-    if (this->ready(EspStation::StatusConnecting) &&
-        this->wifi.status() != WL_CONNECTED) {
-      this->log("Wifi :");
-      this->logt("connecting to " + String(this->wifiInformation.ssid));
-      this->wifi.begin(
-          this->wifiInformation.ssid, this->wifiInformation.password
-      );
-      if (this->wifi.waitForConnectResult() != WL_CONNECTED) {
-        this->status = EspStation::StatusError;
-        this->error = EspStation::ErrorWifiConnection;
-        this->logt(
-            "connection failed ! error : " + String(this->wifi.status())
-        );
-      } else {
-        this->status = EspStation::StatusConnected;
-        this->logt("connected as " + String(this->wifi.localIP().toString()));
-      }
-    }
-  } else {
-    // setup AP mode
-    this->log("Wifi :");
-    this->logt("no wifi information, starting AP mode");
-    // I know, for testing purpose, only... #ItllBeFine
-    String ssid_ = this->name+"_net";
-    String password_ = this->name+"_password";
-    this->wifi.softAP(ssid_.c_str(), password_.c_str());
-    this->status = EspStation::StatusReady;
-  }
-}
-
-String EspStation::scanWifi() {
-  String out = "";
-  if (this->wifi.status() != WL_CONNECTED) {
-    byte available_networks = this->wifi.scanNetworks();
-
-    for (int network = 0; network < available_networks; network++) {
-      out.concat(this->wifi.SSID(network));
-      out.concat(" : ");
-      out.concat(this->wifi.RSSI(network));
-      out.concat("\n");
-    }
-  }
-  return out;
-}
-
 void EspStation::serve() { this->serveWeb(); }
 
 void EspStation::serveWeb() {
@@ -651,7 +618,7 @@ void EspStation::serveWeb() {
 Esp32Station::Esp32Station(String name) : EspStation(name) {
   this->stationTypeName = "ESP32";
 }
-Esp32Station::Esp32Station(String name, WifiInformation wifiInformation)
+Esp32Station::Esp32Station(String name, NetworkInformation wifiInformation)
     : EspStation(name, wifiInformation) {
   this->stationTypeName = "ESP32";
 }
@@ -685,11 +652,6 @@ void Esp8266Station::setup() {
   BaseStation::setup();
   this->log("Available Heap :");
   this->logt(String(ESP.getFreeHeap()));
-
-  this->log("Mounting LittleFS...");
-  if (!LittleFS.begin()) {
-    this->logt("Failed");
-  }
   this->connect();
   this->serve();
 }

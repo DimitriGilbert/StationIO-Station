@@ -26,6 +26,12 @@ typedef ESP8266WiFiClass StationIOStationWifi;
 typedef null StationIOStationWifi;
 #endif
 
+#ifndef StationIOLogger_h
+#include <SimpleLogger.h>
+#endif
+#ifndef StationIOWifiManager_h
+#include <WifiManager.h>
+#endif
 #include "./Sensor.h"
 
 typedef struct {
@@ -51,7 +57,10 @@ class BaseStation {
 
   String name;
   String stationTypeName;
+
   HardwareSerial serial = Serial;
+  SimpleLogger logger = SimpleLogger();
+
   int status;
   int error;
   size_t sensorCount = 0;
@@ -74,6 +83,8 @@ class BaseStation {
   void setSerial(HardwareSerial sr);
   void log(const String& data);
   void logt(const String& data);
+  void log(const String& data, int8_t level);
+  void logt(const String& data, int8_t level);
   void setup();
   void setupSensors(Sensor** sensors, size_t sensorCount);
   void setupLoopCallback(StationCallback_t* loopCallbacks,
@@ -116,6 +127,7 @@ class EspStation : public BaseStation {
   AsyncWebServer webServer;
   WifiInformation wifiInformation;
   StationIOStationWifi wifi;
+  WifiManager wifiManager = WifiManager();
 
   static const int StatusConnecting = 1;
   static const int StatusConnected = 2;
@@ -127,20 +139,17 @@ class EspStation : public BaseStation {
 
 
   EspStation(String name);
-  EspStation(String name, WifiInformation wifiInformation);
+  EspStation(String name, NetworkInformation wifiInformation);
   ~EspStation();
 
   void initWebServer();
   void setupWebServer(StationWebCallbackInfo_t** routes, int callbackCount);
   void addEndpoint(StationWebCallbackInfo_t endpoint);
-  void connect(String hostname);
   void connect();
-  void connectWifi();
-  void connectWifi(WifiInformation wifiInformation);
+  void connect(String hostname);
+  void connect(NetworkInformation wifiInformation);
+  void connect(NetworkInformation wifiInformation, String hostname);
 
-  String scanWifi();
-
-  void setWifiInformation(WifiInformation wifiInformation);
   void serve();
   void serveWeb();
 };
@@ -150,7 +159,7 @@ class Esp32Station : public EspStation {
  private:
  public:
   Esp32Station(String name);
-  Esp32Station(String name, WifiInformation wifiInformation);
+  Esp32Station(String name, NetworkInformation wifiInformation);
   ~Esp32Station();
   void setup();
 };
@@ -160,7 +169,7 @@ class Esp8266Station : public EspStation {
  private:
  public:
   Esp8266Station(String name);
-  Esp8266Station(String name, WifiInformation wifiInformation);
+  Esp8266Station(String name, NetworkInformation wifiInformation);
   ~Esp8266Station();
   void setup();
 };
