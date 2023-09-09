@@ -64,7 +64,7 @@ if (StationIOPlugins !== undefined) {
     return WRPTInccludeTpl;
   });
   StationIOPlugins.setup.push((frmData) => {
-    return eta.render(WRPTSetupTpl, WRPTBuildData(frmData));
+    return eta_.renderString(WRPTSetupTpl, WRPTBuildData(frmData));
   });
   document
     .getElementById("wifi-config")
