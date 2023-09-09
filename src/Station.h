@@ -98,6 +98,9 @@ class BaseStation {
   bool ready();
   bool ready(int minStatus);
   void loop();
+  String toOutput(const char* format);
+  String toOutput(const char* format, int8_t sensorIndex);
+  String toOutput(const char* format, int8_t sensorIndex, int8_t mesureIndex);
   String toString();
   String toString(int index);
   String toCsv();

@@ -57,6 +57,7 @@ void WifiManager::scan() {
 
 String WifiManager::scannedSSID(int16_t network) {
   if (network < 0 || network >= reachableNetworkCount) {
+    logger.log("Scanned networks index unknown",-1);
     return "";
   }
 
@@ -65,6 +66,7 @@ String WifiManager::scannedSSID(int16_t network) {
 
 int32_t WifiManager::scannedRSSI(int16_t network) {
   if (network < 0 || network >= reachableNetworkCount) {
+    logger.log("Scanned networks index unknown",-1);
     return 0;
   }
 
@@ -143,7 +145,7 @@ boolean WifiManager::enableAP(const char* ssid, const char* password) {
     return true;
   }
   logger.log("WifiManager enabling AP");
-  logger.logt("SSID : "+String(ssid), 2);
+  logger.logt("SSID : "+String(ssid), 1);
   logger.logt("Password : "+String(password), 3);
   wifi.mode(WIFI_AP_STA);
   wifi.softAP(ssid, password);

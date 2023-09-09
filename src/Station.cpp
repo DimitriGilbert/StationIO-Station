@@ -177,6 +177,70 @@ I2CScan BaseStation::scanI2C() {
       errors,
   };
 }
+String BaseStation::toOutput(const char* format) {
+  if (strcmp(format, "json") == 0) {
+    return this->toJson();
+  } else if (strcmp(format, "html") == 0) {
+    return this->toHtml();
+  } else if (strcmp(format, "xml") == 0) {
+    return this->toXml();
+  } else if (strcmp(format, "csv") == 0) {
+    return this->toCsv();
+  } else  if (strcmp(format, "string") == 0) {
+    return this->toString();
+  } else {
+    String out = "";
+    for (size_t i = 0; i < this->sensorCount; i++) {
+      out += this->toOutput("raw", i);
+      out += "\n\n";
+    }
+    return out;
+  }
+}
+String BaseStation::toOutput(const char* format, int8_t sensorIndex) {
+  if (sensorIndex< this->sensorCount) {
+    if (strcmp(format, "json") == 0) {
+      return this->getSensor(sensorIndex)->toJson();
+    } else if (strcmp(format, "html") == 0) {
+      return this->getSensor(sensorIndex)->toHtml();
+    } else if (strcmp(format, "xml") == 0) {
+      return this->getSensor(sensorIndex)->toXml();
+    } else if (strcmp(format, "csv") == 0) {
+      return this->getSensor(sensorIndex)->toCsv();
+    } else if (strcmp(format, "string") == 0) {
+      return this->getSensor(sensorIndex)->toString();
+    } else {
+      String out = "";
+      size_t mscnt = this->getSensor(sensorIndex)->getMesuresCount();
+      for (size_t i = 0; i < mscnt; i++) {
+        out += this->toOutput("raw", sensorIndex, i);
+        out += "\n";
+      }
+    }
+  }
+  return "";
+}
+String BaseStation::toOutput(const char* format, int8_t sensorIndex, int8_t mesuresIndex) {
+  if (sensorIndex < this->sensorCount) {
+    size_t mscnt = this->getSensor(sensorIndex)->getMesuresCount();
+    if (mesuresIndex < mscnt) {
+      if (strcmp(format, "json") == 0) {
+        return this->getSensor(sensorIndex)->toJson(mesuresIndex);
+      } else if (strcmp(format, "html") == 0) {
+        return this->getSensor(sensorIndex)->toHtml(mesuresIndex);
+      } else if (strcmp(format, "xml") == 0) {
+        return this->getSensor(sensorIndex)->toXml(mesuresIndex);
+      } else if (strcmp(format, "csv") == 0) {
+        return this->getSensor(sensorIndex)->toCsv(mesuresIndex);
+      } else if (strcmp(format, "string") == 0) {
+        return this->getSensor(sensorIndex)->toString(mesuresIndex);
+      } else {
+        return String(this->getSensor(sensorIndex)->read(mesuresIndex));
+      }
+    }
+  }
+  return "";
+}
 
 String BaseStation::toString() {
   String out = "";
@@ -304,81 +368,59 @@ void EspStation::initWebServer() {
   this->webServer.onNotFound([](AsyncWebServerRequest* request) {
     request->send(404, "text/plain", "Not found");
   });
-  this->webServer.on("/", [this](AsyncWebServerRequest* request) {
+  this->addEndpoint({"/", "", "", [](BaseStation* station_, AsyncWebServerRequest* req) {
     String data;
-    AsyncWebHeader* hd = request->getHeader("Accept");
+    AsyncWebHeader* hd = req->getHeader("Accept");
     const char* accv;
-    if (request->hasParam("format")) {
-      accv = request->getParam("format")->value().c_str();
+    if (req->hasParam("format")) {
+      accv = req->getParam("format")->value().c_str();
     } else {
       accv = hd->value().c_str();
     }
 
-    if (request->hasParam("sensor")) {
-      int sid = request->getParam("sensor")->value().toInt();
-      if (sid < this->sensorCount) {
-        if (request->hasParam("mesure")) {
-          int mesureid = request->getParam("mesure")->value().toInt();
-          if (strcmp(accv, "application/json") == 0) {
-            data = this->sensors[sid]->toJson(mesureid);
-          } else if (strcmp(accv, "application/xml") == 0) {
-            data = this->sensors[sid]->toXml(mesureid);
-          } else if (strcmp(accv, "text/csv") == 0) {
-            data = this->sensors[sid]->toCsv(mesureid);
-          } else if (strcmp(accv, "text/plain") == 0) {
-            data = this->sensors[sid]->toString(mesureid);
-          } else if (strcmp(accv, "text/raw") == 0) {
-            data = String(this->sensors[sid]->read(mesureid));
-          } else {
-            data = this->sensors[sid]->toHtml(mesureid);
-            accv = "text/html";
-          }
+    const char* ofrmt;
+    if (strcmp(accv, "application/json") == 0) {
+      ofrmt = "json";
+    } else if (strcmp(accv, "application/xml") == 0) {
+      ofrmt = "xml";
+    } else if (strcmp(accv, "text/csv") == 0) {
+      ofrmt = "csv";
+    } else if (strcmp(accv, "text/plain") == 0) {
+      ofrmt = "plain";
+    } else if (strcmp(accv, "text/raw") == 0) {
+      ofrmt = "raw";
+    } else {
+      ofrmt = "html";
+      accv = "text/html";
+    }
+
+    if (req->hasParam("sensor")) {
+      int sid = req->getParam("sensor")->value().toInt();
+      if (sid < station_->sensorCount) {
+        if (req->hasParam("mesure")) {
+          int mesureid = req->getParam("mesure")->value().toInt();
+          data = station_->toOutput(ofrmt, sid, mesureid);
         } else {
-          if (strcmp(accv, "application/json") == 0) {
-            data = this->sensors[sid]->toJson();
-          } else if (strcmp(accv, "application/xml") == 0) {
-            data = this->sensors[sid]->toXml();
-          } else if (strcmp(accv, "text/csv") == 0) {
-            data = this->sensors[sid]->toCsv();
-          } else if (strcmp(accv, "text/plain") == 0) {
-            data = this->sensors[sid]->toString();
-          } else if (strcmp(accv, "raw") == 0) {
-            size_t tdataSize = this->sensors[sid]->getMesuresCount();
-            for (size_t i = 0; i < tdataSize; i++) {
-              data.concat(String(this->sensors[sid]->read(i)));
-              if (i < tdataSize - 1) {
-                data.concat("\n");
-              }
-            }
-          } else {
-            data = this->sensors[sid]->toHtml();
-            accv = "text/html";
-          }
+          data = station_->toOutput(ofrmt, sid);
         }
       }
     } else {
-      if (strcmp(accv, "application/json") == 0) {
-        data = this->toJson();
-      } else if (strcmp(accv, "application/xml") == 0) {
-        data = this->toXml();
-      } else if (strcmp(accv, "text/csv") == 0) {
-        data = this->toCsv();
-      } else if (strcmp(accv, "text/plain") == 0) {
-        data = this->toString();
-      } else {
-        data = this->toHtml();
-        accv = "text/html";
-      }
+      data = station_->toOutput(ofrmt);
     }
 
-    request->send(200, accv, data);
-  });
+    req->send(200, accv, data);
+  }});
   this->webServer.on("/sensors", [this](AsyncWebServerRequest* request) {
-    String out = "[";
+    String out = "{";
     for (int i = 0; i < this->sensorCount; i++) {
-      out += "\"" + this->getSensorName(i) + "\",";
+      out += "\"" + this->getSensorName(i) + "\":[";
+      for (int j = 0; j < this->getSensor(i)->getMesuresCount(); j++) {
+        Sensor::SensorMesure ms = this->getSensor(i)->getMesure(j);
+        out += "{\"name\":\"" + ms.name + "\",\"unit\":\"" + ms.unit + "\"}";
+      }
+      out += "],";
     }
-    request->send(200, "application/json", out+ "]");
+    request->send(200, "application/json", out+ "}");
   });
   this->webServer.on("/sensorMesures", [this](AsyncWebServerRequest* request) {
     String out = "[";
@@ -386,7 +428,8 @@ void EspStation::initWebServer() {
     Sensor* sensor = this->getSensor(sid);
 
     for (int i = 0; i < sensor->getMesuresCount(); i++) {
-      out += "\"" + sensor->getMesureName(i) + "\",";
+      Sensor::SensorMesure ms = sensor->getMesure(i);
+      out += "{\"name\":\"" + ms.name + "\",\"unit\":\"" + ms.unit + "\"}";
     }
     request->send(200, "application/json", out + "]");
   });
@@ -605,8 +648,13 @@ void EspStation::addEndpoint(StationWebCallbackInfo_t endpoint) {
             );
             request->requestAuthentication();
           }
+          else {
+            endpoint.callback(this, request);
+          }
         }
-        endpoint.callback(this, request);
+        else {
+          endpoint.callback(this, request);
+        }
       }
   );
   this->openApiStr += "  " + String(endpoint.route) + ":\n";
