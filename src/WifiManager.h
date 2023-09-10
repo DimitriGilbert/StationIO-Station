@@ -28,6 +28,11 @@ typedef ESP8266WiFiClass StationIOStationWifi;
 typedef null StationIOStationWifi;
 #endif
 
+#ifdef StationIORepeater
+#include <lwip/dns.h>
+#include <lwip/napt.h>
+#endif
+
 typedef struct {
   const char* ssid;
   const char* password;
@@ -82,6 +87,10 @@ class WifiManager {
   boolean enableAP(NetworkInformation network);
   boolean enableAP(const char* ssid, const char* password);
   boolean disableAP();
+  
+  boolean enableRepetitor();
+  boolean enableRepetitor(NetworkInformation network);
+  boolean enableRepetitor(const char* ssid, const char* password);
 
   boolean addNetwork(NetworkInformation network);
   boolean setNetwork(NetworkInformation network, int16_t index);

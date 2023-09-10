@@ -163,6 +163,30 @@ boolean WifiManager::disableAP() {
   return !isAPEnabled();
 }
 
+boolean WifiManager::enableRepetitor() {
+  if (strlen(APInformation.ssid) > 0) {
+    return enableRepetitor(APInformation);
+  }
+  return false;
+}
+
+boolean WifiManager::enableRepetitor(NetworkInformation network) {
+  return enableRepetitor(network.ssid, network.password);
+}
+
+boolean WifiManager::enableRepetitor(const char* ssid, const char* password) {
+  if (!isAPEnabled()) {
+    enableAP(ssid, password);
+  }
+  IPAddress apIP = wifi.localIP();
+  IPAddress gatewayIP = wifi.gatewayIP();
+  IPAddress subnetMask = wifi.subnetMask();
+  wifi.softAPConfig(apIP, gatewayIP, subnetMask);
+  // TODO : NAT routing stuff...
+  
+  return true;
+}
+
 boolean WifiManager::addNetwork(NetworkInformation network) {
   for (size_t neti = 0; neti < StationIONetworkPoolSize; neti++) {
     if (networks[neti].ssid == NULL) {

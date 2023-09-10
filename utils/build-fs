@@ -373,11 +373,11 @@ gzip_files() {
     if [ -d "$dir" ]; then
       subdir=$(basename "$dir");
       mkdir -p "$dest_dir/$subdir";
-      (gzip_files "$dir" "$dest_dir/$subdir");
+      (gzip_files "$(realpath --relative-to="$STATIONIO_DIR" "$dir")" "$dest_dir/$subdir");
     elif [ -f "$dir" ]; then
       filename=$(basename "$dir");
 			if [[ "$filename" == *.js ]] || [[ "$filename" == *.css ]]; then
-				"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$dir" | gzip -c - > "$dest_dir/$filename.gz";
+				"$_arg_node" "node_modules/.bin/minify" "$(realpath --relative-to="$STATIONIO_DIR" "$dir")" | gzip -c - > "$dest_dir/$filename.gz";
 			else
 				gzip "$dir" -c > "$dest_dir/$filename.gz";
 			fi
@@ -447,8 +447,8 @@ for js in "${_arg_js[@]}"; do
 	if [ ! -d "$STATIONIO_DIR/data/assets/js/$cpt" ]; then
 		mkdir -p "$STATIONIO_DIR/data/assets/js/$cpt";
 	fi
-
-	"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$js" | gzip -c - > "$STATIONIO_DIR/data/assets/js/$cpt$(basename "$js").gz";
+	# "$_arg_node" 'node_modules/.bin/minify' "$js";
+	"$_arg_node" 'node_modules/.bin/minify' "$(realpath --relative-to="$STATIONIO_DIR" "$js")" | gzip -c - > "$STATIONIO_DIR/data/assets/js/$cpt$(basename "$js").gz";
 done
 
 for css in "${_arg_css[@]}"; do
@@ -463,8 +463,8 @@ for css in "${_arg_css[@]}"; do
 	if [ ! -d "$STATIONIO_DIR/data/assets/css/$cpt" ]; then
 		mkdir -p "$STATIONIO_DIR/data/assets/css/$cpt";
 	fi
-
-	"$_arg_node" "$STATIONIO_DIR/node_modules/.bin/minify" "$css" | gzip -c - > "$STATIONIO_DIR/data/assets/css/$(basename "$css").gz";
+	# "$_arg_node" 'node_modules/.bin/minify' "$css";
+	"$_arg_node" 'node_modules/.bin/minify' "$(realpath --relative-to="$STATIONIO_DIR" "$css")" | gzip -c - > "$STATIONIO_DIR/data/assets/css/$(basename "$css").gz";
 done
 
 "$_arg_pio" run -t buildfs -e "$_arg_environement";
