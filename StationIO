@@ -1,10 +1,10 @@
 #!/bin/bash
 # @parseArger-begin
 # @parseArger-help "StationIO CLI" --option "help" --short-option "h"
-# @parseArger-verbose --option "verbose" --level "0"
+# @parseArger-verbose --option "verbose" --level "0" --quiet-option "quiet"
 # @parseArger-leftovers leftovers
 # @parseArger-declarations
-# @parseArger pos target "target cmd" --subcommand-directory "utils" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "list" --one-of "read" --one-of "set-conf" --one-of "upload"
+# @parseArger pos target "target cmd" --subcommand-directory "utils" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "list" --one-of "read" --one-of "read-all" --one-of "set-conf" --one-of "upload"
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -32,7 +32,7 @@ begins_with_short_option()
 # POSITIONALS ARGUMENTS
 _positionals=();
 _arg_target="";
-_one_of_arg_target=("build-fs" "create" "create-main" "list" "read" "set-conf" "upload" );
+_one_of_arg_target=("build-fs" "create" "create-main" "list" "read" "read-all" "set-conf" "upload" );
 _arg_subcommand_arg="_arg_target";
 __subcommand=();
 # OPTIONALS ARGUMENTS
@@ -57,7 +57,7 @@ print_help()
 	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
 		_helpHasBeenPrinted=0;
 		echo -e "StationIO CLI:"
-	echo -e "	target: target cmd [one of 'build-fs' 'create' 'create-main' 'list' 'read' 'set-conf' 'upload']"
+	echo -e "	target: target cmd [one of 'build-fs' 'create' 'create-main' 'list' 'read' 'read-all' 'set-conf' 'upload']"
 	echo -e "Usage :
 	$0 <target>";
 	fi
@@ -120,14 +120,22 @@ parse_commandline()
 				exit 0;
 				;;
 			--verbose)
-				if [ $# -lt 2 ];then
-					_verbose_level="$((_verbose_level + 1))";
-				else
-					_verbose_level="$2";
-					shift;
-				fi
-				;;
-			
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level + 1))";
+					else
+						_verbose_level="$2";
+						shift;
+					fi
+					;;
+				--quiet)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level - 1))";
+					else
+						_verbose_level="-$2";
+						shift;
+					fi
+					;;
+				
 			*)
 				_last_positional="$1"
 				_positionals+=("$_last_positional")
@@ -199,8 +207,10 @@ trap on_interrupt INT;
 if [ "$_triggerSCHelp" == "0" ];then
 	__subcommand+=("--help");
 fi
-__subcommand+=("${_arg_leftovers[@]}");
-"${__subcommand[@]}";
+if [ "$_verbose_level" -ne "0" ];then
+	__subcommand+=("--verbose" "$_verbose_level");
+fi
+__subcommand+=("${_arg_leftovers[@]}");"${__subcommand[@]}";
 
 # @parseArger-parsing-end
 # print_debug "$@"

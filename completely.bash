@@ -36,8 +36,16 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -- "$cur" )
       ;;
 
+    'create-main'*'--sensor')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d src/sensors ]; then echo bme280 bmp085 bmp280 ccs811 dht11 linky mq135 mq2 sht21 ;fi)")" -- "$cur" )
+      ;;
+
     'create-main'*'--file')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
+      ;;
+
+    'build-fs'*'--upload')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi)")" -- "$cur" )
       ;;
 
     'build-fs'*'--file')
@@ -64,6 +72,10 @@ _StationIO_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--js -j --css -c --directory -d --file -f --file-no-gz -F --node --pio --environement -e --upload -u --dry --no-dry -D")" -- "$cur" )
       ;;
 
+    'read-all'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "--exclude -x --format -f --output -o")" -- "$cur" )
+      ;;
+
     'set-conf'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "$(if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi) --sensor -s --ip -i --board -b --data-file -f --data-directory -d --js -j --css -c")" -- "$cur" )
       ;;
@@ -85,7 +97,7 @@ _StationIO_completions() {
       ;;
 
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create create-main list read set-conf upload")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_StationIO_completions_filter "build-fs create create-main list read read-all set-conf upload")" -- "$cur" )
       ;;
 
   esac
