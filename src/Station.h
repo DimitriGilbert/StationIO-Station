@@ -109,6 +109,8 @@ class BaseStation {
   String toJson(int index);
   String toXml();
   String toXml(int index);
+  String toOpenmetrics();
+  String toOpenmetrics(int index);
   String toHtml();
   String toHtml(int index);
   I2CScan scanI2C();

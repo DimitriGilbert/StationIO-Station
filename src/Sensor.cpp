@@ -96,6 +96,20 @@ String SensorToCsv(Sensor *sensor) {
   return csv;
 }
 
+String SensorMesureToOpenmetrics(Sensor::SensorMesure mesure, float value) {
+  return mesure.name + "{unit=\""+ mesure.unit +"\"} "+ String(value) +"\n";
+}
+String SensorToOpenmetrics(Sensor *sensor) {
+  String str = "";
+  String pref = sensor->getName()+"_";
+
+  size_t mct = sensor->getMesuresCount();
+  for (size_t i = 0; i < mct; i++) {
+    str += pref + SensorMesureToOpenmetrics(sensor->getMesure(i), sensor->read(i));
+  }
+  return str;
+}
+
 String SensorMesureToString(Sensor::SensorMesure mesure, float value) {
   return mesure.name + " : " + String(value) + " " + mesure.unit + "\n";
 }

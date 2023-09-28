@@ -79,6 +79,8 @@ String SensorMesureToJson(Sensor::SensorMesure mesure, float value);
 String SensorToJson(Sensor *sensor);
 String SensorMesureToCsv(Sensor::SensorMesure mesure, float value);
 String SensorToCsv(Sensor *sensor);
+String SensorMesureToOpenmetrics(Sensor::SensorMesure mesure, float value);
+String SensorToOpenmetrics(Sensor *sensor);
 String SensorMesureToString(Sensor::SensorMesure mesure, float value);
 String SensorToString(Sensor *sensor);
 #endif

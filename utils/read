@@ -1,11 +1,11 @@
 #!/bin/bash
 # @parseArger-begin
 # @parseArger-help "Read station data" --option "help" --short-option "h"
-# @parseArger-verbose --option "verbose" --level "0"
+# @parseArger-verbose --option "verbose" --level "0" --quiet-option "quiet"
 # @parseArger-declarations
 # @parseArger pos station "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
 # @parseArger opt sensor "sensor id" --short s --repeat
-# @parseArger opt format "output format" --short f --default-value "plain" --one-of "json" --one-of "csv" --one-of "xml" --one-of "plain" --one-of "html"
+# @parseArger opt format "output format" --short f --default-value "plain" --one-of "json" --one-of "openmetrics" --one-of "csv" --one-of "xml" --one-of "plain" --one-of "html"
 # @parseArger opt mesure "mesure id, can conflict with sensor" --short m --repeat
 # @parseArger opt output "output file" --short o --complete "file"
 # @parseArger-declarations-end
@@ -38,7 +38,7 @@ _arg_station="";
 # OPTIONALS ARGUMENTS
 _arg_sensor=()
 _arg_format="plain"
-_one_of_arg_format=("json" "csv" "xml" "plain" "html" );
+_one_of_arg_format=("json" "openmetrics" "csv" "xml" "plain" "html" );
 _arg_mesure=()
 _arg_output=
 # FLAGS
@@ -55,7 +55,7 @@ print_help()
 		echo -e "Read station data:"
 	echo -e "	station: station name"
 	echo -e "	-s, --sensor <sensor>: sensor id, repeatable"
-	echo -e "	-f, --format <format>: output format [default: ' plain '] [one of 'json' 'csv' 'xml' 'plain' 'html']"
+	echo -e "	-f, --format <format>: output format [default: ' plain '] [one of 'json' 'openmetrics' 'csv' 'xml' 'plain' 'html']"
 	echo -e "	-m, --mesure <mesure>: mesure id, can conflict with sensor, repeatable"
 	echo -e "	-o, --output <output>: output file"
 	echo -e "Usage :
@@ -117,16 +117,16 @@ parse_commandline()
 			-f|--format)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
 				_arg_format="$2"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json openmetrics csv xml plain html";fi
 				shift
 				;;
 			--format=*)
 				_arg_format="${_key##--format=}"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json openmetrics csv xml plain html";fi
 				;;
 			-f*)
 				_arg_format="${_key##-f}"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json openmetrics csv xml plain html";fi
 				;;
 			
 			-m|--mesure)
@@ -170,14 +170,22 @@ parse_commandline()
 				exit 0;
 				;;
 			--verbose)
-				if [ $# -lt 2 ];then
-					_verbose_level="$((_verbose_level + 1))";
-				else
-					_verbose_level="$2";
-					shift;
-				fi
-				;;
-			
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level + 1))";
+					else
+						_verbose_level="$2";
+						shift;
+					fi
+					;;
+				--quiet)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level - 1))";
+					else
+						_verbose_level="-$2";
+						shift;
+					fi
+					;;
+				
 			*)
 				_last_positional="$1"
 				_positionals+=("$_last_positional")

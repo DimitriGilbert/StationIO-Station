@@ -186,8 +186,10 @@ String BaseStation::toOutput(const char* format) {
     return this->toXml();
   } else if (strcmp(format, "csv") == 0) {
     return this->toCsv();
-  } else  if (strcmp(format, "string") == 0) {
+  } else if (strcmp(format, "string") == 0) {
     return this->toString();
+  } else if (strcmp(format, "openmetrics") == 0) {
+    return this->toOpenmetrics();
   } else {
     String out = "";
     for (size_t i = 0; i < this->sensorCount; i++) {
@@ -209,6 +211,8 @@ String BaseStation::toOutput(const char* format, int8_t sensorIndex) {
       return this->getSensor(sensorIndex)->toCsv();
     } else if (strcmp(format, "string") == 0) {
       return this->getSensor(sensorIndex)->toString();
+    } else if (strcmp(format, "openmetrics") == 0) {
+        return this->toOpenmetrics(sensorIndex);
     } else {
       String out = "";
       size_t mscnt = this->getSensor(sensorIndex)->getMesuresCount();
@@ -234,6 +238,9 @@ String BaseStation::toOutput(const char* format, int8_t sensorIndex, int8_t mesu
         return this->getSensor(sensorIndex)->toCsv(mesuresIndex);
       } else if (strcmp(format, "string") == 0) {
         return this->getSensor(sensorIndex)->toString(mesuresIndex);
+      } else if (strcmp(format, "openmetrics") == 0) {
+        return this->getSensor(sensorIndex)->getMesureName(mesuresIndex) + "{station=\""+ this->name +"\",sensor=\""+ this->getSensorName(sensorIndex) +"\"} " +
+           String(this->getSensor(sensorIndex)->read(mesuresIndex)) + "\n";
       } else {
         return String(this->getSensor(sensorIndex)->read(mesuresIndex));
       }
@@ -251,6 +258,24 @@ String BaseStation::toString() {
 }
 String BaseStation::toString(int index) {
   return this->getSensor(index)->toString();
+}
+
+String BaseStation::toOpenmetrics() {
+  String out = "";
+  for (size_t i = 0; i < this->sensorCount; i++) {
+    out.concat(this->toOpenmetrics(i));
+  }
+  return out;
+}
+String BaseStation::toOpenmetrics(int index) {
+  String tmpref = this->name + "_" + this->getSensorName(index);
+  String out = "";
+  size_t mct = this->getSensor(index)->getMesuresCount();
+  for (size_t i = 0; i < mct; i++) {
+    out += this->getSensor(index)->getMesureName(i) + "{station=\""+ this->name +"\",sensor=\""+ this->getSensorName(index) +"\"} " +
+           String(this->getSensor(index)->read(i)) + "\n";
+  }
+  return out;
 }
 String BaseStation::toCsv() {
   String out = "";
@@ -389,6 +414,9 @@ void EspStation::initWebServer() {
       ofrmt = "plain";
     } else if (strcmp(accv, "text/raw") == 0) {
       ofrmt = "raw";
+    } else if (strcmp(accv, "application/openmetrics-text") == 0 || strcmp(accv, "text/openmetrics") == 0) {
+      ofrmt = "openmetrics";
+      accv = "application/openmetrics-text";
     } else {
       ofrmt = "html";
       accv = "text/html";
