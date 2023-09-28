@@ -4,7 +4,7 @@
 # @parseArger-verbose --option "verbose" --level "0" --quiet-option "quiet"
 # @parseArger-leftovers leftovers
 # @parseArger-declarations
-# @parseArger pos target "target cmd" --subcommand-directory "utils" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "list" --one-of "read" --one-of "read-all" --one-of "set-conf" --one-of "upload"
+# @parseArger pos target "target cmd" --subcommand-directory "bin" --subcommand-run --subcommand-use-leftovers --subcommand --one-of "build-fs" --one-of "create" --one-of "create-main" --one-of "list" --one-of "read" --one-of "read-all" --one-of "set-conf" --one-of "upload"
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -31,8 +31,9 @@ begins_with_short_option()
 
 # POSITIONALS ARGUMENTS
 _positionals=();
+_optional_positionals=();
 _arg_target="";
-_one_of_arg_target=("build-fs" "create" "create-main" "list" "read" "read-all" "set-conf" "upload" );
+_one_of_arg_target=("build-fs" "create" "create-main" "list" "read" "read-all" "set-conf" "upload");
 _arg_subcommand_arg="_arg_target";
 __subcommand=();
 # OPTIONALS ARGUMENTS
@@ -69,7 +70,7 @@ print_help()
 
 log() {
 	local _arg_msg="${1}";
-	local _arg_level="${2:"0"}";
+	local _arg_level="${2:-'0'}";
 	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
 		case "$_arg_level" in
 			-3)
@@ -171,7 +172,18 @@ assign_positional_args()
 		test $# -gt 0 || break;
 		if ! [[ "$_positional_name" =~ "_arg_leftovers" ]];then
 			eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
-			__subcommand+=("$_SCRIPT_DIR/utils/${1}");
+			
+			if [ "$_arg_subcommand_arg" == "$_positional_name" ];then
+				if [ -d "$_SCRIPT_DIR/bin/${1}" ];then
+					__subcommand+=("$_SCRIPT_DIR/bin/${1}");
+				elif [[ "bin/" == $(basename "$_SCRIPT_DIR")* ]];then
+					cmdToSub="$(basename "$_SCRIPT_DIR")";
+					cmdsubDir="bin/";
+					__subcommand+=("$_SCRIPT_DIR${cmdsubDir#"${cmdToSub}"}${1}");
+				else
+					__subcommand+=("$_SCRIPT_DIR/bin/${1}");
+				fi
+			fi
 		fi
 		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
 		shift;
@@ -204,13 +216,14 @@ assign_positional_args 1 "${_positionals[@]}";
 trap on_interrupt INT;
 
 
+__subcommand+=("${_arg_leftovers[@]}");
 if [ "$_triggerSCHelp" == "0" ];then
 	__subcommand+=("--help");
 fi
 if [ "$_verbose_level" -ne "0" ];then
 	__subcommand+=("--verbose" "$_verbose_level");
 fi
-__subcommand+=("${_arg_leftovers[@]}");"${__subcommand[@]}";
+"${__subcommand[@]}";
 
 # @parseArger-parsing-end
 # print_debug "$@"

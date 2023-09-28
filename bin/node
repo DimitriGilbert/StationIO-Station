@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run -it --rm -w /w -v "$(pwd)":/w -v node_modules:/usr/local/lib/node_modules --user 1000:1000 tarampampam/node:lts-alpine "$@"
