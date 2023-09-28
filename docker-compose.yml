@@ -1,0 +1,53 @@
+version: '3.3'
+networks:
+  ${StationIO_dc_name}:
+    name: ${StationIO_dc_name}
+    driver: bridge
+services:
+  influxdb:
+    container_name: influxdb
+    image: 'influxdb:latest'
+    user: '1000'
+    expose:
+      - 8086
+    ports:
+      - '$influxdb_host_port:8086'
+    volumes:
+      - $PWD/hub/influxdb_tmp:/tmp
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=$influxdb_username
+      - DOCKER_INFLUXDB_INIT_PASSWORD=$influxdb_password
+      - DOCKER_INFLUXDB_INIT_ORG=$influxdb_org
+      - DOCKER_INFLUXDB_INIT_BUCKET=$influxdb_bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=$influxdb_admin_token
+      - TZ=$StationIO_TZ
+    restart: unless-stopped
+  grafana:
+    container_name: grafana
+    image: grafana/grafana-oss:latest
+    user: '1000'
+    depends_on: 
+      - influxdb
+    volumes:
+      - $PWD/hub/grafana:/var/lib/grafana
+      - $PWD/hub/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - $PWD/hub/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    expose:
+      - 3000
+    ports:
+      - '$gf_host_port:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=$gf_user
+      - GF_SECURITY_ADMIN_PASSWORD=$gf_password
+      - TZ=$StationIO_TZ
+    restart: unless-stopped
+  platformio:
+    container_name: platformio
+    image: 'stationio/pio'
+    user: '1000'
+    volumes:
+      - $HOME/.platformio:/root/.platformio
+      - $PWD:/w
+    environment:
+      - TZ=$StationIO_TZ

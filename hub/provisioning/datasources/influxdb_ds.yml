@@ -1,0 +1,48 @@
+# apiVersion: 1
+# datasources:
+#   - orgId: 1
+#   name: InfluxDB
+#   type: influxdb
+#   typeName: InfluxDB
+#   typeLogoUrl: public/app/plugins/datasource/influxdb/img/influxdb_logo.svg
+#   access: proxy
+#   url: http://influxdb:8086
+#   user: ""
+#   database: ""
+#   basicAuth: false
+#   isDefault: true
+#   jsonData:
+#     defaultBucket: StationIO
+#     httpMode: POST
+#     organization: StationIO
+#     version: Flux
+#   readOnly: false
+#   secureJsonData:
+#     token: StationIOSecretToken
+# Configuration file version
+apiVersion: 1
+
+datasources:
+  
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://influxdb:8086
+    # <string> Sets the database user, if necessary.
+    user:
+    # <string> Sets the database name, if necessary.
+    database:
+    # <bool> Enables basic authorization.
+    basicAuth: false
+    isDefault: true
+    jsonData:
+      defaultBucket: StationIO
+      httpMode: POST
+      organization: StationIO
+      version: Flux
+      tlsAuthWithCACert: true
+    secureJsonData:
+      token: StationIOSecretToken
+    version: 1
+    editable: true

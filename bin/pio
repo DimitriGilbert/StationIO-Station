@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# building image
+imgExists=$(docker images -q stationio/pio);
+if [ "$imgExists" == "" ]; then
+  docker build -t stationio/pio .
+fi
+
+# creating .platformio folder
+if [ -d "$HOME/.platformio" ]; then
+  mkdir -p "$HOME/.platformio";
+fi
+
+# running command
+docker run -it -v "$(pwd)":/w -v "$HOME/.platformio":/root/.platformio --rm stationio/pio;
