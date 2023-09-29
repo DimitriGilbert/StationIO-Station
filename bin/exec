@@ -207,12 +207,12 @@ trap on_interrupt INT;
 # print_debug "$@"
 # @parseArger-end
 
-# shellcheck source=../common
-source "$_SCRIPT_DIR/../common";
-# shellcheck source="../../stations/stations"
-source "$_SCRIPT_DIR/../../stations/stations";
-# shellcheck source="../../.env"
-source "$_SCRIPT_DIR/../../.env";
+# shellcheck source=common
+source "$_SCRIPT_DIR/common";
+# shellcheck source="../stations/stations"
+source "$_SCRIPT_DIR/../stations/stations";
+# shellcheck source="../.env"
+source "$_SCRIPT_DIR/../.env";
 
 dccmd=(docker compose -p "${StationIO_dc_name}" exec);
 if [ "$_arg_tty" == "on" ]; then

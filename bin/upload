@@ -266,7 +266,7 @@ if station_exists "${_arg_name}"; then
 	# shellcheck source="../stations/stations"
 	source "$STATIONIO_DIR/stations/stations";
 	# shellcheck source=./export-conf
-	source "$STATIONIO_DIR/utils/export-conf" "${_arg_name}";	
+	source "$STATIONIO_DIR/bin/export-conf" "${_arg_name}";	
 	
 	ucmd="${_arg_pio} run -t upload";
 	if [ "$_arg_fs" == "on" ]; then
@@ -276,7 +276,7 @@ if station_exists "${_arg_name}"; then
 	if [ "$_arg_board" == "" ]; then
 		_arg_board="${stationIOboard}";
 	else
-		"$STATIONIO_DIR/utils/set-conf" "${_arg_name}" --board "${_arg_board}";
+		"$STATIONIO_DIR/bin/set-conf" "${_arg_name}" --board "${_arg_board}";
 	fi
 	if [ "$_arg_board" != "" ]; then
 		ucmd="$ucmd -e ${_arg_board}";
@@ -285,7 +285,7 @@ if station_exists "${_arg_name}"; then
 	if [ "$_arg_ip" == "" ]; then
 		_arg_ip="${stationIOip}";
 	else
-		"$STATIONIO_DIR/utils/set-conf" "${_arg_name}" --ip "${_arg_ip}";
+		"$STATIONIO_DIR/bin/set-conf" "${_arg_name}" --ip "${_arg_ip}";
 	fi
 
 	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then

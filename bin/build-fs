@@ -333,7 +333,7 @@ source "./stations/stations";
 # a station has been defined
 if [ "$_arg_upload" != "" ] && station_exists "${_arg_upload}"; then
 	# shellcheck source=./export-conf
-	source "$STATIONIO_DIR/utils/export-conf" "${_arg_upload}";
+	source "$STATIONIO_DIR/bin/export-conf" "${_arg_upload}";
 	
 	# check if station has bee loaded
 	# shellcheck disable=SC2154
@@ -470,5 +470,5 @@ done
 "$_arg_pio" run -t buildfs -e "$_arg_environement";
 
 if [ "$_arg_upload" != "" ] && [ "$_arg_dry" != "on" ]; then
-	"$STATIONIO_DIR/utils/upload" "$_arg_upload" --fs;
+	"$STATIONIO_DIR/bin/upload" "$_arg_upload" --fs;
 fi

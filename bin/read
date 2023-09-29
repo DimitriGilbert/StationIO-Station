@@ -264,7 +264,7 @@ if station_exists "$_arg_station"; then
 	# shellcheck source="../stations/stations"
 	source "$STATIONIO_DIR/stations/stations";
 	# shellcheck source=./export-conf
-	source "$STATIONIO_DIR/utils/export-conf" "${_arg_station}";
+	source "$STATIONIO_DIR/bin/export-conf" "${_arg_station}";
 
 	if [ "$stationIOip" != "" ]; then
 		if [ "$_arg_format" == "json" ] || [ "$_arg_format" == "xml" ]; then

@@ -8,6 +8,9 @@
 # @parseArger flag build "build"
 # @parseArger flag update "pull and build"
 # @parseArger flag restart "restart stack if it is running" --on
+# @parseArger flag grafana "start grafana service, force --influxdb" --on
+# @parseArger flag influxdb "start influxdb service" --on
+# @parseArger flag detach "detach" --short d
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -34,12 +37,16 @@ begins_with_short_option()
 
 # POSITIONALS ARGUMENTS
 _positionals=();
+_optional_positionals=();
 # OPTIONALS ARGUMENTS
 # FLAGS
 _arg_pull="off"
 _arg_build="off"
 _arg_update="off"
 _arg_restart="on"
+_arg_grafana="on"
+_arg_influxdb="on"
+_arg_detach="off"
 # LEFTOVERS
 _arg_leftovers=()
 _verbose_level="0";
@@ -57,15 +64,18 @@ print_help()
 	echo -e "	--build|--no-build: build"
 	echo -e "	--update|--no-update: pull and build"
 	echo -e "	--restart|--no-restart: restart stack if it is running, on by default (use --no-restart to turn it off)"
+	echo -e "	--grafana|--no-grafana: start grafana service, force --influxdb, on by default (use --no-grafana to turn it off)"
+	echo -e "	--influxdb|--no-influxdb: start influxdb service, on by default (use --no-influxdb to turn it off)"
+	echo -e "	-d|--detach|--no-detach: detach"
 	echo -e "Usage :
-	$0 [--[no-]pull] [--[no-]build] [--[no-]update] [--[no-]restart]";
+	$0 [--[no-]pull] [--[no-]build] [--[no-]update] [--[no-]restart] [--[no-]grafana] [--[no-]influxdb] [--[no-]detach]";
 	fi
 
 }
 
 log() {
 	local _arg_msg="${1}";
-	local _arg_level="${2:"0"}";
+	local _arg_level="${2:-'0'}";
 	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
 		case "$_arg_level" in
 			-3)
@@ -124,6 +134,24 @@ parse_commandline()
 				;;
 			--no-restart)
 				_arg_restart="off"
+				;;
+			--grafana)
+				_arg_grafana="on"
+				;;
+			--no-grafana)
+				_arg_grafana="off"
+				;;
+			--influxdb)
+				_arg_influxdb="on"
+				;;
+			--no-influxdb)
+				_arg_influxdb="off"
+				;;
+			-d|--detach)
+				_arg_detach="on"
+				;;
+			--no-detach)
+				_arg_detach="off"
 				;;
 			-h|--help)
 				print_help;
@@ -209,6 +237,9 @@ print_debug()
 	echo -e "\tbuild: ${_arg_build}";
 	echo -e "\tupdate: ${_arg_update}";
 	echo -e "\trestart: ${_arg_restart}";
+	echo -e "\tgrafana: ${_arg_grafana}";
+	echo -e "\tinfluxdb: ${_arg_influxdb}";
+	echo -e "\tdetach: ${_arg_detach}";
 	echo -e "\tleftovers: ${_arg_leftovers[*]}";
 
 }
@@ -242,6 +273,19 @@ source "$_SCRIPT_DIR/../.env";
 
 # TODO: handle service to start, no need for platformio by default
 dccmd=(docker compose -p "$StationIO_dc_name" up);
+
+if [ "$_arg_grafana" == "on" ]; then
+	dccmd+=(grafana);
+	_arg_influxdb="on";
+fi
+
+if [ "$_arg_influxdb" == "on" ]; then
+	dccmd+=(influxdb);
+fi
+
+if [ "$_arg_detach" == "on" ]; then
+	dccmd+=(-d);
+fi
 
 if [[ "${_arg_update}" == "on" ]]; then
 	log "update: --pull --build" 2;

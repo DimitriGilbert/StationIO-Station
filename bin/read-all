@@ -245,7 +245,8 @@ fi
 output="";
 # Searching in the current directory
 for file in "$_SCRIPT_DIR"/../stations/.stations/*; do
-	if [ "${#_arg_exclude[@]}" -lt 1 ] || ! echo " ${_arg_exclude[*]} " | grep -q " $file "; then
+	if [ "${#_arg_exclude[@]}" -lt 1 ] || ! echo " ${_arg_exclude[*]} " | grep -q " $(basename "$file") "; then
+		log "reading $(basename "${file}")" 1;
 		_fname="$(basename "${file}")";
 		toutput="$("${rcmd[@]}" "$_fname")";
 		if [ "$toutput" != "" ]; then
@@ -267,6 +268,8 @@ for file in "$_SCRIPT_DIR"/../stations/.stations/*; do
 			esac
 			output+="$toutput";
 		fi
+	else 
+		log "excluding $file" 1;
 	fi
 done
 
