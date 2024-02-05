@@ -294,9 +294,10 @@ if [[ "${_arg_update}" == "on" ]]; then
 fi
 
 if [[ "${_arg_pull}" == "on" ]]; then
-	log "Pulling latest images" 2;
+	log "Pulling/Building latest images" 2;
 	docker pull influxDB:latest;
 	docker pull grafana/grafana-oss:latest;
+	docker build -t stationio/pio - < "$_SCRIPT_DIR/../dockerfile";
 fi
 
 if [[ "${_arg_build}" == "on" ]]; then

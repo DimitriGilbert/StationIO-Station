@@ -13,6 +13,7 @@ station_exists() {
     return 1;
   fi
 }
+
 function is_docker_service_running() {
     local dcmd=(docker-compose)
     if [ "$2" != "" ]; then
