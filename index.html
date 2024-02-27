@@ -126,9 +126,9 @@
           That way you can hookup your custom code in a breeze.<br />
           There are a few (very inventivelly named) bash scripts to handle common tasks :
           <ul>
-            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/createStation">./StationIO create</a>, creates a station</li>
-            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/uploadStation">./StationIO upload</a>, uploads a station</li>
-            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/utils/buildFS">./StationIO build-fs</a>, builds the file system</li>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/bin/createStation">./StationIO create</a>, creates a station</li>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/bin/uploadStation">./StationIO upload</a>, uploads a station</li>
+            <li><a href="https://github.com/DimitriGilbert/StationIO-Station/blob/main/bin/buildFS">./StationIO build-fs</a>, builds the file system</li>
           </ul>
           All the script have plenty of options that are documented, so just use --help to get all the infos.
         </p>
@@ -1150,7 +1150,7 @@ TInfo tinfo;
           }
           sensorsList.appendChild(htmlToElements(sensorForm + "</div>"));
           document.getElementById("sensor-index").value = sensorIndex + 1;
-          e.target.form.form.dispatchEvent(new Event("change", {bubbles: true}));
+          e.target.form.dispatchEvent(new Event("change", {bubbles: true}));
         });
     </script>
     <script id="timer.js">
@@ -1291,10 +1291,12 @@ TInfo tinfo;
             document.getElementById("install-station-name").value = data.name;
             document.getElementById("install-board-type").value = data.type;
             document.getElementById("install-board-type").childNodes.forEach((el) => {
-              if (el.value == data.type) {
-                el.setAttribute("selected", "selected");
-              } else {
-                el.removeAttribute("selected");
+              if (el.value) {
+                if (el.value == data.type) {
+                  el.setAttribute("selected", "selected");
+                } else {
+                  el.removeAttribute("selected");
+                }
               }
             });
 
