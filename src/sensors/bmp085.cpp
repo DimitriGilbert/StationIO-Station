@@ -1,155 +1,77 @@
-#include <Arduino.h>
-#include "../html.h"
 #include "./bmp085.h"
 
-bmp085::bmp085() : Sensor("bmp085") {
-  this->mesuresSampleLast[0] = (unsigned long)0;
-  this->mesuresSampleLast[1] = (unsigned long)0;
-  this->mesuresSampleLast[2] = (unsigned long)5000;
-};
-bmp085::~bmp085(){};
+bmp085::bmp085() : Sensor("bmp085") {}
 
-const bmp085::SensorMesure bmp085::mesures[3] = {
+void bmp085::begin() {
+  if (bmp.begin()) {
+    status = StatusReady;
+  } else {
+    status = StatusError;
+    error = ErrorNotFound;
+  }
+}
+
+Sensor::SensorMeasure bmp085::getMeasure(uint8_t index) const {
+  return mesures[index];
+}
+
+String bmp085::getMeasureName(uint8_t index) const {
+  return mesures[index].name;
+}
+
+size_t bmp085::getMeasureCount() const {
+  return mesuresCount;
+}
+
+Sensor::SensorMeasureData bmp085::read(int index) const {
+  if (index >= 0 && index < mesuresCount) {
+    return mesuresDatas[index];
+  }
+  return 0;
+}
+
+Sensor::SensorMeasureData bmp085::readBuffer(int index, int bufferIndex) const {
+  if (index >= 0 && index < mesuresCount && bufferIndex >= 0 && bufferIndex < mesuresBuffers[index].size()) {
+    return mesuresBuffers[index][bufferIndex];
+  }
+  return 0;
+}
+
+void bmp085::setMeasure(int index, float value) {
+  if (index >= 0 && index < mesuresCount) {
+    mesuresDatas[index] = value;
+    mesuresBuffers[index].push(value);
+  }
+}
+
+Sensor::SensorMeasureData bmp085::average(int last, int index) const {
+  if (index >= 0 && index < mesuresCount) {
+    float sum = 0;
+    int count = min(last, static_cast<int>(mesuresBuffers[index].size()));
+    for (int i = 0; i < count; ++i) {
+      sum += mesuresBuffers[index][i];
+    }
+    return sum / count;
+  }
+  return 0;
+}
+
+String bmp085::jsUtils() const {
+  return "const bmp085_utils = {format_pressure:val=>parseFloat(val)/100,inChart: (name) => name != 'altitude',format_pressure_unit:val=>hPa};";
+}
+
+void bmp085::loop() {
+  mesuresDatas[0] = bmp.readTemperature();
+  mesuresDatas[1] = bmp.readPressure();
+  mesuresDatas[2] = bmp.readAltitude(1013.25);
+
+  for (int i = 0; i < mesuresCount; ++i) {
+    mesuresBuffers[i].push(mesuresDatas[i]);
+  }
+}
+
+const bmp085::SensorMeasure bmp085::mesures[mesuresCount] = {
     {"temperature", "*C"},
     {"pressure", "Pa"},
     {"altitude", "m"},
 };
-const u_int* bmp085::mesuresSampleRates[3] = {
-    (const u_int*)5000,
-    (const u_int*)5000,
-    (const u_int*)60000,
-};
-// void bmp085::onSetup(StationClass station, int index) {}
-void bmp085::begin() {
-  this->bmp.begin() ? this->status = Sensor::StatusReady
-                    : (this->status = Sensor::StatusError) &&
-                          (this->error = Sensor::ErrorNotFound);
-}
-String bmp085::getName() { return this->name; }
-String bmp085::getMesureName(u_int index) { return this->mesures[index].name; }
-Sensor::SensorMesure bmp085::getMesure(u_int index) {
-  return this->mesures[index];
-}
-size_t bmp085::getMesuresCount() { return this->mesuresCount; }
-Sensor::SensorMesureData* bmp085::read_() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    this->mesuresDatas[i] = this->read_(i);
-    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
-  }
-  return this->mesuresDatas;
-}
-Sensor::SensorMesureData bmp085::read_(int index) {
-  if (index < this->mesuresCount) {
-    Sensor::SensorMesureData value = 0;
-    this->mesuresSampleLast[index] = millis();
-    switch (index) {
-      // mesure temperature
-      case 0:
-        value = this->bmp.readTemperature();
-        break;
-
-      // mesure pressure
-      case 1:
-        value = this->bmp.readPressure();
-        break;
-
-      // mesure altitude
-      case 2:
-        value = this->bmp.readAltitude(1013);
-        break;
-    }
-    this->setMesure(index, value);
-    return this->mesuresDatas[index];
-  }
-  return this->read_(0);
-}
-void bmp085::setMesure(int index, float value) {
-  this->mesuresDatas[index] = value;
-  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
-}
-void bmp085::loop() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (millis() - this->mesuresSampleLast[i] >
-        (unsigned long)this->mesuresSampleRates[i]) {
-      this->read_(i);
-    }
-  }
-}
-
-Sensor::SensorMesureData* bmp085::read() {
-  return this->mesuresDatas;
-}
-
-Sensor::SensorMesureData bmp085::read(int index) {
-  return this->__read(index, this->mesuresCount, this->mesuresDatas);
-}
-
-Sensor::SensorMesureData bmp085::readBuffer(int index, int bufferIndex) {
-  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
-  return this->mesuresBuffers[index][bufferIndex];
-}
-
-Sensor::SensorMesureData* bmp085::average(int last) {
-  Sensor::SensorMesureData data[this->mesuresCount];
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    data[i] = this->average(last, i);
-  }
-
-  return data;
-}
-
-Sensor::SensorMesureData bmp085::average(int last, int index) {
-  // return this->__average(last, index, this->mesuresCount,
-  // this->mesuresBuffers);
-  if (index > this->mesuresCount) {
-    return 0;
-  }
-  SensorMesureData data = 0;
-
-  if (last > this->mesuresBuffers[index].size()) {
-    last = this->mesuresBuffers[index].size();
-  }
-
-  for (size_t i = 0; i < last; i++) {
-    data = data + this->mesuresBuffers[index][i];
-  }
-  return data / float(last);
-}
-
-String bmp085::toString() {
-  return SensorToString(this);
-}
-String bmp085::toString(int index) {
-  return SensorMesureToString(this->getMesure(index), this->read(index));
-}
-String bmp085::toCsv() {
-  return SensorToCsv(this);
-}
-String bmp085::toCsv(int index) {
-  return SensorMesureToCsv(this->getMesure(index), this->read(index));
-}
-String bmp085::toJson() {
-  return SensorToJson(this);
-}
-String bmp085::toJson(int index) {
-  return SensorMesureToJson(this->getMesure(index), this->read(index));
-}
-String bmp085::toXml() {
-  return SensorToXml(this);
-}
-String bmp085::toXml(int index) {
-  return SensorMesureToXml(this->getMesure(index), this->read(index));
-}
-String bmp085::jsUtils() {
-  return HtmlElt(
-      "script",
-      "const bmp085_utils = {format_pressure:val=>parseFloat(val)/100"
-      ",inChart: (name) => name != 'altitude',format_pressure_unit:val=>hPa};"
-  );
-}
-String bmp085::toHtml() {
-  return SensorToHtml(this);
-}
-String bmp085::toHtml(int index) {
-  return SensorMesureToHtml(this->getMesure(index), this->read(index));
-}

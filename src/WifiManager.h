@@ -1,86 +1,85 @@
+// WifiManager.h
+#ifndef WIFI_MANAGER_H
+#define WIFI_MANAGER_H
+
 #include <Arduino.h>
+#include <vector>
+#include "SimpleLogger.h"
 
-#ifndef StationIONetworkPoolSize
-#define StationIONetworkPoolSize 3
-#endif
-#ifndef StationIOLogger_h
-#include <SimpleLogger.h>
-#endif
-#ifndef StationIOWifiManager_h
-#define StationIOWifiManager_h
-#endif
-
-// Hardware specific definitions
 #ifdef ESP32
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
 #include <WiFi.h>
-#define StationIOStationConnectable = true
-#define StationIOStationConnectableWifi = true
-typedef WiFiClass StationIOStationWifi;
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
-#define StationIOStationConnectable = true
-#define StationIOStationConnectableWifi = true
-typedef ESP8266WiFiClass StationIOStationWifi;
 #else
-#define StationIOStationConnectable = false
-typedef null StationIOStationWifi;
+#error "Unsupported platform"
 #endif
 
-typedef struct {
-  const char* ssid;
-  const char* password;
-} NetworkInformation;
+#include <LittleFS.h>
+#include <ArduinoJson.h>
 
-typedef struct {
-  const char* ssid;
-  const int32_t rssi;
-} ScannedNetwork;
+#define WIFI_CONNECT_TIMEOUT 30000 // 30 seconds
+
+struct NetworkInformation {
+    String ssid;
+    String password;
+};
+
+struct ScannedNetwork {
+    String ssid;
+    int32_t rssi;
+};
+
+enum class WifiError {
+    None,
+    ConnectionFailed,
+    ConfigLoadFailed,
+    APStartFailed
+};
 
 class WifiManager {
-  public:
-  static const int8_t StatusError = -1;
-  static const int8_t StatusStarting = 0;
-  static const int8_t StatusConnecting = 1;
-  static const int8_t StatusConnected = 2;
-  static const int8_t StatusReady = 3;
+public:
+    WifiManager();
+    void begin();
+    void begin(NetworkInformation network);
+    void begin(NetworkInformation network, const char* hostname);
+    void begin(const char* ssid, const char* password);
+    void begin(const char* ssid, const char* password, const char* hostname);
 
-  int8_t status = 0;
+    WifiError loadConfig(const char* filename);
+    void scan();
+    std::vector<ScannedNetwork> getScannedNetworks();
 
-  StationIOStationWifi wifi;
+    bool isConnected();
+    WifiError connect();
+    WifiError connect(int16_t network);
+    WifiError connect(NetworkInformation network);
+    WifiError connect(const char* ssid, const char* password);
+    void connectAsync(const char* ssid, const char* password);
+    bool disconnect();
+    bool reconnect();
 
-  SimpleLogger logger;
+    bool isAPEnabled();
+    WifiError enableAP();
+    WifiError enableAP(NetworkInformation network);
+    WifiError enableAP(const char* ssid, const char* password);
+    WifiError disableAP();
 
-  NetworkInformation networks[StationIONetworkPoolSize];
-  int16_t currentNetwork = 0;
-  NetworkInformation APInformation  = {"", ""};
-  char* hostname = NULL;
-  int16_t reachableNetworkCount = 0;
+    void setHostname(const char* hostname);
+    String getLocalIP();
+    int32_t getRSSI();
 
-  WifiManager();
-  void begin();
-  void begin(NetworkInformation network);
-  void begin(NetworkInformation network, const char* hostname);
-  void begin(const char* ssid, const char* password);
-  void begin(const char* ssid, const char* password, const char* hostname);
+    SimpleLogger logger;
 
-  void scan();
-  String scannedSSID(int16_t network);
-  int32_t scannedRSSI(int16_t network);
-  
-  boolean isConnected();
-  boolean connect();
-  boolean connect(int16_t network);
-  boolean connect(NetworkInformation network);
-  boolean connect(const char* ssid, const char* password);
-  boolean disconnect();
-  boolean reconnect();
+private:
+    std::vector<NetworkInformation> networks;
+    int16_t currentNetwork;
+    NetworkInformation APInformation;
+    char* hostname;
+    std::vector<ScannedNetwork> scannedNetworks;
 
-  boolean isAPEnabled();
-  boolean enableAP();
-  boolean enableAP(NetworkInformation network);
-  boolean enableAP(const char* ssid, const char* password);
-  boolean disableAP();
-
+    void initWiFi();
+    bool addNetwork(NetworkInformation network);
+    bool removeNetwork(int16_t network);
 };
+
+#endif // WIFI_MANAGER_H

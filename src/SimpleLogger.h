@@ -1,26 +1,36 @@
+#ifndef SIMPLE_LOGGER_H
+#define SIMPLE_LOGGER_H
+
 #include <Arduino.h>
-#ifndef StationIOLogger_h
-#define StationIOLogger_h
-#endif
 
 class SimpleLogger {
-  public:
-  HardwareSerial sr = Serial;
-  int8_t level = 0;
+public:
+    enum LogLevel {
+        DEBUG,
+        INFO,
+        WARNING,
+        ERROR
+    };
 
-  SimpleLogger() {};
-  void begin();
-  void begin(int16_t speed);
-  void begin(HardwareSerial& serial);
-  void begin(HardwareSerial& serial, int16_t speed);
+    SimpleLogger();
+    
+    void begin(HardwareSerial& serial, long baud_rate = 115200);
+    void setLogLevel(LogLevel level);
+    void log(const String& message, LogLevel level = INFO);
+    void logf(const char* format, LogLevel level = INFO, ...);
 
-  void log(const String& data);
-  void log(const String& data, int8_t level);
-  void log(const char*& data);
-  void log(const char*& data, int8_t level);
+    // Convenience methods for different log levels
+    void debug(const String& message);
+    void info(const String& message);
+    void warning(const String& message);
+    void error(const String& message);
 
-  void logt(const String& data);
-  void logt(const String& data, int8_t level);
-  void logt(const char*& data);
-  void logt(const char*& data, int8_t level);
+private:
+    HardwareSerial* _serial;
+    LogLevel _minLevel;
+    
+    const char* levelToString(LogLevel level) const;
+    void printTimestamp() const;
 };
+
+#endif // SIMPLE_LOGGER_H

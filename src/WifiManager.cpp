@@ -1,161 +1,206 @@
-#include <WifiManager.h>
 
-WifiManager::WifiManager() {
-  for (int16_t i = 0; i < StationIONetworkPoolSize; i++) {
-    networks[i] = {"", ""};
-  }
-}
+// WifiManager.cpp
+#include "WifiManager.h"
+
+WifiManager::WifiManager() : currentNetwork(-1), hostname(nullptr) {}
 
 void WifiManager::begin() {
-  begin(networks[0], NULL);
+    initWiFi();
 }
 
 void WifiManager::begin(NetworkInformation network) {
-  begin(network, NULL);
+    begin(network.ssid.c_str(), network.password.c_str());
 }
 
 void WifiManager::begin(NetworkInformation network, const char* hostname) {
-  begin(network.ssid, network.password, hostname);
+    begin(network.ssid.c_str(), network.password.c_str(), hostname);
 }
 
 void WifiManager::begin(const char* ssid, const char* password) {
-  begin(ssid, password, NULL);
+    begin(ssid, password, nullptr);
 }
 
 void WifiManager::begin(const char* ssid, const char* password, const char* hostname) {
-  logger.log("Starting WifiManager",1);
+    initWiFi();
+    addNetwork({ssid, password});
+    setHostname(hostname);
+}
 
-  if (ssid != NULL) {
-    networks[0] = {ssid, password};
-    currentNetwork = 0;
-  }
+void WifiManager::initWiFi() {
+    WiFi.mode(WIFI_STA);
+    WiFi.persistent(false);
+    WiFi.setAutoConnect(false);
+    WiFi.setAutoReconnect(true);
+}
 
-  wifi.persistent(false);
-  wifi.setAutoConnect(false);
-  wifi.setAutoReconnect(true);
+WifiError WifiManager::loadConfig(const char* filename) {
+    if (!LittleFS.begin()) {
+        logger.log("Failed to mount file system", SimpleLogger::ERROR);
+        return WifiError::ConfigLoadFailed;
+    }
 
-  // wifi.mode(WIFI_AP_STA);
+    File configFile = LittleFS.open(filename, "r");
+    if (!configFile) {
+        logger.log("Failed to open config file", SimpleLogger::ERROR);
+        return WifiError::ConfigLoadFailed;
+    }
 
-  if (hostname != NULL) {
-    logger.logt("hostname : "+String(hostname),2);
-    this->hostname = (char*)malloc(strlen(hostname)+1);
-    strcpy(this->hostname, hostname);
-  }
-  if (this->hostname != NULL) {
-    wifi.hostname(this->hostname);
-  }
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, configFile);
+    if (error) {
+        logger.log("Failed to parse config file", SimpleLogger::ERROR);
+        return WifiError::ConfigLoadFailed;
+    }
+
+    networks.clear();
+    JsonArray wifiNetworks = doc["wifi"]["networks"];
+    for (JsonObject network : wifiNetworks) {
+        const char* ssid = network["ssid"];
+        const char* password = network["password"];
+        addNetwork({ssid, password});
+    }
+
+    const char* newHostname = doc["wifi"]["hostname"];
+    setHostname(newHostname);
+
+    return WifiError::None;
 }
 
 void WifiManager::scan() {
-  logger.log("Scanning networks",1);
-  if (wifi.scanNetworks() == WIFI_SCAN_RUNNING) {
-    return;
-  }
-
-  reachableNetworkCount = wifi.scanComplete();
+    scannedNetworks.clear();
+    int n = WiFi.scanNetworks();
+    for (int i = 0; i < n; ++i) {
+        scannedNetworks.push_back({WiFi.SSID(i), WiFi.RSSI(i)});
+    }
 }
 
-String WifiManager::scannedSSID(int16_t network) {
-  if (network < 0 || network >= reachableNetworkCount) {
-    return "";
-  }
-
-  return wifi.SSID(network);
+std::vector<ScannedNetwork> WifiManager::getScannedNetworks() {
+    return scannedNetworks;
 }
 
-int32_t WifiManager::scannedRSSI(int16_t network) {
-  if (network < 0 || network >= reachableNetworkCount) {
-    return 0;
-  }
-
-  return wifi.RSSI(network);
+bool WifiManager::isConnected() {
+    return WiFi.status() == WL_CONNECTED;
 }
 
-boolean WifiManager::isConnected() {
-  return wifi.status() == WL_CONNECTED;
+WifiError WifiManager::connect() {
+    if (networks.empty()) {
+        logger.log("No networks configured", SimpleLogger::ERROR);
+        return WifiError::ConnectionFailed;
+    }
+    return connect(0);
 }
 
-boolean WifiManager::connect() {
-  return connect(currentNetwork);
+WifiError WifiManager::connect(int16_t network) {
+    if (network < 0 || network >= networks.size()) {
+        logger.log("Invalid network index", SimpleLogger::ERROR);
+        return WifiError::ConnectionFailed;
+    }
+    return connect(networks[network]);
 }
 
-boolean WifiManager::connect(int16_t network) {
-  if (network < 0 || network >= StationIONetworkPoolSize) {
-    logger.log("network index does not exists", -2);
-    return false;
-  }
-
-  currentNetwork = network;
-  return connect(networks[currentNetwork]);
+WifiError WifiManager::connect(NetworkInformation network) {
+    return connect(network.ssid.c_str(), network.password.c_str());
 }
 
-boolean WifiManager::connect(NetworkInformation network) {
-  if (network.ssid == NULL) {
-    logger.log("network ssid is NULL", -2);
-    return false;
-  }
+WifiError WifiManager::connect(const char* ssid, const char* password) {
+    logger.log("Connecting to " + String(ssid), SimpleLogger::INFO);
+    WiFi.begin(ssid, password);
 
-  return connect(network.ssid, network.password);
+    unsigned long startAttemptTime = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < WIFI_CONNECT_TIMEOUT) {
+        delay(100);
+    }
+
+    if (WiFi.status() != WL_CONNECTED) {
+        logger.log("Failed to connect to " + String(ssid), SimpleLogger::ERROR);
+        return WifiError::ConnectionFailed;
+    }
+
+    logger.log("Connected to " + String(ssid), SimpleLogger::INFO);
+    logger.log("IP: " + WiFi.localIP().toString(), SimpleLogger::INFO);
+    return WifiError::None;
 }
 
-boolean WifiManager::connect(const char* ssid, const char* password) {
-  logger.log("WifiManager connecting to "+String(ssid));
-  wifi.begin(ssid, password);
-
-  if (wifi.waitForConnectResult() != WL_CONNECTED) {
-    logger.log("WifiManager failed to connect to "+String(ssid), -2);
-    return false;
-  }
-  logger.logt("connected", 2);
-  return true;
+void WifiManager::connectAsync(const char* ssid, const char* password) {
+    WiFi.begin(ssid, password);
 }
 
-boolean WifiManager::disconnect() {
-  logger.log("WifiManager disconnecting");
-  return wifi.disconnect();
+bool WifiManager::disconnect() {
+    return WiFi.disconnect();
 }
 
-boolean WifiManager::reconnect() {
-  logger.log("WifiManager reconnecting");
-  return wifi.reconnect();
+bool WifiManager::reconnect() {
+    return WiFi.reconnect();
 }
 
-boolean WifiManager::isAPEnabled() {
-  WiFiMode_t mode = wifi.getMode();
-  return mode == WIFI_AP || mode == WIFI_AP_STA;
+bool WifiManager::isAPEnabled() {
+    return WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_AP_STA;
 }
 
-boolean WifiManager::enableAP() {
-  if (strlen(APInformation.ssid) > 0) {
-    return enableAP(APInformation);
-  }
-  return false;
+WifiError WifiManager::enableAP() {
+    if (APInformation.ssid.length() > 0) {
+        return enableAP(APInformation.ssid.c_str(), APInformation.password.c_str());
+    }
+    logger.log("No AP information set", SimpleLogger::ERROR);
+    return WifiError::APStartFailed;
 }
 
-boolean WifiManager::enableAP(NetworkInformation network) {
-  return enableAP(network.ssid, network.password);
+WifiError WifiManager::enableAP(NetworkInformation network) {
+    return enableAP(network.ssid.c_str(), network.password.c_str());
 }
 
-boolean WifiManager::enableAP(const char* ssid, const char* password) {
-  if (isAPEnabled()) {
-    logger.log("WifiManager AP already enabled", -1);
+WifiError WifiManager::enableAP(const char* ssid, const char* password) {
+    logger.log("Enabling AP: " + String(ssid), SimpleLogger::INFO);
+    if (WiFi.softAP(ssid, password)) {
+        APInformation = {ssid, password};
+        logger.log("AP IP address: " + WiFi.softAPIP().toString(), SimpleLogger::INFO);
+        return WifiError::None;
+    }
+    logger.log("Failed to start AP", SimpleLogger::ERROR);
+    return WifiError::APStartFailed;
+}
+
+WifiError WifiManager::disableAP() {
+    if (isAPEnabled()) {
+        WiFi.softAPdisconnect(true);
+        WiFi.mode(WIFI_STA);
+        return WifiError::None;
+    }
+    return WifiError::None; // AP was already disabled
+}
+
+void WifiManager::setHostname(const char* newHostname) {
+    if (newHostname) {
+        if (hostname) {
+            free(hostname);
+        }
+        hostname = strdup(newHostname);
+        WiFi.setHostname(hostname);
+    }
+}
+
+String WifiManager::getLocalIP() {
+    return WiFi.localIP().toString();
+}
+
+int32_t WifiManager::getRSSI() {
+    return WiFi.RSSI();
+}
+
+bool WifiManager::addNetwork(NetworkInformation network) {
+    for (const auto& existingNetwork : networks) {
+        if (existingNetwork.ssid == network.ssid) {
+            return false; // Network already exists
+        }
+    }
+    networks.push_back(network);
     return true;
-  }
-  logger.log("WifiManager enabling AP");
-  logger.logt("SSID : "+String(ssid), 2);
-  logger.logt("Password : "+String(password), 3);
-  wifi.mode(WIFI_AP_STA);
-  wifi.softAP(ssid, password);
-  return isAPEnabled();
 }
 
-boolean WifiManager::disableAP() {
-  if (!isAPEnabled()) {
-    logger.log("WifiManager AP already disabled", -1);
+bool WifiManager::removeNetwork(int16_t network) {
+    if (network < 0 || network >= networks.size()) {
+        return false;
+    }
+    networks.erase(networks.begin() + network);
     return true;
-  }
-  logger.log("WifiManager disabling AP");
-  wifi.softAPdisconnect(true);
-  wifi.mode(WIFI_STA);
-  return !isAPEnabled();
 }

@@ -1,73 +1,74 @@
-#include <SimpleLogger.h>
+#include "SimpleLogger.h"
+#include <stdarg.h>
 
-void SimpleLogger::begin() {
-  begin(9600);
+SimpleLogger::SimpleLogger() : _serial(nullptr), _minLevel(INFO) {}
+
+void SimpleLogger::begin(HardwareSerial& serial, long baud_rate) {
+    _serial = &serial;
+    _serial->begin(baud_rate);
 }
 
-void SimpleLogger::begin(int16_t speed) {
-  uint32_t br = sr.baudRate();
-  if (br == 0) {
-    sr.begin(speed);
-  } else if (br != speed) {
-    sr.updateBaudRate(speed);
-  }
+void SimpleLogger::setLogLevel(LogLevel level) {
+    _minLevel = level;
 }
 
-void SimpleLogger::begin(HardwareSerial& serial) {
-  sr = serial;
-  begin();
+void SimpleLogger::log(const String& message, LogLevel level) {
+    if (level >= _minLevel && _serial != nullptr) {
+        printTimestamp();
+        _serial->print(levelToString(level));
+        _serial->print(": ");
+        _serial->println(message);
+    }
 }
 
-void SimpleLogger::begin(HardwareSerial& serial, int16_t speed) {
-  sr = serial;
-  begin(speed);
+void SimpleLogger::logf(const char* format, LogLevel level, ...) {
+    if (level >= _minLevel && _serial != nullptr) {
+        va_list args;
+        va_start(args, level);
+        
+        printTimestamp();
+        _serial->print(levelToString(level));
+        _serial->print(": ");
+        
+        char buf[256];
+        vsnprintf(buf, sizeof(buf), format, args);
+        _serial->println(buf);
+        
+        va_end(args);
+    }
 }
 
-void SimpleLogger::log(const String& data) {
-  if (level <= this->level) {
-    sr.println(data);
-  }
+void SimpleLogger::debug(const String& message) {
+    log(message, DEBUG);
 }
 
-void SimpleLogger::log(const String& data, int8_t level) {
-  if (level <= this->level) {
-    sr.println(data);
-  }
+void SimpleLogger::info(const String& message) {
+    log(message, INFO);
 }
 
-void SimpleLogger::log(const char*& data) {
-  if (level <= this->level) {
-    sr.println(data);
-  }
+void SimpleLogger::warning(const String& message) {
+    log(message, WARNING);
 }
 
-void SimpleLogger::log(const char*& data, int8_t level) {
-  if (level <= this->level) {
-    sr.println(data);
-  }
+void SimpleLogger::error(const String& message) {
+    log(message, ERROR);
 }
 
-void SimpleLogger::logt(const String& data) {
-  if (level <= this->level) {
-    log(("\t"+String(data)).c_str(), level);
-  }
+const char* SimpleLogger::levelToString(LogLevel level) const {
+    switch (level) {
+        case DEBUG:   return "DEBUG";
+        case INFO:    return "INFO";
+        case WARNING: return "WARNING";
+        case ERROR:   return "ERROR";
+        default:      return "UNKNOWN";
+    }
 }
 
-void SimpleLogger::logt(const String& data, int8_t level) {
-  if (level <= this->level) {
-    log(("\t"+String(data)).c_str(), level);
-  }
+void SimpleLogger::printTimestamp() const {
+    unsigned long ms = millis();
+    unsigned long seconds = ms / 1000;
+    unsigned long minutes = seconds / 60;
+    unsigned long hours = minutes / 60;
+    
+    _serial->printf("[%02lu:%02lu:%02lu.%03lu] ", hours, minutes % 60, seconds % 60, ms % 1000);
 }
-
-void SimpleLogger::logt(const char*& data) {
-  if (level <= this->level) {
-    log(("\t"+String(data)).c_str(), level);
-  }
-}
-
-void SimpleLogger::logt(const char*& data, int8_t level) {
-  if (level <= this->level) {
-    log(("\t"+String(data)).c_str(), level);
-  }
-}
-
