@@ -1,0 +1,311 @@
+#!/bin/bash
+# @parseArger-begin
+# @parseArger-help "collect data from StationIO stations" --option "help" --short-option "h"
+# @parseArger-verbose --option "verbose" --level "0" --quiet-option "quiet"
+# @parseArger-declarations
+# @parseArger opt stationio-directory "stationIO install directory" --alias stationio-dir --alias sd
+# @parseArger opt exclude "station to exclude" --short x --repeat
+# @parseArger opt exclude-mesure "yq path for mesure to exclude" --repeat --alias xm
+# @parseArger opt collect-dir "collected data directory"
+# @parseArger-declarations-end
+
+# @parseArger-utils
+_helpHasBeenPrinted=1;
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";
+# @parseArger-utils-end
+
+# @parseArger-parsing
+die()
+{
+	local _ret="${2:-1}"
+	test "${_PRINT_HELP:-no}" = yes && print_help >&2
+	log "$1" -3 >&2
+	exit "${_ret}"
+}
+
+
+begins_with_short_option()
+{
+	local first_option all_short_options=''
+	first_option="${1:0:1}"
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+}
+
+# POSITIONALS ARGUMENTS
+_positionals=();
+# OPTIONALS ARGUMENTS
+_arg_stationio_directory=
+_arg_exclude=()
+_arg_exclude_mesure=()
+_arg_collect_dir=
+# FLAGS
+_verbose_level="0";
+
+
+
+print_help()
+{
+	_triggerSCHelp=1;
+
+	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
+		_helpHasBeenPrinted=0;
+		echo -e "collect data from StationIO stations:"
+	echo -e "	--stationio-directory|--stationio-dir|--sd <stationio-directory>: stationIO install directory"
+	echo -e "	-x, --exclude <exclude>: station to exclude, repeatable"
+	echo -e "	--exclude-mesure|--xm <exclude-mesure>: yq path for mesure to exclude, repeatable"
+	echo -e "	--collect-dir <collect-dir>: collected data directory"
+	echo -e "Usage :
+	$0 [--stationio-directory <value>] [--exclude <value>] [--exclude-mesure <value>] [--collect-dir <value>]";
+	fi
+
+}
+
+log() {
+	local _arg_msg="${1}";
+	local _arg_level="${2:"0"}";
+	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
+		case "$_arg_level" in
+			-3)
+				_arg_COLOR="\033[0;31m";
+				;;
+			-2)
+				_arg_COLOR="\033[0;33m";
+				;;
+			-1)
+				_arg_COLOR="\033[1;33m";
+				;;
+			1)
+				_arg_COLOR="\033[0;32m";
+				;;
+			2)
+				_arg_COLOR="\033[1;36m";
+				;;
+			3)
+				_arg_COLOR="\033[0;36m";
+				;;
+			*)
+				_arg_COLOR="\033[0m";
+				;;
+		esac
+		echo -e "${_arg_COLOR}${_arg_msg}\033[0m";
+	fi
+}
+
+parse_commandline()
+{
+	_positionals_count=0
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			--sd|--stationio-dir|--stationio-directory)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_stationio_directory="$2"
+				shift
+				;;
+			--stationio-directory=*)
+				_arg_stationio_directory="${_key##--stationio-directory=}"
+				;;
+			--stationio-dir=*)
+				_arg_stationio_directory="${_key##--stationio-dir=}"
+				;;
+			--sd=*)
+				_arg_stationio_directory="${_key##--sd=}"
+				;;
+			
+			-x|--exclude)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_exclude+=("$2")
+				shift
+				;;
+			--exclude=*)
+				_arg_exclude+=("${_key##--exclude=}")
+				;;
+			-x*)
+				_arg_exclude+=("${_key##-x}")
+				;;
+			
+			--xm|--exclude-mesure)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_exclude_mesure+=("$2")
+				shift
+				;;
+			--exclude-mesure=*)
+				_arg_exclude_mesure+=("${_key##--exclude-mesure=}")
+				;;
+			--xm=*)
+				_arg_exclude_mesure+=("${_key##--xm=}")
+				;;
+			
+			--collect-dir)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_collect_dir="$2"
+				shift
+				;;
+			--collect-dir=*)
+				_arg_collect_dir="${_key##--collect-dir=}"
+				;;
+			
+			-h|--help)
+				print_help;
+				exit 0;
+				;;
+			-h*)
+				print_help;
+				exit 0;
+				;;
+			-v|--version)
+				print_version;
+				exit 0;
+				;;
+			-v*)
+				print_version;
+				exit 0;
+				;;
+			--verbose)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level + 1))";
+					else
+						_verbose_level="$2";
+						shift;
+					fi
+					;;
+				--quiet)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level - 1))";
+					else
+						_verbose_level="-$2";
+						shift;
+					fi
+					;;
+				
+			*)
+				_last_positional="$1"
+				_positionals+=("$_last_positional")
+				_positionals_count=$((_positionals_count + 1))
+				;;
+		esac
+		shift
+	done
+}
+
+
+handle_passed_args_count()
+{
+	local _required_args_string=""
+	if [ "${_positionals_count}" -gt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 0 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
+	fi
+	if [ "${_positionals_count}" -lt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 0 (namely: $_required_args_string), but got only ${_positionals_count}.
+	${_positionals[*]}" 1;
+	fi
+}
+
+
+assign_positional_args()
+{
+	local _positional_name _shift_for=$1;
+	_positional_names="";
+	shift "$_shift_for"
+	for _positional_name in ${_positional_names};do
+		test $# -gt 0 || break;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
+		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
+		shift;
+	done
+}
+
+print_debug()
+{
+	print_help
+	# shellcheck disable=SC2145
+	echo "DEBUG: $0 $@";
+	
+	echo -e "\tstationio-directory: ${_arg_stationio_directory}";
+	echo -e "\texclude: ${_arg_exclude[*]}";
+	echo -e "\texclude-mesure: ${_arg_exclude_mesure[*]}";
+	echo -e "\tcollect-dir: ${_arg_collect_dir}";
+
+}
+
+print_version()
+{
+	echo "";
+}
+
+on_interrupt() {
+	die Process aborted! 130;
+}
+
+parse_commandline "$@";
+handle_passed_args_count;
+assign_positional_args 1 "${_positionals[@]}";
+trap on_interrupt INT;
+
+
+
+# @parseArger-parsing-end
+# print_debug "$@"
+# @parseArger-end
+
+# shellcheck source=../common
+source "$_SCRIPT_DIR/../common";
+# shellcheck source="../../stations/stations"
+source "$_SCRIPT_DIR/../../stations/stations";
+# shellcheck source="../../.env"
+source "$_SCRIPT_DIR/../../.env";
+
+stioExe="$(realpath "$_SCRIPT_DIR/../../StationIO")";
+
+collectCmd=("$stioExe" read --format json);
+wrCmd=("$_SCRIPT_DIR/influx" write -b "StationIO" -o "StationIO" -p s);
+
+pjl=$("$stioExe" list);
+if [ "$_arg_collect_dir" == "" ]; then
+	_arg_collect_dir="$(realpath "$_SCRIPT_DIR/../../hub/collected_data")";
+fi
+collectFile="$_arg_collect_dir/$(date +%Y-%m-%d)";
+yestColF="$_arg_collect_dir/$(date +%Y-%m-%d -d "yesterday")";
+if [ ! -f "$collectFile" ] && [ -f "$yestColF" ]; then
+	if [ ! -f "$_arg_collect_dir/archive.tar.xz" ]; then
+		rm "$_arg_collect_dir/archive.tar.xz";
+	fi
+	cd "$_arg_collect_dir";
+	tar --use-compress-program=xz -czf archive.tar.xz --exclude='.gitkeep' ./;
+	cd -;
+fi
+
+for pj in $pjl; do
+	# shellcheck disable=SC2076
+	if ! echo " ${_arg_exclude[*]} " | grep -q "$pj"; then
+		stData=$("${collectCmd[@]}" "$pj");
+		colDate=$(date +%s);
+		
+		if [ "$stData" != "" ] && [ "$stData" != "null" ]; then
+			# shellcheck disable=SC2207
+			sensorNames=($(echo "$stData" | yq -oy ".sensors | keys | .[]"));
+			for sn in "${sensorNames[@]}"; do
+				# shellcheck disable=SC2207
+				sensorMesures=($(echo "$stData" | yq -oy ".sensors.$sn | keys | .[]"));
+				for ms in "${sensorMesures[@]}"; do
+					# shellcheck disable=SC2076
+					if ! [[ "${_arg_exclude_mesure[*]}" =~ "$sn.$ms" ]]; then
+						sensorData=$(echo "$stData" | yq -oy ".sensors.$sn.$ms");
+						if [ "$sensorData" != "" ] \
+							&& [ "$sensorData" != "null" ] \
+							&& [ "$sensorData" != "Null" ] \
+							&& [ "$sensorData" != "NULL" ] \
+							&& [ "$sensorData" != "NaN" ]; then
+							
+							wru=("${wrCmd[@]}" "$ms,room=$pj,sensor=$sn mesure=$sensorData $colDate");
+							"${wru[@]}";
+							log "${wru[*]}" 1;
+							echo "$ms,room=$pj,sensor=$sn mesure=$sensorData $colDate" >> "$collectFile";
+						fi
+					fi
+				done
+			done
+		fi
+	fi
+done

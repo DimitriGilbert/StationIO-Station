@@ -225,10 +225,10 @@ if (StationIOPlugins !== undefined) {
     return IRTInccludeTpl;
   });
   StationIOPlugins.declaration.push((frmData) => {
-    return eta.render(IRTDeclarationTpl, IRTBuildData(frmData));
+    return eta_.renderString(IRTDeclarationTpl, IRTBuildData(frmData));
   });
   StationIOPlugins.setup.push((frmData) => {
-    return eta.render(IRTSetupTpl, IRTBuildData(frmData));
+    return eta_.renderString(IRTSetupTpl, IRTBuildData(frmData));
   });
   document
     .getElementById("timers-config")

@@ -1,159 +1,96 @@
-#include "./bmp280.h"
+#include "bmp280.h"
 
-#include <Arduino.h>
+// Define static member (measure descriptions)
+const Sensor::SensorMeasure bmp280::measures[measureCount] = {
+    {"Temperature", "°C"},
+    {"Pressure", "Pa"},
+    {"Altitude", "m"}
+};
 
-#include "../html.h"
-
+// Constructor
 bmp280::bmp280() : Sensor("bmp280") {
-  this->mesuresSampleLast[0] = (unsigned long)0;
-  this->mesuresSampleLast[1] = (unsigned long)0;
-  this->mesuresSampleLast[2] = (unsigned long)5000;
-};
-bmp280::~bmp280(){};
-
-const bmp280::SensorMesure bmp280::mesures[3] = {
-    {"temperature", "*C"},
-    {"pressure", "Pa"},
-    {"altitude", "m"},
-};
-const u_int* bmp280::mesuresSampleRates[3] = {
-    (const u_int*)5000,
-    (const u_int*)5000,
-    (const u_int*)60000,
-};
-
-// void bmp280::onSetup(StationClass station, int index) {}
-void bmp280::begin(){
-  this->bmp.begin() || this->bmp.begin(BMP280_ADDRESS_ALT)
-      ? this->status = Sensor::StatusReady
-      : (this->status = Sensor::StatusError) &&
-            (this->error = Sensor::ErrorNotFound);
-}
-String bmp280::getName() { return this->name; }
-String bmp280::getMesureName(u_int index) { return this->mesures[index].name; }
-Sensor::SensorMesure bmp280::getMesure(u_int index) {
-  return this->mesures[index];
-}
-size_t bmp280::getMesuresCount() { return this->mesuresCount; }
-Sensor::SensorMesureData* bmp280::read_() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    this->mesuresDatas[i] = this->read_(i);
-    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
-  }
-  return this->mesuresDatas;
-}
-Sensor::SensorMesureData bmp280::read_(int index) {
-  if (index < this->mesuresCount) {
-    Sensor::SensorMesureData value = 0;
-    this->mesuresSampleLast[index] = millis();
-    switch (index) {
-      // mesure temperature
-      case 0:
-        value = this->bmp.readTemperature();
-        break;
-
-      // mesure pressure
-      case 1:
-        value = this->bmp.readPressure();
-        break;
-
-      // mesure altitude
-      case 2:
-        value = this->bmp.readAltitude(1013);
-        break;
+    // Initialize measure data and buffers
+    for (int i = 0; i < measureCount; i++) {
+        measureData[i] = 0;
     }
-    this->setMesure(index, value);
-    return this->mesuresDatas[index];
-  }
-  return this->read_(0);
 }
-void bmp280::setMesure(int index, float value) {
-  this->mesuresDatas[index] = value;
-  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
-}
-void bmp280::loop() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (millis() - this->mesuresSampleLast[i] >
-        (unsigned long)this->mesuresSampleRates[i]) {
-      this->read_(i);
+
+// Initialize the BMP280 sensor
+void bmp280::begin() {
+    if (bmp.begin()) {
+        status = StatusReady;
+    } else {
+        status = StatusError;
+        error = ErrorNotFound;
     }
-  }
 }
 
-Sensor::SensorMesureData* bmp280::read() {
-  return this->mesuresDatas;
+// Return the measure information based on the index
+Sensor::SensorMeasure bmp280::getMeasure(uint8_t index) const {
+    return measures[index];
 }
 
-Sensor::SensorMesureData bmp280::read(int index) {
-  return this->__read(index, this->mesuresCount, this->mesuresDatas);
+// Return the name of a measure (Temperature, Pressure, Altitude)
+String bmp280::getMeasureName(uint8_t index) const {
+    return measures[index].name;
 }
 
-Sensor::SensorMesureData bmp280::readBuffer(int index, int bufferIndex) {
-  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
-  return this->mesuresBuffers[index][bufferIndex];
+// Return the total number of measures (Temperature, Pressure, Altitude)
+size_t bmp280::getMeasureCount() const {
+    return measureCount;
 }
 
-Sensor::SensorMesureData* bmp280::average(int last) {
-  Sensor::SensorMesureData data[this->mesuresCount];
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    data[i] = this->average(last, i);
-  }
-
-  return data;
-}
-
-Sensor::SensorMesureData bmp280::average(int last, int index) {
-  // return this->__average(last, index, this->mesuresCount,
-  // this->mesuresBuffers);
-  if (index > this->mesuresCount) {
+// Read a specific measure (Temperature, Pressure, or Altitude) from the sensor
+Sensor::SensorMeasureData bmp280::read(int index) const {
+    if (index >= 0 && index < measureCount) {
+        return measureData[index];
+    }
     return 0;
-  }
-  SensorMesureData data = 0;
-
-  if (last > this->mesuresBuffers[index].size()) {
-    last = this->mesuresBuffers[index].size();
-  }
-
-  for (size_t i = 0; i < last; i++) {
-    data = data + this->mesuresBuffers[index][i];
-  }
-  return data / float(last);
 }
 
-String bmp280::toString() {
-  return SensorToString(this);
+// Read buffered data for a specific measure
+Sensor::SensorMeasureData bmp280::readBuffer(int index, int bufferIndex) const {
+    if (index >= 0 && index < measureCount && bufferIndex >= 0 && bufferIndex < measureBuffers[index].size()) {
+        return measureBuffers[index][bufferIndex];
+    }
+    return 0;
 }
-String bmp280::toString(int index) {
-  return SensorMesureToString(this->getMesure(index), this->read(index));
+
+// Set a specific measure value and store it in the buffer
+void bmp280::setMeasure(int index, float value) {
+    if (index >= 0 && index < measureCount) {
+        measureData[index] = value;
+        measureBuffers[index].push(value);
+    }
 }
-String bmp280::toCsv() {
-  return SensorToCsv(this);
+
+// Calculate the average of the last 'n' values for a specific measure
+Sensor::SensorMeasureData bmp280::average(int last, int index) const {
+    if (index >= 0 && index < measureCount) {
+        float sum = 0;
+        int count = min(last, static_cast<int>(measureBuffers[index].size()));
+        for (int i = 0; i < count; ++i) {
+            sum += measureBuffers[index][i];
+        }
+        return sum / count;
+    }
+    return 0;
 }
-String bmp280::toCsv(int index) {
-  return SensorMesureToCsv(this->getMesure(index), this->read(index));
+
+// Main loop to continuously read sensor data
+void bmp280::loop() {
+    // Update the sensor data
+    measureData[0] = bmp.readTemperature();
+    measureData[1] = bmp.readPressure();
+    measureData[2] = bmp.readAltitude(1013.25);  // Standard sea-level pressure
+
+    // Push the new data into the buffers
+    for (int i = 0; i < measureCount; ++i) {
+        measureBuffers[i].push(measureData[i]);
+    }
 }
-String bmp280::toJson() {
-  return SensorToJson(this);
-}
-String bmp280::toJson(int index) {
-  return SensorMesureToJson(this->getMesure(index), this->read(index));
-}
-String bmp280::toXml() {
-  return SensorToXml(this);
-}
-String bmp280::toXml(int index) {
-  return SensorMesureToXml(this->getMesure(index), this->read(index));
-}
-String bmp280::jsUtils() {
-  return HtmlElt(
-      "script",
-      "const bmp280_utils = {format_pressure:val=>parseFloat(val)/100"
-      ",inChart: (name) => name !== 'altitude',format_pressure_unit:val=>hPa};"
-  );
-}
-String bmp280::toHtml() {
-  return SensorToHtml(this);
-}
-String bmp280::toHtml(int index) {
-  return SensorMesureToHtml(this->getMesure(index), this->read(index));
+
+// Provide JavaScript utilities for web-based visualization
+String bmp280::jsUtils() const {
+    return "const bmp280_utils = {inChart: name => ['Temperature', 'Pressure', 'Altitude'].includes(name)};";
 }

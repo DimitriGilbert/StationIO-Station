@@ -301,7 +301,7 @@ if [ ! -d "./stations/.stations" ]; then
 fi
 
 # shellcheck source=./export-conf
-source "$STATIONIO_DIR/utils/export-conf" "${_arg_name}";
+source "$STATIONIO_DIR/bin/export-conf" "${_arg_name}";
 
 if [ "$stationIOip" == "" ]; then
 	stationIOip="0"

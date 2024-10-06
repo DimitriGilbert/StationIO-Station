@@ -1,13 +1,15 @@
 #!/bin/bash
 # @parseArger-begin
-# @parseArger-help "Read station data" --option "help" --short-option "h"
+# @parseArger-help "Upload a station to the board" --option "help" --short-option "h"
 # @parseArger-verbose --option "verbose" --level "0"
 # @parseArger-declarations
-# @parseArger pos station "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
-# @parseArger opt sensor "sensor id" --short s --repeat
-# @parseArger opt format "output format" --short f --default-value "plain" --one-of "json" --one-of "csv" --one-of "xml" --one-of "plain" --one-of "html"
-# @parseArger opt mesure "mesure id, can conflict with sensor" --short m --repeat
-# @parseArger opt output "output file" --short o --complete "file"
+# @parseArger pos name "station name" --complete-custom "if [ -d stations/.stations ]; then /usr/bin/ls stations/.stations ;fi"
+# @parseArger opt ip "station ip"
+# @parseArger opt port "host port upload flags, avoid random for firewalls" --short p --default-value "46667"
+# @parseArger opt board "PIO build environement name" --short b
+# @parseArger opt pio "pio executable" --default-value "/home/didi/.platformio/penv/bin/pio"
+# @parseArger flag ota "OTA update" --on
+# @parseArger flag fs "upload fs"
 # @parseArger-declarations-end
 
 # @parseArger-utils
@@ -34,14 +36,15 @@ begins_with_short_option()
 
 # POSITIONALS ARGUMENTS
 _positionals=();
-_arg_station="";
+_arg_name="";
 # OPTIONALS ARGUMENTS
-_arg_sensor=()
-_arg_format="plain"
-_one_of_arg_format=("json" "csv" "xml" "plain" "html" );
-_arg_mesure=()
-_arg_output=
+_arg_ip=
+_arg_port="46667"
+_arg_board=
+_arg_pio="/home/didi/.platformio/penv/bin/pio"
 # FLAGS
+_arg_ota="on"
+_arg_fs="off"
 _verbose_level="0";
 
 
@@ -52,14 +55,16 @@ print_help()
 
 	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
 		_helpHasBeenPrinted=0;
-		echo -e "Read station data:"
-	echo -e "	station: station name"
-	echo -e "	-s, --sensor <sensor>: sensor id, repeatable"
-	echo -e "	-f, --format <format>: output format [default: ' plain '] [one of 'json' 'csv' 'xml' 'plain' 'html']"
-	echo -e "	-m, --mesure <mesure>: mesure id, can conflict with sensor, repeatable"
-	echo -e "	-o, --output <output>: output file"
+		echo -e "Upload a station to the board:"
+	echo -e "	name: station name"
+	echo -e "	--ip <ip>: station ip"
+	echo -e "	-p, --port <port>: host port upload flags, avoid random for firewalls [default: ' 46667 ']"
+	echo -e "	-b, --board <board>: PIO build environement name"
+	echo -e "	--pio <pio>: pio executable [default: ' /home/didi/.platformio/penv/bin/pio ']"
+	echo -e "	--ota|--no-ota: OTA update, on by default (use --no-ota to turn it off)"
+	echo -e "	--fs|--no-fs: upload fs"
 	echo -e "Usage :
-	$0 <station> [--sensor <value>] [--format <value>] [--mesure <value>] [--output <value>]";
+	$0 <name> [--ip <value>] [--port <value>] [--board <value>] [--pio <value>] [--[no-]ota] [--[no-]fs]";
 	fi
 
 }
@@ -102,57 +107,60 @@ parse_commandline()
 	do
 		_key="$1"
 		case "$_key" in
-			-s|--sensor)
+			--ip)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_sensor+=("$2")
+				_arg_ip="$2"
 				shift
 				;;
-			--sensor=*)
-				_arg_sensor+=("${_key##--sensor=}")
-				;;
-			-s*)
-				_arg_sensor+=("${_key##-s}")
+			--ip=*)
+				_arg_ip="${_key##--ip=}"
 				;;
 			
-			-f|--format)
+			-p|--port)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_format="$2"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+				_arg_port="$2"
 				shift
 				;;
-			--format=*)
-				_arg_format="${_key##--format=}"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+			--port=*)
+				_arg_port="${_key##--port=}"
 				;;
-			-f*)
-				_arg_format="${_key##-f}"
-				if [[ "${#_one_of_arg_format[@]}" -gt 0 ]];then [[ "${_one_of_arg_format[*]}" =~ (^|[[:space:]])"$_arg_format"($|[[:space:]]) ]] || die "format must be one of: json csv xml plain html";fi
+			-p*)
+				_arg_port="${_key##-p}"
 				;;
 			
-			-m|--mesure)
+			-b|--board)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_mesure+=("$2")
+				_arg_board="$2"
 				shift
 				;;
-			--mesure=*)
-				_arg_mesure+=("${_key##--mesure=}")
+			--board=*)
+				_arg_board="${_key##--board=}"
 				;;
-			-m*)
-				_arg_mesure+=("${_key##-m}")
+			-b*)
+				_arg_board="${_key##-b}"
 				;;
 			
-			-o|--output)
+			--pio)
 				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_output="$2"
+				_arg_pio="$2"
 				shift
 				;;
-			--output=*)
-				_arg_output="${_key##--output=}"
-				;;
-			-o*)
-				_arg_output="${_key##-o}"
+			--pio=*)
+				_arg_pio="${_key##--pio=}"
 				;;
 			
+			--ota)
+				_arg_ota="on"
+				;;
+			--no-ota)
+				_arg_ota="off"
+				;;
+			--fs)
+				_arg_fs="on"
+				;;
+			--no-fs)
+				_arg_fs="off"
+				;;
 			-h|--help)
 				print_help;
 				exit 0;
@@ -191,7 +199,7 @@ parse_commandline()
 
 handle_passed_args_count()
 {
-	local _required_args_string="station"
+	local _required_args_string="name"
 	if [ "${_positionals_count}" -gt 1 ] && [ "$_helpHasBeenPrinted" == "1" ];then
 		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
 	fi
@@ -205,7 +213,7 @@ handle_passed_args_count()
 assign_positional_args()
 {
 	local _positional_name _shift_for=$1;
-	_positional_names="_arg_station ";
+	_positional_names="_arg_name ";
 	shift "$_shift_for"
 	for _positional_name in ${_positional_names};do
 		test $# -gt 0 || break;
@@ -221,11 +229,13 @@ print_debug()
 	# shellcheck disable=SC2145
 	echo "DEBUG: $0 $@";
 	
-	echo -e "\tstation: ${_arg_station}";
-	echo -e "\tsensor: ${_arg_sensor[*]}";
-	echo -e "\tformat: ${_arg_format}";
-	echo -e "\tmesure: ${_arg_mesure[*]}";
-	echo -e "\toutput: ${_arg_output}";
+	echo -e "\tname: ${_arg_name}";
+	echo -e "\tip: ${_arg_ip}";
+	echo -e "\tport: ${_arg_port}";
+	echo -e "\tboard: ${_arg_board}";
+	echo -e "\tpio: ${_arg_pio}";
+	echo -e "\tota: ${_arg_ota}";
+	echo -e "\tfs: ${_arg_fs}";
 
 }
 
@@ -252,50 +262,55 @@ trap on_interrupt INT;
 # shellcheck source=common
 source "$_SCRIPT_DIR/common";
 
-if station_exists "$_arg_station"; then
+if station_exists "${_arg_name}"; then
 	# shellcheck source="../stations/stations"
 	source "$STATIONIO_DIR/stations/stations";
 	# shellcheck source=./export-conf
-	source "$STATIONIO_DIR/utils/export-conf" "${_arg_station}";
+	source "$STATIONIO_DIR/bin/export-conf" "${_arg_name}";	
+	
+	ucmd="${_arg_pio} run -t upload";
+	if [ "$_arg_fs" == "on" ]; then
+		ucmd+="fs";
+	fi
 
-	if [ "$stationIOip" != "" ]; then
-		if [ "$_arg_format" == "json" ] || [ "$_arg_format" == "xml" ]; then
-			_arg_format="application/${_arg_format}";
-		else
-			_arg_format="text/${_arg_format}";
-		fi
-		
-		_surl="http://$stationIOip/";
-		wgcmd=(wget -q -O - --header "Accept:${_arg_format}" --header "Content-Type:${_arg_format}");
-		_urlargs=();
-
-		if [ "${#_arg_sensor[@]}" -gt 0 ]; then
-			for sen_ in "${_arg_sensor[@]}"; do
-				_urlargs+=("sensor=$sen_");
-			done
-		fi
-		if [ "${#_arg_mesure[@]}" -gt 0 ]; then
-			for mes_ in "${_arg_mesure[@]}"; do
-				_urlargs+=("mesure=$mes_");
-			done
-		fi
-		if [ "${#_urlargs[@]}" -gt 0 ]; then
-			_surl+="?";
-			for arg_ in "${_urlargs[@]}"; do
-				_surl+="$arg_&";
-			done
-		fi
-		wgcmd+=("$_surl");
-
-		output=$("${wgcmd[@]}");
-		if [ "$_arg_output" != "" ]; then
-			echo -e "$output" >"$_arg_output";
-		else
-			echo -e "$output";
-		fi
+	if [ "$_arg_board" == "" ]; then
+		_arg_board="${stationIOboard}";
 	else
-		die "Station $_arg_station has no ip";
+		"$STATIONIO_DIR/bin/set-conf" "${_arg_name}" --board "${_arg_board}";
+	fi
+	if [ "$_arg_board" != "" ]; then
+		ucmd="$ucmd -e ${_arg_board}";
+	fi
+
+	if [ "$_arg_ip" == "" ]; then
+		_arg_ip="${stationIOip}";
+	else
+		"$STATIONIO_DIR/bin/set-conf" "${_arg_name}" --ip "${_arg_ip}";
+	fi
+
+	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
+		ucmd="$ucmd --upload-port ${_arg_ip}";
+	fi
+
+	if [ -f "$STATIONIO_DIR/src/main.cpp" ]; then
+		mv "$STATIONIO_DIR/src/main.cpp" "$STATIONIO_DIR/src/main.cpp.bak";
+	fi
+
+	cp "$STATIONIO_DIR/stations/${_arg_name}.main.cpp" "$STATIONIO_DIR/src/main.cpp";
+
+	if [ "$_arg_ip" != "" ] && [ "$_arg_ota" == "on" ]; then
+		(export PLATFORMIO_UPLOAD_FLAGS=--host_port=$_arg_port; $ucmd;)
+	else
+		$ucmd;
+	fi
+
+	# if success
+	if [ $? -eq 0 ]; then
+		rm "$STATIONIO_DIR/src/main.cpp";
+		if [ -f "$STATIONIO_DIR/src/main.cpp.bak" ]; then
+			mv "$STATIONIO_DIR/src/main.cpp.bak" "$STATIONIO_DIR/src/main.cpp";
+		fi
 	fi
 else
-	die "Station $_arg_station does not exist";
+	die "Station ${_arg_name} not found";
 fi

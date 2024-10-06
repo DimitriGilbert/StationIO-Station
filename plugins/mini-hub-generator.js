@@ -144,7 +144,7 @@ const miniHubStationFrmTpl = `<div class="row">
 function miniHubAddStation() {
   document.getElementById("mini-hub-stations-count").value++;
   let id = document.getElementById("mini-hub-stations-count").value;
-  let stationFrm = eta.render(miniHubStationFrmTpl, { id: id });
+  let stationFrm = eta_.renderString(miniHubStationFrmTpl, { id: id });
   document
     .getElementById("mini-hub-stations")
     .appendChild(htmlToElements(stationFrm));
@@ -171,10 +171,10 @@ if (StationIOPlugins !== undefined) {
     return miniHubIncludeTpl;
   });
   StationIOPlugins.declaration.push((frmData) => {
-    return eta.render(miniHubDeclarationTpl, miniHubBuildData(frmData));
+    return eta_.renderString(miniHubDeclarationTpl, miniHubBuildData(frmData));
   });
   StationIOPlugins.setup.push((frmData) => {
-    return eta.render(miniHubSetupTpl, miniHubBuildData(frmData));
+    return eta_.renderString(miniHubSetupTpl, miniHubBuildData(frmData));
   });
   document
     .getElementById("endpoints-config")

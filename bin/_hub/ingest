@@ -1,0 +1,403 @@
+#!/bin/bash
+# @parseArger-begin
+# @parseArger-help "ingest data file" --option "help" --short-option "h"
+# @parseArger-verbose --option "verbose" --level "0" --quiet-option "quiet"
+# @parseArger-declarations
+# @parseArger opt file "file to load" --short f --repeat
+# @parseArger opt directory "directory to import file from" --short d --repeat --alias dir
+# @parseArger opt exclude-file "filename to exclude" --repeat --alias xf
+# @parseArger opt archive "load files and folder from an archive" --repeat
+# @parseArger opt archive-format "archive format" --default-value "gz"
+# @parseArger flag concat "concatenate files into a single file" --short c --alias concatenate
+# @parseArger flag exec "execute concat file write and remove file after, useful for directory" --on
+# @parseArger-declarations-end
+
+# @parseArger-utils
+_helpHasBeenPrinted=1;
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";
+# @parseArger-utils-end
+
+# @parseArger-parsing
+die()
+{
+	local _ret="${2:-1}"
+	test "${_PRINT_HELP:-no}" = yes && print_help >&2
+	log "$1" -3 >&2
+	exit "${_ret}"
+}
+
+
+begins_with_short_option()
+{
+	local first_option all_short_options=''
+	first_option="${1:0:1}"
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+}
+
+# POSITIONALS ARGUMENTS
+_positionals=();
+# OPTIONALS ARGUMENTS
+_arg_file=()
+_arg_directory=()
+_arg_exclude_file=()
+_arg_archive=()
+_arg_archive_format="gz"
+# FLAGS
+_arg_concat="off"
+_arg_exec="on"
+_verbose_level="0";
+
+
+
+print_help()
+{
+	_triggerSCHelp=1;
+
+	if [[ "$_helpHasBeenPrinted" == "1" ]]; then
+		_helpHasBeenPrinted=0;
+		echo -e "ingest data file:"
+	echo -e "	-f, --file <file>: file to load, repeatable"
+	echo -e "	-d, --directory|--dir <directory>: directory to import file from, repeatable"
+	echo -e "	--exclude-file|--xf <exclude-file>: filename to exclude, repeatable"
+	echo -e "	--archive <archive>: load files and folder from an archive, repeatable"
+	echo -e "	--archive-format <archive-format>: archive format [default: ' gz ']"
+	echo -e "	-c|--concat|--no-concat: concatenate files into a single file
+		aliases: --concatenate,"
+	echo -e "	--exec|--no-exec: execute concat file write and remove file after, useful for directory, on by default (use --no-exec to turn it off)"
+	echo -e "Usage :
+	$0 [--file <value>] [--directory <value>] [--exclude-file <value>] [--archive <value>] [--archive-format <value>] [--[no-]concat] [--[no-]exec]";
+	fi
+
+}
+
+log() {
+	local _arg_msg="${1}";
+	local _arg_level="${2:"0"}";
+	if [ "${_arg_level}" -le "${_verbose_level}" ]; then
+		case "$_arg_level" in
+			-3)
+				_arg_COLOR="\033[0;31m";
+				;;
+			-2)
+				_arg_COLOR="\033[0;33m";
+				;;
+			-1)
+				_arg_COLOR="\033[1;33m";
+				;;
+			1)
+				_arg_COLOR="\033[0;32m";
+				;;
+			2)
+				_arg_COLOR="\033[1;36m";
+				;;
+			3)
+				_arg_COLOR="\033[0;36m";
+				;;
+			*)
+				_arg_COLOR="\033[0m";
+				;;
+		esac
+		echo -e "${_arg_COLOR}${_arg_msg}\033[0m";
+	fi
+}
+
+parse_commandline()
+{
+	_positionals_count=0
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			-f|--file)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_file+=("$2")
+				shift
+				;;
+			--file=*)
+				_arg_file+=("${_key##--file=}")
+				;;
+			-f*)
+				_arg_file+=("${_key##-f}")
+				;;
+			
+			-d|--dir|--directory)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_directory+=("$2")
+				shift
+				;;
+			--directory=*)
+				_arg_directory+=("${_key##--directory=}")
+				;;
+			--dir=*)
+				_arg_directory+=("${_key##--dir=}")
+				;;
+			-d*)
+				_arg_directory+=("${_key##-d}")
+				;;
+			
+			--xf|--exclude-file)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_exclude_file+=("$2")
+				shift
+				;;
+			--exclude-file=*)
+				_arg_exclude_file+=("${_key##--exclude-file=}")
+				;;
+			--xf=*)
+				_arg_exclude_file+=("${_key##--xf=}")
+				;;
+			
+			--archive)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_archive+=("$2")
+				shift
+				;;
+			--archive=*)
+				_arg_archive+=("${_key##--archive=}")
+				;;
+			
+			--archive-format)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_archive_format="$2"
+				shift
+				;;
+			--archive-format=*)
+				_arg_archive_format="${_key##--archive-format=}"
+				;;
+			
+			-c|--concat|--concatenate)
+				_arg_concat="on"
+				;;
+			--no-concat)
+				_arg_concat="off"
+				;;
+			--exec)
+				_arg_exec="on"
+				;;
+			--no-exec)
+				_arg_exec="off"
+				;;
+			-h|--help)
+				print_help;
+				exit 0;
+				;;
+			-h*)
+				print_help;
+				exit 0;
+				;;
+			-v|--version)
+				print_version;
+				exit 0;
+				;;
+			-v*)
+				print_version;
+				exit 0;
+				;;
+			--verbose)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level + 1))";
+					else
+						_verbose_level="$2";
+						shift;
+					fi
+					;;
+				--quiet)
+					if [ $# -lt 2 ];then
+						_verbose_level="$((_verbose_level - 1))";
+					else
+						_verbose_level="-$2";
+						shift;
+					fi
+					;;
+				
+			*)
+				_last_positional="$1"
+				_positionals+=("$_last_positional")
+				_positionals_count=$((_positionals_count + 1))
+				;;
+		esac
+		shift
+	done
+}
+
+
+handle_passed_args_count()
+{
+	local _required_args_string=""
+	if [ "${_positionals_count}" -gt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect at most 0 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}').\n\t${_positionals[*]}" 1
+	fi
+	if [ "${_positionals_count}" -lt 0 ] && [ "$_helpHasBeenPrinted" == "1" ];then
+		_PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 0 (namely: $_required_args_string), but got only ${_positionals_count}.
+	${_positionals[*]}" 1;
+	fi
+}
+
+
+assign_positional_args()
+{
+	local _positional_name _shift_for=$1;
+	_positional_names="";
+	shift "$_shift_for"
+	for _positional_name in ${_positional_names};do
+		test $# -gt 0 || break;
+		eval "if [ \"\$_one_of${_positional_name}\" != \"\" ];then [[ \"\${_one_of${_positional_name}[*]}\" =~ \"\${1}\" ]];fi" || die "${_positional_name} must be one of: $(eval "echo \"\${_one_of${_positional_name}[*]}\"")" 1;
+		eval "$_positional_name=\${1}" || die "Error during argument parsing, possibly an ParseArger bug." 1;
+		shift;
+	done
+}
+
+print_debug()
+{
+	print_help
+	# shellcheck disable=SC2145
+	echo "DEBUG: $0 $@";
+	
+	echo -e "\tfile: ${_arg_file[*]}";
+	echo -e "\tdirectory: ${_arg_directory[*]}";
+	echo -e "\texclude-file: ${_arg_exclude_file[*]}";
+	echo -e "\tarchive: ${_arg_archive[*]}";
+	echo -e "\tarchive-format: ${_arg_archive_format}";
+	echo -e "\tconcat: ${_arg_concat}";
+	echo -e "\texec: ${_arg_exec}";
+
+}
+
+print_version()
+{
+	echo "";
+}
+
+on_interrupt() {
+	die Process aborted! 130;
+}
+
+parse_commandline "$@";
+handle_passed_args_count;
+assign_positional_args 1 "${_positionals[@]}";
+trap on_interrupt INT;
+
+
+
+# @parseArger-parsing-end
+# print_debug "$@"
+# @parseArger-end
+
+incmd=("$_SCRIPT_DIR/influx" write -b "StationIO" -o "StationIO" -p s);
+
+if [ "${#_arg_file[@]}" -gt 0 ]; then
+	for f in "${_arg_file[@]}"; do
+		log "file: ${f}" 3;
+		file_basename="$(basename "$f")";
+		if ! echo " ${_arg_exclude_file[*]} " | grep -q " $file_basename " ; then
+			if [ -f "$f" ]; then
+				if [ "$_arg_concat" == "on" ]; then
+					log "concat $f" 2;
+					echo "# file : $f" >> "$_SCRIPT_DIR/../data/influxdb_tmp/to_import";
+					cat "$f" >> "$_SCRIPT_DIR/../data/influxdb_tmp/to_import";
+				else
+					cp "$f" "$_SCRIPT_DIR/../data/influxdb_tmp/$file_basename";
+					t_incmd=("${incmd[@]}" -f "/tmp/$file_basename");
+					
+					if [ "$_arg_exec" == "on" ]; then
+						log "ingesting $f" 2;
+						"${t_incmd[@]}";
+						rm "$_SCRIPT_DIR/../data/influxdb_tmp/$file_basename";
+					fi
+				fi
+			else
+				log "File $f does not exist" -2;
+			fi
+		else
+			log "skipping $f" 2;
+		fi
+	done
+fi
+
+if [ "${#_arg_directory[@]}" -gt 0 ]; then
+	for d in "${_arg_directory[@]}"; do
+		file_basename="$(basename "$d")";
+		if ! echo " ${_arg_exclude_file[*]} " | grep -q " $file_basename " ; then
+			if [ -d "$d" ]; then
+				log "directory: ${d}" 3;
+				d_incmd=("$_SCRIPT_DIR/ingest" --verbose "$_verbose_level");
+				if [ "$_arg_concat" == "on" ]; then
+					d_incmd+=(--concat --no-exec);
+				fi
+				if [ "$_arg_exec" == "off" ]; then
+					d_incmd+=(--no-exec);
+				fi
+				if [ "${#_arg_exclude_file[@]}" -gt 0 ]; then
+					for xf in "${_arg_exclude_file[@]}"; do
+						d_incmd+=(--exclude-file "$xf");
+					done
+				fi
+				for f2 in "$d"/*; do
+					if [ -f "$f2" ]; then
+						d_incmd+=("-f" "$f2");
+					fi
+					if [ -d "$f2" ]; then
+						d_incmd+=("-d" "$f2");
+					fi
+				done
+				log "\ningesting directory:\n${d_incmd[*]}\n" 2;
+				"${d_incmd[@]}";
+			else
+				log "directory $d does not exist" -2;
+			fi
+		else
+			log "skipping directory $d" 2;
+		fi
+	done
+fi
+
+if [ "${#_arg_archive[@]}" -gt 0 ]; then
+	for ar in "${_arg_archive[@]}"; do
+		if [ -f "$ar" ]; then
+			tdir="$(mktemp -d)";
+			case "${_arg_archive_format}" in
+				gz)
+					xtfrm="z";
+				;;
+				bz2)
+					xtfrm="j";
+				;;
+				xz)
+					xtfrm="J";
+				;;
+				*)
+					xtfrm="";
+				;;
+			esac
+			untarCmd=("tar" "-x${xtfrm}f" "$ar" "-C" "$tdir");
+			log "archive: ${d} to temp dir $tdir" 2;
+			"${untarCmd[@]}";
+			ar_incmd=("$_SCRIPT_DIR/ingest" --verbose "$_verbose_level");
+			if [ "$_arg_concat" == "on" ]; then
+				ar_incmd+=(--concat --no-exec);
+			fi
+			if [ "$_arg_exec" == "off" ]; then
+				ar_incmd+=(--no-exec);
+			fi
+			if [ "${#_arg_exclude_file[@]}" -gt 0 ]; then
+				for xf in "${_arg_exclude_file[@]}"; do
+					ar_incmd+=(--exclude-file "$xf");
+				done
+			fi
+			ar_incmd+=("-d" "$tdir");
+			"${ar_incmd[@]}";
+			
+			rm -rf "$tdir";
+		else
+			log "archive $ar does not exist" -2;
+		fi
+	done
+fi
+
+if [ "$_arg_concat" == "on" ] && [ "$_arg_exec" == "on" ]; then
+	t_incmd=("${incmd[@]}" -f "/tmp/to_import");
+	log "ingesting concatenated file" 2;
+	log "${t_incmd[*]}" 2;
+	# "${t_incmd[@]}";
+	rm "$_SCRIPT_DIR/../data/influxdb_tmp/to_import";
+fi
