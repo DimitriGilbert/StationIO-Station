@@ -27,6 +27,7 @@ void WifiManager::begin(const char* ssid, const char* password, const char* host
 }
 
 void WifiManager::initWiFi() {
+    logger.log("Initializing WiFi", SimpleLogger::INFO);
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.setAutoConnect(false);
@@ -103,7 +104,8 @@ WifiError WifiManager::connect(NetworkInformation network) {
 }
 
 WifiError WifiManager::connect(const char* ssid, const char* password) {
-    logger.log("Connecting to " + String(ssid), SimpleLogger::INFO);
+    logger.log("[WIFI] " + String(ssid), SimpleLogger::INFO);
+    logger.log("    Connecting...", SimpleLogger::INFO);
     WiFi.begin(ssid, password);
 
     unsigned long startAttemptTime = millis();
@@ -112,12 +114,12 @@ WifiError WifiManager::connect(const char* ssid, const char* password) {
     }
 
     if (WiFi.status() != WL_CONNECTED) {
-        logger.log("Failed to connect to " + String(ssid), SimpleLogger::ERROR);
+        logger.log("    Failed to connect", SimpleLogger::ERROR);
         return WifiError::ConnectionFailed;
     }
 
-    logger.log("Connected to " + String(ssid), SimpleLogger::INFO);
-    logger.log("IP: " + WiFi.localIP().toString(), SimpleLogger::INFO);
+    logger.log("    Connected", SimpleLogger::INFO);
+    logger.log("    IP: " + WiFi.localIP().toString(), SimpleLogger::INFO);
     return WifiError::None;
 }
 

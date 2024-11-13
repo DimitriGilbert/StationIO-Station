@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include <HardwareSerial.h>
+
 class SimpleLogger {
 public:
     enum LogLevel {
@@ -14,7 +16,7 @@ public:
 
     SimpleLogger();
     
-    void begin(HardwareSerial& serial, long baud_rate = 115200);
+    void begin(HardwareSerial& serial, long baud_rate = 9600);
     void setLogLevel(LogLevel level);
     void log(const String& message, LogLevel level = INFO);
     void logf(const char* format, LogLevel level = INFO, ...);

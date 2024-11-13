@@ -1,56 +1,45 @@
-#include <Arduino.h>
-#include <LibTeleinfo.h>
-
-#include "../Sensor.h"
-#include "../Station.h"
-
 #ifndef StationIOSensor_linky_h
 #define StationIOSensor_linky_h
 
-class Linky : public Sensor {
- public:
+#include <Arduino.h>
+#include <LibTeleinfo.h>
+#include "Sensor.h"
+#include "Station.h"
+
+class Linky : public Sensor
+{
+public:
+  // Constructor and Destructor
   Linky(TInfo &lnk);
   ~Linky();
 
+  // Required overrides from Sensor class
+  void begin() override;                                                   // Initialize the sensor
+  String getMeasureName(uint8_t index) const override;                     // Get the name of a measure
+  SensorMeasure getMeasure(uint8_t index) const override;                  // Get a specific measure (struct)
+  size_t getMeasureCount() const override;                                 // Get the total number of measures
+  SensorMeasureData read(int index) const override;                        // Read a specific measure by index
+  SensorMeasureData readBuffer(int index, int bufferIndex) const override; // Read from buffer
+  void setMeasure(int index, float value) override;                        // Set measure data
+  SensorMeasureData average(int last, int index) const override;           // Calculate average for a specific measure
+  String jsUtils() const override;
+  void loop() override; // Main loop
+
+  // Additional methods specific to the Linky sensor
+  String getValue(String name);         // Retrieve a specific value from the teleinfo system
+  SensorMeasureData *read();            // Read all measures
+  SensorMeasureData *average(int last); // Calculate average for all measures
+
+private:
+  // Teleinfo instance and measures data
   TInfo lnk;
-  static const size_t mesuresCount = 4;
-  static const SensorMesure mesures[4];
-  static const u_int *mesuresSampleRates[4];
-  unsigned long mesuresSampleLast[4];
-
-  SensorMesureData mesuresDatas[4];
-  CircularBuffer<SensorMesureData, 40> mesuresBuffers[4];
-
-  // void onSetup(StationClass station, int index);
-  void begin();
-  String getValue(String name);
-  String getName();
-  String getMesureName(u_int index);
-  SensorMesure getMesure(u_int index);
-  size_t getMesuresCount();
-  SensorMesureData *read();
-  SensorMesureData read(int index);
-  SensorMesureData readBuffer(int index, int bufferIndex);
-  void setMesure(int index, float value);
-  SensorMesureData *average(int last);
-  SensorMesureData average(int last, int index);
-  String toString();
-  String toString(int index);
-  String toCsv();
-  String toCsv(int index);
-  String toJson();
-  String toJson(int index);
-  String toXml();
-  String toXml(int index);
-  String jsUtils();
-  String toHtml();
-  String toHtml(int index);
-  SensorMesureData *read_();
-  SensorMesureData read_(int index);
-  void loop();
+  static const size_t measureCount = 4;                               // Number of measures
+  SensorMeasureData measureData[measureCount];                        // Array to store current measure data
+  CircularBuffer<SensorMeasureData, 40> measureBuffers[measureCount]; // Buffer for historical data
+  static const SensorMeasure measures[measureCount];                  // Definition of measures (e.g., hp, hc, etc.)
+  unsigned long measureSampleLast[measureCount];                      // Timestamps of the last samples
 };
-
-String LinkyJsonData(ValueList *me);
 void LinkyOnData(BaseStation *station, ValueList *vallnk, uint8_t flag);
-
-#endif
+// from hallard/teleinfo library example
+String LinkyJsonData(ValueList *me);
+#endif // StationIOSensor_linky_h

@@ -273,8 +273,11 @@ if station_exists "$_arg_station"; then
 			_arg_format="text/${_arg_format}";
 		fi
 		
+
+		tmpFile=$(mktemp);
 		_surl="http://$stationIOip/";
-		wgcmd=(wget -q -O - --header "Accept:${_arg_format}" --header "Content-Type:${_arg_format}");
+		wgcmd=(curl -s -o "$tmpFile" -H "Accept: ${_arg_format}" -H "Content-Type: ${_arg_format}" --connect-timeout 5);
+		# wgcmd=(wget -q -O - --header "Accept:${_arg_format}" --header "Content-Type:${_arg_format}");
 		_urlargs=();
 
 		if [ "${#_arg_sensor[@]}" -gt 0 ]; then
@@ -295,7 +298,8 @@ if station_exists "$_arg_station"; then
 		fi
 		wgcmd+=("$_surl");
 
-		output=$("${wgcmd[@]}");
+		"${wgcmd[@]}" || die "timeout" 1;
+		output="$(cat "$tmpFile")";
 		if [ "$_arg_output" != "" ]; then
 			echo -e "$output" >"$_arg_output";
 		else

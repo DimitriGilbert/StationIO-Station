@@ -1,163 +1,94 @@
-#include "./sht21.h"
+#include "sht21.h"
 
-#include <Arduino.h>
+// Define static member (measure descriptions)
+const Sensor::SensorMeasure sht21::measures[measureCount] = {
+    {"Temperature", "°C"},
+    {"Humidity", "%"}
+};
 
-#include "../html.h"
-
+// Constructor
 sht21::sht21() : Sensor("sht21") {
-  this->mesuresSampleLast[0] = (unsigned long)1000;
-  this->mesuresSampleLast[1] = (unsigned long)1000;
-  this->mesuresSampleLast[2] = (unsigned long)1000;
-};
-sht21::~sht21(){};
+    // Initialize measure data and buffers
+    for (int i = 0; i < measureCount; i++) {
+        measureData[i] = 0;
+    }
+}
 
-const sht21::SensorMesure sht21::mesures[3] = {
-    {"temperature", "*C"},
-    {"humidity", "%"},
-    {"compensated_humidity", "%"},
-};
-const u_int* sht21::mesuresSampleRates[3] = {
-    (const u_int*)5000,
-    (const u_int*)5000,
-    (const u_int*)5000,
-};
-
-// void sht21::onSetup(StationClass station, int index) {}
+// Initialize the SHT21 sensor
 void sht21::begin() {
-  Serial.println("sht21::begin()");
-  this->sht.begin() ? this->status = Sensor::StatusReady
-                    : (this->status = Sensor::StatusError) &&
-                          (this->error = Sensor::ErrorNotFound);
-
-  Serial.println("sht21::dobegin");
-}
-String sht21::getName() { return this->name; }
-String sht21::getMesureName(u_int index) { return this->mesures[index].name; }
-Sensor::SensorMesure sht21::getMesure(u_int index) {
-  return this->mesures[index];
-}
-size_t sht21::getMesuresCount() {
-  return this->mesuresCount;
-}
-Sensor::SensorMesureData* sht21::read_() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    this->mesuresDatas[i] = this->read_(i);
-    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
-  }
-  return this->mesuresDatas;
-}
-Sensor::SensorMesureData sht21::read_(int index) {
-  if (index < this->mesuresCount) {
-    Sensor::SensorMesureData value = 0;
-    this->mesuresSampleLast[index] = millis();
-    switch (index) {
-      // mesure temperature
-      case 0:
-        value = this->sht.readTemperature();
-        break;
-
-      // mesure humidity
-      case 1:
-        value = this->sht.readHumidity();
-        break;
-
-      // mesure compensated_humidity
-      case 2:
-        value = this->sht.getCompensatedHumidity(this->read_(0));
-        break;
+    if (sht.begin()) {
+        status = StatusReady;
+    } else {
+        status = StatusError;
+        error = ErrorNotFound;
     }
-    this->setMesure(index, value);
-    return this->mesuresDatas[index];
-  }
-  return this->read_(0);
-}
-void sht21::setMesure(int index, float value) {
-  this->mesuresDatas[index] = value;
-  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
 }
 
-void sht21::loop() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    if (millis() - this->mesuresSampleLast[i] >
-        (unsigned long)this->mesuresSampleRates[i]) {
-      this->read_(i);
+// Return the measure information based on the index
+Sensor::SensorMeasure sht21::getMeasure(uint8_t index) const {
+    return measures[index];
+}
+
+// Return the name of a measure (Temperature or Humidity)
+String sht21::getMeasureName(uint8_t index) const {
+    return measures[index].name;
+}
+
+// Return the total number of measures (Temperature and Humidity)
+size_t sht21::getMeasureCount() const {
+    return measureCount;
+}
+
+// Read a specific measure (Temperature or Humidity) from the sensor
+Sensor::SensorMeasureData sht21::read(int index) const {
+    if (index >= 0 && index < measureCount) {
+        return measureData[index];
     }
-  }
-}
-
-Sensor::SensorMesureData* sht21::read() {
-  return this->mesuresDatas;
-}
-
-Sensor::SensorMesureData sht21::read(int index) {
-  return this->__read(index, this->mesuresCount, this->mesuresDatas);
-}
-
-Sensor::SensorMesureData sht21::readBuffer(int index, int bufferIndex) {
-  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
-  return this->mesuresBuffers[index][bufferIndex];
-}
-
-Sensor::SensorMesureData* sht21::average(int last) {
-  Sensor::SensorMesureData data[this->mesuresCount];
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    data[i] = this->average(last, i);
-  }
-
-  return data;
-}
-
-Sensor::SensorMesureData sht21::average(int last, int index) {
-  // return this->__average(last, index, this->mesuresCount,
-  // this->mesuresBuffers);
-  if (index > this->mesuresCount) {
     return 0;
-  }
-  SensorMesureData data = 0;
-
-  if (last > this->mesuresBuffers[index].size()) {
-    last = this->mesuresBuffers[index].size();
-  }
-
-  for (size_t i = 0; i < last; i++) {
-    data = data + this->mesuresBuffers[index][i];
-  }
-  return data / float(last);
 }
 
-String sht21::toString() {
-  return SensorToString(this);
+// Read buffered data for a specific measure
+Sensor::SensorMeasureData sht21::readBuffer(int index, int bufferIndex) const {
+    if (index >= 0 && index < measureCount && bufferIndex >= 0 && bufferIndex < measureBuffers[index].size()) {
+        return measureBuffers[index][bufferIndex];
+    }
+    return 0;
 }
-String sht21::toString(int index) {
-  return SensorMesureToString(this->getMesure(index), this->read(index));
+
+// Set a specific measure value and store it in the buffer
+void sht21::setMeasure(int index, float value) {
+    if (index >= 0 && index < measureCount) {
+        measureData[index] = value;
+        measureBuffers[index].push(value);
+    }
 }
-String sht21::toCsv() {
-  return SensorToCsv(this);
+
+// Calculate the average of the last 'n' values for a specific measure
+Sensor::SensorMeasureData sht21::average(int last, int index) const {
+    if (index >= 0 && index < measureCount) {
+        float sum = 0;
+        int count = min(last, static_cast<int>(measureBuffers[index].size()));
+        for (int i = 0; i < count; ++i) {
+            sum += measureBuffers[index][i];
+        }
+        return sum / count;
+    }
+    return 0;
 }
-String sht21::toCsv(int index) {
-  return SensorMesureToCsv(this->getMesure(index), this->read(index));
+
+// Main loop to continuously read sensor data
+void sht21::loop() {
+    // Update the sensor data
+    measureData[0] = sht.readTemperature();
+    measureData[1] = sht.readHumidity();
+
+    // Push the new data into the buffers
+    for (int i = 0; i < measureCount; ++i) {
+        measureBuffers[i].push(measureData[i]);
+    }
 }
-String sht21::toJson() {
-  return SensorToJson(this);
-}
-String sht21::toJson(int index) {
-  return SensorMesureToJson(this->getMesure(index), this->read(index));
-}
-String sht21::toXml() {
-  return SensorToXml(this);
-}
-String sht21::toXml(int index) {
-  return SensorMesureToXml(this->getMesure(index), this->read(index));
-}
-String sht21::jsUtils() {
-  return HtmlElt(
-      "script",
-      "const sht21_utils={inChart: name=>['temperature', 'humidity'].includes(name)};"
-  );
-}
-String sht21::toHtml() {
-  return SensorToHtml(this);
-}
-String sht21::toHtml(int index) {
-  return SensorMesureToHtml(this->getMesure(index), this->read(index));
+
+// Provide JavaScript utilities for web-based visualization
+String sht21::jsUtils() const {
+    return "const sht21_utils = {inChart: name => ['Temperature', 'Humidity'].includes(name)};";
 }

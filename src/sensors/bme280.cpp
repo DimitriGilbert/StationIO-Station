@@ -1,6 +1,11 @@
 #include "bme280.h"
 
-bme280::bme280() : Sensor("BME280") {}
+bme280::bme280() : Sensor("bme280") {
+    // Initialize measure data and buffers
+    for (int i = 0; i < measureCount; i++) {
+        measureData[i] = 0;
+    }
+}
 
 void bme280::begin() {
     if (bme.begin()) {

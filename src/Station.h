@@ -12,11 +12,11 @@
 
 #ifdef ESP32
 #include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #elif defined(ESP8266)
 #include <ESPAsyncTCP.h>
-#endif
-
 #include <ESPAsyncWebServer.h>
+#endif
 
 class BaseStation {
 public:
@@ -43,6 +43,7 @@ public:
 
     bool isReady() const;
     bool isReady(int minStatus) const;
+    String getName() const;
 
     String toOutput(const String& format) const;
     String toOutput(const String& format, int8_t sensorIndex) const;
@@ -51,6 +52,14 @@ public:
     Sensor* getSensor(int index) const;
     Sensor* getSensor(const String& name) const;
     String getSensorName(int index) const;
+    int getSensorCount() const;
+
+    String toString() const;
+    String toCsv() const;
+    String toJson() const;
+    String toXml() const;
+    String toOpenMetrics() const;
+    String toHtml() const;
 
 protected:
     String name;
@@ -69,14 +78,14 @@ protected:
 
     static constexpr int ErrorNone = 0;
     static constexpr int ErrorUnknown = 1;
-
-    String toString() const;
-    String toCsv() const;
-    String toJson() const;
-    String toXml() const;
-    String toOpenMetrics() const;
-    String toHtml() const;
 };
+
+void rootEndpoint(BaseStation* station, AsyncWebServerRequest* request);
+void sensorsEndpoint(BaseStation* station, AsyncWebServerRequest* request);
+void averageEndpoint(BaseStation* station, AsyncWebServerRequest* request);
+void bufferEndpoint(BaseStation* station, AsyncWebServerRequest* request);
+void openapiEndpoint(BaseStation* station, AsyncWebServerRequest* request);
+void fancyEndpoint(BaseStation* station, AsyncWebServerRequest* request);
 
 class EspStation : public BaseStation {
 public:
@@ -91,15 +100,17 @@ public:
 
     EspStation(const String& name);
     ~EspStation() override;
-
     void setup() override;
     void setup(const String& configFile);
-    void loop() override;
+    void setup(const String& ssid, const String& password);
+    void setup(const String& ssid, const String& password, const String& hostname);
 
     void connect();
     void connect(const String& ssid, const String& password);
     void connect(const String& ssid, const String& password, const String& hostname);
     void connectAsync(const String& ssid, const String& password);
+
+    void loop() override;
 
     void initWebServer();
     void setupWebServer(const std::vector<StationWebCallbackInfo_t>& routes);
@@ -128,6 +139,8 @@ public:
 
     void setup() override;
     void setup(const String& configFile);
+    void setup(const String& ssid, const String& password);
+    void setup(const String& ssid, const String& password, const String& hostname);
 };
 using StationClass = Esp32Station;
 #elif defined(ESP8266)

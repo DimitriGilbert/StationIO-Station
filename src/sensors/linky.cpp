@@ -1,196 +1,220 @@
-#include "./linky.h"
-
+#include "linky.h"
 #include <Arduino.h>
 
-#include "../html.h"
+// Define static member for measure information (e.g., hp, hc, tarif, power)
+const Sensor::SensorMeasure Linky::measures[measureCount] = {
+    {"hp", "W"}, {"hc", "W"}, {"tarif", ""}, {"power", "VA"}};
 
-Linky::Linky(TInfo &lnk) : Sensor("linky") {
-  // Serial.begin(1200, SERIAL_7E1);
-  // Serial.swap();
-  this->lnk = lnk;
-  // this->lnk.init();
-  // this->lnk.attachData(fn_data);
-  this->mesuresSampleLast[0] = (unsigned long)10000;
-  this->mesuresSampleLast[1] = (unsigned long)10000;
-  this->mesuresSampleLast[2] = (unsigned long)10000;
-  this->mesuresSampleLast[3] = (unsigned long)10000;
-  // this->mesuresSampleLast[4] = (unsigned long)10000;
-};
-Linky::~Linky(){};
-
-const Linky::SensorMesure Linky::mesures[4] = {
-    {"hp", "W"}, {"hc", "W"}, {"tarif", ""}, {"power", "va"}, 
-    // {"ADCO", "va"},
-};
-const u_int *Linky::mesuresSampleRates[4] = {
-    (const u_int *)5000, (const u_int *)5000, (const u_int *)5000,
-    (const u_int *)5000, 
-    // (const u_int *)5000,
-};
-void Linky::begin() {
-}
-String Linky::getValue(String name) {
-  const char *tgt = name.c_str();
-  int tgtl = strlen(tgt);
-  ValueList *me = this->lnk.getList();
-  String data = "does not exists";
-  while (me->next) {
-    // go to next node
-    me = me->next;
-
-    // Check if we match this LABEL
-    if (tgtl == strlen(me->name) && strcmp(me->name, tgt) == 0) {
-      // this one has a value ?
-      if (me->value) {
-        data = String(me->value);
-      }
+// Constructor
+Linky::Linky(TInfo &lnk) : Sensor("linky"), lnk(lnk)
+{
+    // Initialize the last sample times
+    for (size_t i = 0; i < measureCount; i++)
+    {
+        measureSampleLast[i] = 10000;
     }
-  }
-  return data;
 }
 
-// void Linky::onSetup(StationClass station, int index) {}
-String Linky::getName() { return this->name; }
-String Linky::getMesureName(u_int index) { return this->mesures[index].name; }
-Sensor::SensorMesure Linky::getMesure(u_int index) {
-  return this->mesures[index];
+// Destructor
+Linky::~Linky() {}
+
+// Initialize the Linky sensor
+void Linky::begin()
+{
+    // Initialization logic, if needed
 }
-size_t Linky::getMesuresCount() { return this->mesuresCount; }
-Sensor::SensorMesureData *Linky::read_() {
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    this->mesuresDatas[i] = this->read_(i);
-    this->mesuresBuffers[i].unshift(this->mesuresDatas[i]);
-  }
-  return this->mesuresDatas;
+
+// Get the measure name (e.g., "hp", "hc", "tarif", "power")
+String Linky::getMeasureName(uint8_t index) const
+{
+    return measures[index].name;
 }
-Sensor::SensorMesureData Linky::read_(int index) {
-  if (index < this->mesuresCount) {
-    Sensor::SensorMesureData value = 0;
-    this->mesuresSampleLast[index] = millis();
-    switch (index) {
-      // mesure hp
-      case 0:
-        value = this->getValue("HCHP").toFloat();
-        break;
 
-      // mesure hc
-      case 1:
-        value = this->getValue("HCHC").toFloat();
-        break;
+// Get the full measure structure (name and unit)
+Sensor::SensorMeasure Linky::getMeasure(uint8_t index) const
+{
+    return measures[index];
+}
 
-      // mesure tarif
-      case 2:
-        value = this->getValue("PTEC") == "HC.." ? 1 : 57;
-        break;
+// Get the total number of measures
+size_t Linky::getMeasureCount() const
+{
+    return measureCount;
+}
 
-      // mesure power
-      case 3:
-        value = this->getValue("PAPP").toFloat();
-        break;
-
-      // mesure ADC index power
-      case 4:
-        value = this->getValue("ADCO").toFloat();
-        break;
+// Read a specific measure by index
+Sensor::SensorMeasureData Linky::read(int index) const
+{
+    if (index >= 0 && index < measureCount)
+    {
+        return measureData[index];
     }
-    this->setMesure(index, value);
-    return this->mesuresDatas[index];
-  }
-  return this->read_(0);
-}
-void Linky::setMesure(int index, float value) {
-  this->mesuresDatas[index] = value;
-  this->mesuresBuffers[index].unshift(this->mesuresDatas[index]);
-}
-
-void Linky::loop() {}
-
-Sensor::SensorMesureData *Linky::read() { return this->mesuresDatas; }
-
-Sensor::SensorMesureData Linky::read(int index) {
-  return this->__read(index, this->mesuresCount, this->mesuresDatas);
-}
-
-Sensor::SensorMesureData Linky::readBuffer(int index, int bufferIndex) {
-  bufferIndex = bufferIndex > 40 ? 40 : bufferIndex < 0 ? 0 : bufferIndex;
-  return this->mesuresBuffers[index][bufferIndex];
-}
-
-Sensor::SensorMesureData *Linky::average(int last) {
-  Sensor::SensorMesureData data[this->mesuresCount];
-  for (size_t i = 0; i < this->mesuresCount; i++) {
-    data[i] = this->average(last, i);
-  }
-
-  return data;
-}
-
-Sensor::SensorMesureData Linky::average(int last, int index) {
-  // return this->__average(last, index, this->mesuresCount,
-  // this->mesuresBuffers);
-  if (index > this->mesuresCount) {
     return 0;
-  }
-  SensorMesureData data = 0;
-
-  if (last > this->mesuresBuffers[index].size()) {
-    last = this->mesuresBuffers[index].size();
-  }
-
-  for (size_t i = 0; i < last; i++) {
-    data = data + this->mesuresBuffers[index][i];
-  }
-  return data / float(last);
 }
 
-String Linky::toString() {
-  return SensorToString(this);
-}
-String Linky::toString(int index) {
-  return SensorMesureToString(this->getMesure(index), this->read(index));
-}
-String Linky::toCsv() {
-  return SensorToCsv(this);
-}
-String Linky::toCsv(int index) {
-  return SensorMesureToCsv(this->getMesure(index), this->read(index));
-}
-String Linky::toJson() {
-  return SensorToJson(this);
-}
-String Linky::toJson(int index) {
-  return SensorMesureToJson(this->getMesure(index), this->read(index));
-}
-String Linky::toXml() {
-  return SensorToXml(this);
-}
-String Linky::toXml(int index) {
-  return SensorMesureToXml(this->getMesure(index), this->read(index));
-}
-String Linky::jsUtils() {
-  return HtmlElt(
-      "script",
-      "const linky_utils = "
-      "{format_hp:val=>{linky_utils.conso.hp.push(val);return "
-      "parseFloat(val)/1000;}"
-      ",format_hc:val=>{linky_utils.conso.hc.push(val);return "
-      "parseFloat(val)/1000;}"
-      ",format_unit_hp:val=>' KWh'"
-      ",format_unit_hc:val=>' KWh'"
-      ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
-      ",inChart:name=>name==='power'"
-      ",conso:{hp:[], hc:[]}};setTimeout(()=>{let lscr="
-      "document.createElement('script');lscr.src='assets/js/linky.js';"
-      "document.head.appendChild(lscr);}, 500);"
-  );
-}
-String Linky::toHtml() {
-  return SensorToHtml(this);
-}
-String Linky::toHtml(int index) {
-  return SensorMesureToHtml(this->getMesure(index), this->read(index));
+// Read a value from the circular buffer
+Sensor::SensorMeasureData Linky::readBuffer(int index, int bufferIndex) const
+{
+    if (index >= 0 && index < measureCount && bufferIndex >= 0 && bufferIndex < measureBuffers[index].size())
+    {
+        return measureBuffers[index][bufferIndex];
+    }
+    return 0;
 }
 
+// Set a measure value and store it in the buffer
+void Linky::setMeasure(int index, float value)
+{
+    if (index >= 0 && index < measureCount)
+    {
+        measureData[index] = value;
+        measureBuffers[index].unshift(value);
+    }
+}
+
+// Calculate the average value over the last 'n' samples for a specific measure
+Sensor::SensorMeasureData Linky::average(int last, int index) const
+{
+    if (index < 0 || index >= measureCount)
+    {
+        return 0;
+    }
+
+    float sum = 0;
+    int count = min(last, static_cast<int>(measureBuffers[index].size()));
+    for (int i = 0; i < count; ++i)
+    {
+        sum += measureBuffers[index][i];
+    }
+    return sum / count;
+}
+
+// Main loop to read and update sensor data
+void Linky::loop()
+{
+    // Read values from the teleinfo system
+    measureData[0] = getValue("HCHP").toFloat();            // hp
+    measureData[1] = getValue("HCHC").toFloat();            // hc
+    measureData[2] = (getValue("PTEC") == "HC..") ? 1 : 57; // tarif
+    measureData[3] = getValue("PAPP").toFloat();            // power
+
+    // Store the data in the circular buffers
+    for (int i = 0; i < measureCount; ++i)
+    {
+        measureBuffers[i].unshift(measureData[i]);
+    }
+}
+
+// Retrieve a specific value from the teleinfo system
+String Linky::getValue(String name)
+{
+    const char *tgt = name.c_str();
+    int tgtl = strlen(tgt);
+    ValueList *me = lnk.getList();
+    String data = "does not exist";
+
+    while (me->next)
+    {
+        me = me->next;
+
+        // Check if the name matches
+        if (tgtl == strlen(me->name) && strcmp(me->name, tgt) == 0)
+        {
+            // If a value exists, return it
+            if (me->value)
+            {
+                data = String(me->value);
+            }
+        }
+    }
+    return data;
+}
+
+// Read all measures
+Sensor::SensorMeasureData *Linky::read()
+{
+    for (size_t i = 0; i < measureCount; i++)
+    {
+        measureData[i] = read(i);
+        measureBuffers[i].unshift(measureData[i]);
+    }
+    return measureData;
+}
+
+// Calculate the average for all measures
+Sensor::SensorMeasureData *Linky::average(int last)
+{
+    for (size_t i = 0; i < measureCount; i++)
+    {
+        measureData[i] = average(last, i);
+    }
+    return measureData;
+}
+
+String Linky::jsUtils() const
+{
+    return "const linky_utils = "
+           "{format_hp:val=>{linky_utils.conso.hp.push(val);return "
+           "parseFloat(val)/1000;}"
+           ",format_hc:val=>{linky_utils.conso.hc.push(val);return "
+           "parseFloat(val)/1000;}"
+           ",format_unit_hp:val=>' KWh'"
+           ",format_unit_hc:val=>' KWh'"
+           ",format_tarif:val=>parseInt(val)==1?'heures creuses':'heures pleines'"
+           ",inChart:name=>name==='power'"
+           ",conso:{hp:[], hc:[]}};setTimeout(()=>{let lscr="
+           "document.createElement('script');lscr.src='assets/js/linky.js';"
+           "document.head.appendChild(lscr);}, 500);";
+}
+
+void LinkyOnData(BaseStation *station, ValueList *vallnk, uint8_t flag)
+{
+#ifdef ESP8266
+    digitalWrite(LED_BUILTIN_AUX, LOW);
+#endif
+    int index = -1;
+    float value = -1;
+    if (strcmp(vallnk->name, "PAPP") == 0)
+    {
+        index = 3;
+        value = atof(vallnk->value);
+#ifdef ESP8266
+        digitalWrite(LED_BUILTIN, LOW);
+#endif
+    }
+    else if (strcmp(vallnk->name, "HCHP") == 0)
+    {
+        index = 0;
+        value = atof(vallnk->value);
+#ifdef ESP8266
+        digitalWrite(LED_BUILTIN, LOW);
+#endif
+    }
+    else if (strcmp(vallnk->name, "HCHC") == 0)
+    {
+        index = 1;
+        value = atof(vallnk->value);
+#ifdef ESP8266
+        digitalWrite(LED_BUILTIN, LOW);
+#endif
+    }
+    else if (strcmp(vallnk->name, "PTEC") == 0)
+    {
+        index = 2;
+        value = strcmp(vallnk->value, "HC..") == 0 ? 1 : 0;
+#ifdef ESP8266
+        digitalWrite(LED_BUILTIN, LOW);
+#endif
+    }
+    if (index != -1)
+    {
+        station->getSensor("linky")->setMeasure(index, value);
+    }
+#ifdef ESP8266
+    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN_AUX, HIGH);
+#endif
+}
 // from hallard/teleinfo library example
 String LinkyJsonData(ValueList *me) {
   bool firstdata = true;
@@ -237,44 +261,4 @@ String LinkyJsonData(ValueList *me) {
     out.concat("}");
   }
   return out;
-}
-
-void LinkyOnData(BaseStation* station, ValueList* vallnk, uint8_t flag) {
-#ifdef ESP8266
-  digitalWrite(LED_BUILTIN_AUX, LOW);
-#endif
-  int index = -1;
-  float value = -1;
-  if (strcmp(vallnk->name, "PAPP") == 0) {
-    index = 3;
-    value = atof(vallnk->value);
-#ifdef ESP8266
-    digitalWrite(LED_BUILTIN, LOW);
-#endif
-  } else if (strcmp(vallnk->name, "HCHP") == 0) {
-    index = 0;
-    value = atof(vallnk->value);
-#ifdef ESP8266
-    digitalWrite(LED_BUILTIN, LOW);
-#endif
-  } else if (strcmp(vallnk->name, "HCHC") == 0) {
-    index = 1;
-    value = atof(vallnk->value);
-#ifdef ESP8266
-    digitalWrite(LED_BUILTIN, LOW);
-#endif
-  } else if (strcmp(vallnk->name, "PTEC") == 0) {
-    index = 2;
-    value = strcmp(vallnk->value, "HC..") == 0 ? 1 : 0;
-#ifdef ESP8266
-    digitalWrite(LED_BUILTIN, LOW);
-#endif
-  }
-  if (index != -1) {
-    station->getSensor("linky")->setMesure(index, value);
-  }
-#ifdef ESP8266
-  digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(LED_BUILTIN_AUX, HIGH);
-#endif
 }
