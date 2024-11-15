@@ -13,9 +13,11 @@
 #ifdef ESP32
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <PubSubClient.h>
 #elif defined(ESP8266)
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <PubSubClient.h>
 #endif
 
 class BaseStation {
@@ -91,6 +93,8 @@ class EspStation : public BaseStation {
 public:
     using StationWebCallback_t = void (*)(BaseStation*, AsyncWebServerRequest*);
 
+    WifiManager wifiManager;
+
     struct StationWebCallbackInfo_t {
         String route;
         String login;
@@ -117,11 +121,21 @@ public:
     void addEndpoint(const StationWebCallbackInfo_t& endpoint);
     void serveWeb();
 
-    WifiManager wifiManager;
+    void setupMqtt(const String& broker, int port, const String& username = "", const String& password = "");
+    void publishMqtt(const String& topic, const String& payload);
+    bool connectMqtt();
+    void loopMqtt();
 
 protected:
     AsyncWebServer webServer;
     String openApiStr;
+
+    PubSubClient mqttClient;
+    String mqttBroker;
+    String mqttUsername;
+    String mqttPassword;
+    int mqttPort;
+    bool mqttEnabled;
 
     static constexpr int StatusConnecting = 1;
     static constexpr int StatusConnected = 2;

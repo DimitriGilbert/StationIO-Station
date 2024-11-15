@@ -39,6 +39,8 @@ enum class WifiError {
 class WifiManager {
 public:
     WifiManager();
+
+    SimpleLogger logger;
     void begin();
     void begin(NetworkInformation network);
     void begin(NetworkInformation network, const char* hostname);
@@ -67,9 +69,7 @@ public:
     void setHostname(const char* hostname);
     String getLocalIP();
     int32_t getRSSI();
-
-    SimpleLogger logger;
-
+    Client& getClient();
 private:
     std::vector<NetworkInformation> networks;
     int16_t currentNetwork;

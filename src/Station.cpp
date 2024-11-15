@@ -473,6 +473,9 @@ void EspStation::setup(const String& ssid, const String& password, const String&
 
 void EspStation::loop() {
     BaseStation::loop();
+    if (mqttEnabled) {
+        mqttClient.loop();
+    }
     ArduinoOTA.handle();
 }
 
@@ -545,6 +548,53 @@ void EspStation::serveWeb() {
     } else {
         log("Cannot start web server: WiFi not connected", SimpleLogger::ERROR);
     }
+}
+
+void EspStation::setupMqtt(const String& broker, int port, const String& username, const String& password) {
+    mqttBroker = broker;
+    mqttPort = port;
+    mqttUsername = username;
+    mqttPassword = password;
+    mqttEnabled = true;
+    
+    mqttClient.setClient(wifiManager.getClient());
+    mqttClient.setServer(mqttBroker.c_str(), mqttPort);
+}
+
+bool EspStation::connectMqtt() {
+    if (!mqttEnabled) return false;
+    
+    String clientId = "ESP-" + name + "-" + String(random(0xffff), HEX);
+    
+    bool connected = false;
+    if (mqttUsername.length() > 0) {
+        connected = mqttClient.connect(clientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str());
+    } else {
+        connected = mqttClient.connect(clientId.c_str());
+    }
+    
+    if (connected) {
+        log("Connected to MQTT broker", SimpleLogger::INFO);
+    } else {
+        log("Failed to connect to MQTT broker", SimpleLogger::ERROR);
+    }
+    
+    return connected;
+}
+
+void EspStation::loopMqtt() {
+    if (!mqttEnabled) return;
+    
+    if (!mqttClient.connected()) {
+        connectMqtt();
+    }
+    mqttClient.loop();
+}
+
+void EspStation::publishMqtt(const String& topic, const String& payload) {
+    if (!mqttEnabled || !mqttClient.connected()) return;
+    
+    mqttClient.publish(topic.c_str(), payload.c_str());
 }
 
 #ifdef ESP32

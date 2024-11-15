@@ -206,3 +206,9 @@ bool WifiManager::removeNetwork(int16_t network) {
     networks.erase(networks.begin() + network);
     return true;
 }
+
+
+Client& WifiManager::getClient() {
+    static WiFiClient wifiClient;
+    return wifiClient;
+}
